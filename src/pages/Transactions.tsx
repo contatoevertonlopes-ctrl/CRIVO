@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Search, Plus, Edit2, Trash2, ArrowLeft, Filter, Download } from "lucide-react";
+import { Search, Plus, Edit2, Trash2, ArrowLeft, Filter, Download, Lock, Crown, RefreshCw, Calendar } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 
 interface Transaction {
@@ -19,10 +21,13 @@ interface Transaction {
   type: "income" | "expense";
   amount: number;
   status: "confirmed" | "pending" | "paid";
+  is_recurring?: boolean;
+  recurring_interval?: string;
 }
 
 const Transactions = () => {
   const { user, loading: authLoading } = useAuth();
+  const { subscribed, loading: subLoading } = useSubscription();
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
@@ -31,9 +36,15 @@ const Transactions = () => {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [minAmount, setMinAmount] = useState("");
+  const [maxAmount, setMaxAmount] = useState("");
+  const [recurringOnly, setRecurringOnly] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [showProFilters, setShowProFilters] = useState(false);
 
   const [formData, setFormData] = useState({
     description: "",
@@ -42,6 +53,8 @@ const Transactions = () => {
     type: "expense" as "income" | "expense",
     status: "pending" as "confirmed" | "pending" | "paid",
     date: new Date().toISOString().split("T")[0],
+    is_recurring: false,
+    recurring_interval: "monthly",
   });
 
   useEffect(() => {
@@ -100,14 +113,39 @@ const Transactions = () => {
       filtered = filtered.filter((t) => t.category === categoryFilter);
     }
 
+    // Pro filters
+    if (subscribed) {
+      if (dateFrom) {
+        filtered = filtered.filter((t) => t.date >= dateFrom);
+      }
+      if (dateTo) {
+        filtered = filtered.filter((t) => t.date <= dateTo);
+      }
+      if (minAmount) {
+        filtered = filtered.filter((t) => t.amount >= parseFloat(minAmount));
+      }
+      if (maxAmount) {
+        filtered = filtered.filter((t) => t.amount <= parseFloat(maxAmount));
+      }
+      if (recurringOnly) {
+        filtered = filtered.filter((t) => t.is_recurring);
+      }
+    }
+
     setFilteredTransactions(filtered);
-  }, [transactions, search, typeFilter, statusFilter, categoryFilter]);
+  }, [transactions, search, typeFilter, statusFilter, categoryFilter, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed]);
 
   const categories = [...new Set(transactions.map((t) => t.category))];
 
   const handleAdd = async () => {
     if (!user || !formData.description || !formData.amount || !formData.category) {
       toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+
+    // Check if trying to add recurring without Pro
+    if (formData.is_recurring && !subscribed) {
+      toast.error("Transações recorrentes são exclusivas do Plano Pro");
       return;
     }
 
@@ -188,6 +226,8 @@ const Transactions = () => {
       type: transaction.type,
       status: transaction.status,
       date: transaction.date,
+      is_recurring: transaction.is_recurring || false,
+      recurring_interval: transaction.recurring_interval || "monthly",
     });
     setIsEditDialogOpen(true);
   };
@@ -200,6 +240,8 @@ const Transactions = () => {
       type: "expense",
       status: "pending",
       date: new Date().toISOString().split("T")[0],
+      is_recurring: false,
+      recurring_interval: "monthly",
     });
   };
 
@@ -235,12 +277,20 @@ const Transactions = () => {
     toast.success("Arquivo exportado com sucesso!");
   };
 
+  const clearProFilters = () => {
+    setDateFrom("");
+    setDateTo("");
+    setMinAmount("");
+    setMaxAmount("");
+    setRecurringOnly(false);
+  };
+
   const totals = {
     income: filteredTransactions.filter((t) => t.type === "income").reduce((acc, t) => acc + t.amount, 0),
     expense: filteredTransactions.filter((t) => t.type === "expense").reduce((acc, t) => acc + t.amount, 0),
   };
 
-  if (authLoading) {
+  if (authLoading || subLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-muted-foreground">Carregando...</div>
@@ -312,6 +362,49 @@ const Transactions = () => {
           onChange={(e) => setFormData({ ...formData, date: e.target.value })}
         />
       </div>
+      
+      {/* Recurring Transaction - Pro Feature */}
+      <div className="relative p-4 rounded-xl border border-border bg-secondary/20">
+        {!subscribed && (
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm rounded-xl z-10 flex flex-col items-center justify-center gap-2">
+            <Lock className="w-5 h-5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Plano Pro</span>
+          </div>
+        )}
+        <div className="flex items-center gap-3">
+          <Checkbox
+            id="recurring"
+            checked={formData.is_recurring}
+            onCheckedChange={(checked) => setFormData({ ...formData, is_recurring: !!checked })}
+            disabled={!subscribed}
+          />
+          <div className="flex items-center gap-2">
+            <RefreshCw className="w-4 h-4 text-primary" />
+            <Label htmlFor="recurring" className="text-sm cursor-pointer">
+              Transação recorrente
+            </Label>
+          </div>
+        </div>
+        {formData.is_recurring && subscribed && (
+          <div className="mt-3 space-y-2">
+            <Label className="text-xs text-muted-foreground">Intervalo</Label>
+            <Select 
+              value={formData.recurring_interval} 
+              onValueChange={(v) => setFormData({ ...formData, recurring_interval: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="weekly">Semanal</SelectItem>
+                <SelectItem value="monthly">Mensal</SelectItem>
+                <SelectItem value="yearly">Anual</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
+
       <Button onClick={onSubmit} className="w-full bg-primary hover:bg-primary/90">
         {submitLabel}
       </Button>
@@ -322,7 +415,7 @@ const Transactions = () => {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       
-      <main className="flex-1 p-4 lg:p-8 lg:ml-64">
+      <main className="flex-1 p-4 lg:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
@@ -381,10 +474,25 @@ const Transactions = () => {
 
           {/* Filters */}
           <div className="rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-4 mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Filter className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Filtros</span>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Filtros</span>
+              </div>
+              <button
+                onClick={() => setShowProFilters(!showProFilters)}
+                className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                  subscribed 
+                    ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20" 
+                    : "border-border bg-secondary/50 text-muted-foreground"
+                }`}
+              >
+                {subscribed ? <Crown className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                Filtros Pro
+              </button>
             </div>
+            
+            {/* Basic Filters */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -430,6 +538,89 @@ const Transactions = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Pro Filters */}
+            {showProFilters && (
+              <div className="relative mt-4 pt-4 border-t border-border">
+                {!subscribed && (
+                  <div className="absolute inset-0 bg-background/60 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-3 rounded-xl">
+                    <Lock className="w-6 h-6 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">Filtros exclusivos do Plano Pro</p>
+                    <Button
+                      size="sm"
+                      onClick={() => navigate("/plans")}
+                      className="gap-2 bg-primary hover:bg-primary/90"
+                    >
+                      <Crown className="w-4 h-4" />
+                      Assinar Pro
+                    </Button>
+                  </div>
+                )}
+                <div className={`grid grid-cols-1 md:grid-cols-5 gap-4 ${!subscribed ? "filter blur-sm" : ""}`}>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Calendar className="w-3 h-3" /> Data inicial
+                    </Label>
+                    <Input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      disabled={!subscribed}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Calendar className="w-3 h-3" /> Data final
+                    </Label>
+                    <Input
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      disabled={!subscribed}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Valor mínimo</Label>
+                    <Input
+                      type="number"
+                      placeholder="R$ 0,00"
+                      value={minAmount}
+                      onChange={(e) => setMinAmount(e.target.value)}
+                      disabled={!subscribed}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Valor máximo</Label>
+                    <Input
+                      type="number"
+                      placeholder="R$ 0,00"
+                      value={maxAmount}
+                      onChange={(e) => setMaxAmount(e.target.value)}
+                      disabled={!subscribed}
+                    />
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-background">
+                      <Checkbox
+                        id="recurring-filter"
+                        checked={recurringOnly}
+                        onCheckedChange={(checked) => setRecurringOnly(!!checked)}
+                        disabled={!subscribed}
+                      />
+                      <Label htmlFor="recurring-filter" className="text-xs cursor-pointer flex items-center gap-1">
+                        <RefreshCw className="w-3 h-3" />
+                        Recorrentes
+                      </Label>
+                    </div>
+                    {subscribed && (dateFrom || dateTo || minAmount || maxAmount || recurringOnly) && (
+                      <Button variant="ghost" size="sm" onClick={clearProFilters} className="h-10">
+                        Limpar
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Transactions Table */}
@@ -461,48 +652,55 @@ const Transactions = () => {
                         className="border-b border-secondary/50 hover:bg-secondary/30 transition-colors"
                       >
                         <td className="py-4 px-4">{formatDate(transaction.date)}</td>
-                        <td className="py-4 px-4 font-medium">{transaction.description}</td>
+                        <td className="py-4 px-4 font-medium">
+                          <div className="flex items-center gap-2">
+                            {transaction.description}
+                            {transaction.is_recurring && (
+                              <span title="Recorrente">
+                                <RefreshCw className="w-3 h-3 text-primary" />
+                              </span>
+                            )}
+                          </div>
+                        </td>
                         <td className="py-4 px-4">{transaction.category}</td>
                         <td className="py-4 px-4">
                           <span
-                            className={`inline-flex items-center justify-center text-xs px-2.5 py-1 rounded-full ${
+                            className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full ${
                               transaction.type === "income"
-                                ? "bg-primary/15 text-green-300"
-                                : "bg-destructive/15 text-red-300"
+                                ? "bg-primary/14 text-green-200"
+                                : "bg-destructive/10 text-red-200"
                             }`}
                           >
                             {transaction.type === "income" ? "Entrada" : "Saída"}
                           </span>
                         </td>
-                        <td className={`py-4 px-4 font-medium ${transaction.type === "income" ? "text-primary" : "text-destructive"}`}>
-                          {transaction.type === "income" ? "+" : "-"}{formatCurrency(transaction.amount)}
-                        </td>
+                        <td className="py-4 px-4">{formatCurrency(transaction.amount)}</td>
                         <td className="py-4 px-4">
                           <span
-                            className={`inline-flex items-center justify-center text-xs px-2.5 py-1 rounded-full ${
+                            className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full ${
                               transaction.status === "confirmed" || transaction.status === "paid"
-                                ? "bg-primary/15 text-green-300"
-                                : "bg-warning/15 text-yellow-300"
+                                ? "bg-primary/14 text-green-200"
+                                : "bg-warning/10 text-yellow-200"
                             }`}
                           >
                             {transaction.status === "confirmed"
                               ? "Confirmado"
                               : transaction.status === "paid"
                               ? "Pago"
-                              : "Pendente"}
+                              : "Em aberto"}
                           </span>
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => openEditDialog(transaction)}
-                              className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+                              className="p-1.5 rounded-lg hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors"
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleDelete(transaction.id)}
-                              className="p-2 rounded-lg hover:bg-destructive/20 transition-colors text-muted-foreground hover:text-destructive"
+                              className="p-1.5 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
