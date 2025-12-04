@@ -3,7 +3,13 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
+  ({ className, type, onMouseDown, ...props }, ref) => {
+    const handleMouseDown = (e: React.MouseEvent<HTMLInputElement>) => {
+      // Prevent dialog from capturing focus
+      e.stopPropagation();
+      onMouseDown?.(e);
+    };
+
     return (
       <input
         type={type}
@@ -12,6 +18,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className,
         )}
         ref={ref}
+        onMouseDown={handleMouseDown}
         {...props}
       />
     );
