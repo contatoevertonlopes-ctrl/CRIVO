@@ -408,46 +408,62 @@ const Transactions = () => {
         </div>
         
         {/* Recurring Transaction - Pro Feature */}
-        <div className="relative p-4 rounded-xl border border-border bg-secondary/20">
-          {!subscribed && (
+        {subscribed ? (
+          <div className="p-4 rounded-xl border border-primary/40 bg-primary/5">
+            <div className="flex items-center gap-3">
+              <Checkbox
+                id="recurring"
+                checked={formData.is_recurring}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_recurring: !!checked })}
+              />
+              <div className="flex items-center gap-2">
+                <RefreshCw className="w-4 h-4 text-primary" />
+                <Label htmlFor="recurring" className="text-sm cursor-pointer">
+                  Transação recorrente
+                </Label>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary">Pro</span>
+              </div>
+            </div>
+            {formData.is_recurring && (
+              <div className="mt-3 space-y-2">
+                <Label className="text-xs text-muted-foreground">Intervalo</Label>
+                <Select 
+                  value={formData.recurring_interval} 
+                  onValueChange={(v) => setFormData({ ...formData, recurring_interval: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="weekly">Semanal</SelectItem>
+                    <SelectItem value="monthly">Mensal</SelectItem>
+                    <SelectItem value="yearly">Anual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="relative p-4 rounded-xl border border-border bg-secondary/20">
             <div className="absolute inset-0 bg-background/60 backdrop-blur-sm rounded-xl z-10 flex flex-col items-center justify-center gap-2">
               <Lock className="w-5 h-5 text-muted-foreground" />
               <span className="text-xs text-muted-foreground">Plano Pro</span>
             </div>
-          )}
-          <div className="flex items-center gap-3">
-            <Checkbox
-              id="recurring"
-              checked={formData.is_recurring}
-              onCheckedChange={(checked) => setFormData({ ...formData, is_recurring: !!checked })}
-              disabled={!subscribed}
-            />
-            <div className="flex items-center gap-2">
-              <RefreshCw className="w-4 h-4 text-primary" />
-              <Label htmlFor="recurring" className="text-sm cursor-pointer">
-                Transação recorrente
-              </Label>
+            <div className="flex items-center gap-3">
+              <Checkbox
+                id="recurring-locked"
+                checked={false}
+                disabled
+              />
+              <div className="flex items-center gap-2">
+                <RefreshCw className="w-4 h-4 text-muted-foreground" />
+                <Label className="text-sm text-muted-foreground">
+                  Transação recorrente
+                </Label>
+              </div>
             </div>
           </div>
-          {formData.is_recurring && subscribed && (
-            <div className="mt-3 space-y-2">
-              <Label className="text-xs text-muted-foreground">Intervalo</Label>
-              <Select 
-                value={formData.recurring_interval} 
-                onValueChange={(v) => setFormData({ ...formData, recurring_interval: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="weekly">Semanal</SelectItem>
-                  <SelectItem value="monthly">Mensal</SelectItem>
-                  <SelectItem value="yearly">Anual</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        </div>
+        )}
 
         <Button onClick={onSubmit} className="w-full bg-primary hover:bg-primary/90">
           {submitLabel}

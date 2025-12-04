@@ -1,7 +1,14 @@
 import { useNavigate } from "react-router-dom";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const PlansCard = () => {
   const navigate = useNavigate();
+  const { subscribed, loading } = useSubscription();
+
+  // Não mostrar o card para usuários Pro
+  if (loading || subscribed) {
+    return null;
+  }
 
   return (
     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-background via-background to-black border border-primary/40 shadow-[0_0_60px_rgba(34,197,94,0.3)] p-5">
