@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
+
 const PlansCard = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-background via-background to-black border border-primary/40 shadow-[0_0_60px_rgba(34,197,94,0.3)] p-5">
       {/* Gradient ghost effect */}
@@ -28,7 +32,10 @@ const PlansCard = () => {
             <div className="text-[11px] text-muted-foreground mb-2">
               Cancela quando quiser. Ideal para testar.
             </div>
-            <button className="w-full text-xs py-2 px-3 rounded-full bg-secondary/90 text-foreground border border-border/60 hover:bg-secondary hover:border-border transition-all font-medium">
+            <button 
+              onClick={() => navigate("/plans")}
+              className="w-full text-xs py-2 px-3 rounded-full bg-secondary/90 text-foreground border border-border/60 hover:bg-secondary hover:border-border transition-all font-medium"
+            >
               Assinar mensal
             </button>
           </div>
@@ -43,7 +50,10 @@ const PlansCard = () => {
             <div className="text-[11px] text-muted-foreground mb-2">
               Equivale a <strong>~R$ 22,42/mês</strong>. Perfeito para quem leva os números a sério.
             </div>
-            <button className="w-full text-xs py-2 px-3 rounded-full bg-gradient-to-r from-primary to-green-600 text-primary-foreground shadow-[0_8px_25px_rgba(34,197,94,0.5)] hover:shadow-[0_8px_30px_rgba(34,197,94,0.6)] transition-all font-medium">
+            <button 
+              onClick={() => navigate("/plans")}
+              className="w-full text-xs py-2 px-3 rounded-full bg-gradient-to-r from-primary to-green-600 text-primary-foreground shadow-[0_8px_25px_rgba(34,197,94,0.5)] hover:shadow-[0_8px_30px_rgba(34,197,94,0.6)] transition-all font-medium"
+            >
               Assinar anual ⭐
             </button>
           </div>
