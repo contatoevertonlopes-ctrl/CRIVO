@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus } from "lucide-react";
+import { Plus, RefreshCw, Lock } from "lucide-react";
 
 interface AddTransactionDialogProps {
   onSuccess: () => void;
@@ -27,6 +29,7 @@ interface AddTransactionDialogProps {
 
 const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   const { user } = useAuth();
+  const { subscribed } = useSubscription();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -36,6 +39,8 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   const [amount, setAmount] = useState("");
   const [status, setStatus] = useState("em_aberto");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringInterval, setRecurringInterval] = useState("monthly");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,6 +79,8 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
       setAmount("");
       setStatus("em_aberto");
       setDate(new Date().toISOString().split("T")[0]);
+      setIsRecurring(false);
+      setRecurringInterval("monthly");
       setOpen(false);
       onSuccess();
     } catch (error: any) {
@@ -197,6 +204,55 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
               className="bg-secondary/50 border-border/50"
             />
           </div>
+
+          {/* Recurring Transaction - Pro Feature */}
+          {subscribed ? (
+            <div className="p-3 rounded-xl border border-primary/40 bg-primary/5">
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  id="recurring-dashboard"
+                  checked={isRecurring}
+                  onCheckedChange={(checked) => setIsRecurring(!!checked)}
+                />
+                <div className="flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4 text-primary" />
+                  <Label htmlFor="recurring-dashboard" className="text-sm cursor-pointer">
+                    Transação recorrente
+                  </Label>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary">Pro</span>
+                </div>
+              </div>
+              {isRecurring && (
+                <div className="mt-3 space-y-2">
+                  <Label className="text-xs text-muted-foreground">Intervalo</Label>
+                  <Select value={recurringInterval} onValueChange={setRecurringInterval}>
+                    <SelectTrigger className="bg-secondary/50 border-border/50">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="weekly">Semanal</SelectItem>
+                      <SelectItem value="monthly">Mensal</SelectItem>
+                      <SelectItem value="yearly">Anual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="relative p-3 rounded-xl border border-border bg-secondary/20">
+              <div className="absolute inset-0 bg-background/60 backdrop-blur-sm rounded-xl z-10 flex flex-col items-center justify-center gap-1">
+                <Lock className="w-4 h-4 text-muted-foreground" />
+                <span className="text-[10px] text-muted-foreground">Plano Pro</span>
+              </div>
+              <div className="flex items-center gap-3 opacity-50">
+                <Checkbox disabled checked={false} />
+                <div className="flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Transação recorrente</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-3 pt-2">
             <Button
