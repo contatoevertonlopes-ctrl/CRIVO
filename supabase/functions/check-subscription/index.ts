@@ -42,6 +42,34 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // FIRST: Check local database for admin-granted subscriptions
+    const { data: localSub, error: localSubError } = await supabaseClient
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!localSubError && localSub && localSub.status === "active" && localSub.plan === "pro") {
+      logStep("Found active Pro subscription in local database", { 
+        plan: localSub.plan, 
+        status: localSub.status,
+        expires_at: localSub.expires_at 
+      });
+      
+      return new Response(JSON.stringify({
+        subscribed: true,
+        product_id: "local_pro",
+        subscription_end: localSub.expires_at,
+        plan_type: "monthly", // Default for admin-granted
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    logStep("No active Pro in local DB, checking Stripe");
+
+    // SECOND: Check Stripe for paid subscriptions
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
 
