@@ -1,15 +1,19 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
-const data = [
-  { name: "Mídia paga", value: 48 },
-  { name: "Operacional", value: 22 },
-  { name: "Assinaturas", value: 18 },
-  { name: "Outros", value: 12 },
-];
+interface CategoryData {
+  name: string;
+  value: number;
+}
+
+interface ExpenseChartProps {
+  data?: CategoryData[];
+}
 
 const COLORS = ["hsl(142 76% 45%)", "hsl(217 91% 60%)", "hsl(48 96% 53%)", "hsl(0 84% 60%)"];
 
-const ExpenseChart = () => {
+const ExpenseChart = ({ data = [] }: ExpenseChartProps) => {
+  const hasData = data.length > 0 && data[0].name !== "Sem dados";
+
   return (
     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-5">
       {/* Gradient ghost effect */}
@@ -29,36 +33,45 @@ const ExpenseChart = () => {
         </div>
 
         <div className="h-[180px] mt-2">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                innerRadius={50}
-                outerRadius={70}
-                fill="#8884d8"
-                paddingAngle={2}
-                dataKey="value"
-              >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(222 47% 5%)",
-                  border: "1px solid hsl(217 33% 17%)",
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                }}
-              />
-              <Legend
-                wrapperStyle={{ fontSize: "11px", color: "#9ca3af" }}
-                iconType="circle"
-              />
-            </PieChart>
-          </ResponsiveContainer>
+          {!hasData ? (
+            <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+              Adicione despesas para visualizar
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={data}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={70}
+                  fill="#8884d8"
+                  paddingAngle={2}
+                  dataKey="value"
+                >
+                  {data.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(222 47% 5%)",
+                    border: "1px solid hsl(217 33% 17%)",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                  }}
+                  formatter={(value: number) =>
+                    new Intl.NumberFormat("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    }).format(value)
+                  }
+                />
+                <Legend wrapperStyle={{ fontSize: "11px", color: "#9ca3af" }} iconType="circle" />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
     </div>

@@ -21,7 +21,7 @@ interface Transaction {
   category: string;
   type: "income" | "expense";
   amount: number;
-  status: "confirmed" | "pending" | "paid";
+  status: string;
   is_recurring?: boolean;
   recurring_interval?: string;
 }
@@ -52,7 +52,7 @@ const Transactions = () => {
     amount: "",
     category: "",
     type: "expense" as "income" | "expense",
-    status: "pending" as "confirmed" | "pending" | "paid",
+    status: "em_aberto",
     date: new Date().toISOString().split("T")[0],
     is_recurring: false,
     recurring_interval: "monthly",
@@ -239,11 +239,39 @@ const Transactions = () => {
       amount: "",
       category: "",
       type: "expense",
-      status: "pending",
+      status: "em_aberto",
       date: new Date().toISOString().split("T")[0],
       is_recurring: false,
       recurring_interval: "monthly",
     });
+  };
+
+  const getStatusLabel = (status: string) => {
+    const statusMap: Record<string, string> = {
+      em_aberto: "Em aberto",
+      a_vencer: "A vencer",
+      vencido: "Vencido",
+      pagamento_concluido: "Pagamento concluído",
+      pending: "Em aberto",
+      confirmed: "Pagamento concluído",
+      paid: "Pagamento concluído",
+    };
+    return statusMap[status] || status;
+  };
+
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case "pagamento_concluido":
+      case "confirmed":
+      case "paid":
+        return "bg-primary/14 text-green-200";
+      case "a_vencer":
+        return "bg-warning/10 text-yellow-200";
+      case "vencido":
+        return "bg-destructive/10 text-red-200";
+      default:
+        return "bg-secondary/50 text-muted-foreground";
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -266,7 +294,7 @@ const Transactions = () => {
       t.category,
       t.type === "income" ? "Entrada" : "Saída",
       t.amount.toString(),
-      t.status === "confirmed" ? "Confirmado" : t.status === "paid" ? "Pago" : "Pendente",
+      getStatusLabel(t.status),
     ]);
 
     const csvContent = [headers, ...rows].map((row) => row.join(",")).join("\n");
@@ -343,14 +371,15 @@ const Transactions = () => {
         </div>
         <div className="space-y-2">
           <Label>Status</Label>
-          <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v as "confirmed" | "pending" | "paid" })}>
+          <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="pending">Pendente</SelectItem>
-              <SelectItem value="confirmed">Confirmado</SelectItem>
-              <SelectItem value="paid">Pago</SelectItem>
+              <SelectItem value="em_aberto">Em aberto</SelectItem>
+              <SelectItem value="a_vencer">A vencer</SelectItem>
+              <SelectItem value="vencido">Vencido</SelectItem>
+              <SelectItem value="pagamento_concluido">Pagamento concluído</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -521,9 +550,10 @@ const Transactions = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="pending">Pendente</SelectItem>
-                  <SelectItem value="confirmed">Confirmado</SelectItem>
-                  <SelectItem value="paid">Pago</SelectItem>
+                  <SelectItem value="em_aberto">Em aberto</SelectItem>
+                  <SelectItem value="a_vencer">A vencer</SelectItem>
+                  <SelectItem value="vencido">Vencido</SelectItem>
+                  <SelectItem value="pagamento_concluido">Pagamento concluído</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -679,17 +709,9 @@ const Transactions = () => {
                         <td className="py-4 px-4">{formatCurrency(transaction.amount)}</td>
                         <td className="py-4 px-4">
                           <span
-                            className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full ${
-                              transaction.status === "confirmed" || transaction.status === "paid"
-                                ? "bg-primary/14 text-green-200"
-                                : "bg-warning/10 text-yellow-200"
-                            }`}
+                            className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full ${getStatusStyle(transaction.status)}`}
                           >
-                            {transaction.status === "confirmed"
-                              ? "Confirmado"
-                              : transaction.status === "paid"
-                              ? "Pago"
-                              : "Em aberto"}
+                            {getStatusLabel(transaction.status)}
                           </span>
                         </td>
                         <td className="py-4 px-4">
