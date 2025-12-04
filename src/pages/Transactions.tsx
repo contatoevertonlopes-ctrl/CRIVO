@@ -483,7 +483,7 @@ const Transactions = () => {
                 <Download className="w-4 h-4" />
                 Exportar CSV
               </Button>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} modal={false}>
                 <DialogTrigger asChild>
                   <Button className="gap-2 bg-primary hover:bg-primary/90" onClick={resetForm}>
                     <Plus className="w-4 h-4" />
@@ -754,7 +754,7 @@ const Transactions = () => {
           </div>
 
           {/* Edit Dialog */}
-          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} modal={false}>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Editar Transação</DialogTitle>
