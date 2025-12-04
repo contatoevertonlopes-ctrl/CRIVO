@@ -13,44 +13,15 @@ interface Transaction {
   status: "confirmed" | "pending" | "paid";
 }
 
-const mockTransactions: Transaction[] = [
-  {
-    id: "1",
-    date: "2025-11-24",
-    description: "Gestão de Tráfego – Cliente A",
-    category: "Serviços",
-    type: "income",
-    amount: 4500,
-    status: "confirmed",
-  },
-  {
-    id: "2",
-    date: "2025-11-22",
-    description: "Assinaturas de ferramentas",
-    category: "Operacional",
-    type: "expense",
-    amount: 690,
-    status: "paid",
-  },
-  {
-    id: "3",
-    date: "2025-11-20",
-    description: "Campanhas Meta Ads",
-    category: "Mídia paga",
-    type: "expense",
-    amount: 2300,
-    status: "pending",
-  },
-];
-
 const TransactionsTable = () => {
   const { user } = useAuth();
-  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
-  const [loading, setLoading] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchTransactions = async () => {
     if (!user) {
-      setTransactions(mockTransactions);
+      setTransactions([]);
+      setLoading(false);
       return;
     }
 
@@ -64,15 +35,10 @@ const TransactionsTable = () => {
         .limit(10);
 
       if (error) throw error;
-
-      if (data && data.length > 0) {
-        setTransactions(data as Transaction[]);
-      } else {
-        setTransactions(mockTransactions);
-      }
+      setTransactions((data as Transaction[]) || []);
     } catch (error) {
       console.error("Error fetching transactions:", error);
-      setTransactions(mockTransactions);
+      setTransactions([]);
     } finally {
       setLoading(false);
     }
@@ -115,6 +81,11 @@ const TransactionsTable = () => {
         {loading ? (
           <div className="text-center py-8 text-muted-foreground">
             Carregando...
+          </div>
+        ) : transactions.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p className="mb-2">Nenhuma transação encontrada</p>
+            <p className="text-xs">Adicione sua primeira transação para começar</p>
           </div>
         ) : (
           <table className="w-full text-xs border-collapse">
