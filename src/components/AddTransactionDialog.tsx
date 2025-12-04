@@ -105,7 +105,10 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
           Nova transação
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-background border-secondary">
+      <DialogContent 
+        className="bg-background border-secondary"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Adicionar transação</DialogTitle>
         </DialogHeader>

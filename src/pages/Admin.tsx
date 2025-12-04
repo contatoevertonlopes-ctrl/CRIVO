@@ -180,12 +180,34 @@ const Admin = () => {
 
   const updateSubscription = async (userId: string, status: string, plan: string) => {
     try {
-      const { error } = await supabase
+      // Check if subscription exists
+      const { data: existingSub } = await supabase
         .from("subscriptions")
-        .update({ status, plan, updated_at: new Date().toISOString() })
-        .eq("user_id", userId);
+        .select("id")
+        .eq("user_id", userId)
+        .single();
 
-      if (error) throw error;
+      if (existingSub) {
+        // Update existing subscription
+        const { error } = await supabase
+          .from("subscriptions")
+          .update({ status, plan, updated_at: new Date().toISOString() })
+          .eq("user_id", userId);
+
+        if (error) throw error;
+      } else {
+        // Insert new subscription
+        const { error } = await supabase
+          .from("subscriptions")
+          .insert({
+            user_id: userId,
+            status,
+            plan,
+            started_at: new Date().toISOString(),
+          });
+
+        if (error) throw error;
+      }
 
       toast.success("Assinatura atualizada com sucesso!");
       fetchData();
