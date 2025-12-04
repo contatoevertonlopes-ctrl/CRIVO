@@ -1,13 +1,15 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdmin } from "@/hooks/useAdmin";
 import { useSidebarContext } from "@/contexts/SidebarContext";
-import { ChevronLeft, ChevronRight, LayoutDashboard, ArrowRightLeft, BarChart3, Settings, Crown } from "lucide-react";
+import { ChevronLeft, ChevronRight, LayoutDashboard, ArrowRightLeft, BarChart3, Settings, Crown, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
   const { collapsed, toggle } = useSidebarContext();
 
   const navItems = [
@@ -98,6 +100,24 @@ const Sidebar = () => {
                   </li>
                 );
               })}
+
+              {/* Admin link - only visible for admins */}
+              {isAdmin && (
+                <li
+                  onClick={() => navigate("/admin")}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200",
+                    collapsed && "justify-center px-2",
+                    location.pathname === "/admin"
+                      ? "bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/50 text-foreground"
+                      : "text-yellow-400 hover:bg-yellow-500/10 hover:border-yellow-500/40 hover:text-yellow-300 border border-transparent"
+                  )}
+                  title={collapsed ? "Administração" : undefined}
+                >
+                  <Shield className="w-5 h-5 shrink-0" />
+                  {!collapsed && <span className="text-sm">Administração</span>}
+                </li>
+              )}
             </ul>
           </div>
         </nav>
