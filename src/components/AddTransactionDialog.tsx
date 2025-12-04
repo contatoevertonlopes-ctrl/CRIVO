@@ -95,7 +95,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   ];
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={setOpen} modal={true}>
       <DialogTrigger asChild>
         <Button
           size="sm"
@@ -105,12 +105,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
           Nova transação
         </Button>
       </DialogTrigger>
-      <DialogContent 
-        className="bg-background border-secondary"
-        onOpenAutoFocus={(e) => e.preventDefault()}
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-      >
+      <DialogContent className="bg-background border-secondary">
         <DialogHeader>
           <DialogTitle>Adicionar transação</DialogTitle>
         </DialogHeader>
