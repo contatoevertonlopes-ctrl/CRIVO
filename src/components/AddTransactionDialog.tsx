@@ -108,6 +108,8 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
       <DialogContent 
         className="bg-background border-secondary"
         onOpenAutoFocus={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle>Adicionar transação</DialogTitle>
