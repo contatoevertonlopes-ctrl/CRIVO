@@ -174,7 +174,7 @@ const Transactions = () => {
   };
 
   const handleEdit = async () => {
-    if (!editingTransaction) return;
+    if (!editingTransaction || !user) return;
 
     try {
       const { error } = await supabase
@@ -187,7 +187,8 @@ const Transactions = () => {
           status: formData.status,
           date: formData.date,
         })
-        .eq("id", editingTransaction.id);
+        .eq("id", editingTransaction.id)
+        .eq("user_id", user.id);
 
       if (error) throw error;
 
