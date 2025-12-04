@@ -87,13 +87,17 @@ const Settings = () => {
   const getPlanLabel = (plan: string) => {
     switch (plan) {
       case "monthly":
-        return "Mensal";
+        return "Pro (Mensal)";
       case "annual":
-        return "Anual";
+        return "Pro (Anual)";
+      case "pro":
+        return "Pro";
       default:
         return "Gratuito";
     }
   };
+
+  const isPro = subscription?.plan && subscription.plan !== "free";
 
   if (!user) return null;
 
@@ -152,20 +156,22 @@ const Settings = () => {
           </div>
 
           {/* Subscription Section */}
-          <div className="rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-6">
+          <div className={`rounded-3xl bg-gradient-to-bl from-background to-black border shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-6 ${
+            isPro ? "border-primary/40" : "border-secondary"
+          }`}>
             <h2 className="text-lg font-semibold mb-4">Assinatura</h2>
             
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-sm text-muted-foreground">Plano atual</p>
-                <p className="font-semibold">
+                <p className={`font-semibold ${isPro ? "text-primary" : ""}`}>
                   {subscription ? getPlanLabel(subscription.plan) : "Carregando..."}
                 </p>
               </div>
               <span className={`text-xs px-3 py-1 rounded-full ${
-                subscription?.plan === "free"
-                  ? "bg-secondary/50 text-muted-foreground"
-                  : "bg-primary/20 border border-primary/50 text-green-200"
+                isPro
+                  ? "bg-primary/20 border border-primary/50 text-green-200"
+                  : "bg-secondary/50 text-muted-foreground"
               }`}>
                 {subscription?.status === "active" ? "Ativo" : "Inativo"}
               </span>
@@ -174,9 +180,9 @@ const Settings = () => {
             <Button
               variant="outline"
               onClick={() => navigate("/plans")}
-              className="border-primary/50 hover:bg-primary/10"
+              className={isPro ? "border-primary/50 hover:bg-primary/10" : ""}
             >
-              {subscription?.plan === "free" ? "Fazer upgrade" : "Gerenciar plano"}
+              {isPro ? "Gerenciar plano" : "Fazer upgrade"}
             </Button>
           </div>
 
