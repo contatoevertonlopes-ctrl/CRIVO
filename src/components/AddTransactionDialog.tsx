@@ -30,14 +30,12 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    description: "",
-    category: "",
-    type: "expense" as "income" | "expense",
-    amount: "",
-    status: "pending" as "confirmed" | "pending" | "paid",
-    date: new Date().toISOString().split("T")[0],
-  });
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [type, setType] = useState<"income" | "expense">("expense");
+  const [amount, setAmount] = useState("");
+  const [status, setStatus] = useState("em_aberto");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,12 +52,12 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
     try {
       const { error } = await supabase.from("transactions").insert({
         user_id: user.id,
-        description: formData.description,
-        category: formData.category,
-        type: formData.type,
-        amount: parseFloat(formData.amount),
-        status: formData.status,
-        date: formData.date,
+        description,
+        category,
+        type,
+        amount: parseFloat(amount),
+        status,
+        date,
       });
 
       if (error) throw error;
@@ -69,14 +67,13 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
         description: "A transação foi salva com sucesso.",
       });
 
-      setFormData({
-        description: "",
-        category: "",
-        type: "expense",
-        amount: "",
-        status: "pending",
-        date: new Date().toISOString().split("T")[0],
-      });
+      // Reset form
+      setDescription("");
+      setCategory("");
+      setType("expense");
+      setAmount("");
+      setStatus("em_aberto");
+      setDate(new Date().toISOString().split("T")[0]);
       setOpen(false);
       onSuccess();
     } catch (error: any) {
@@ -89,6 +86,13 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
       setLoading(false);
     }
   };
+
+  const statusOptions = [
+    { value: "em_aberto", label: "Em aberto" },
+    { value: "a_vencer", label: "A vencer" },
+    { value: "vencido", label: "Vencido" },
+    { value: "pagamento_concluido", label: "Pagamento concluído" },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -111,25 +115,19 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             <Label htmlFor="description">Descrição</Label>
             <Input
               id="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder="Ex: Pagamento cliente X"
               required
               className="bg-secondary/50 border-border/50"
+              autoComplete="off"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="type">Tipo</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value: "income" | "expense") =>
-                  setFormData({ ...formData, type: value })
-                }
-              >
+              <Select value={type} onValueChange={(value: "income" | "expense") => setType(value)}>
                 <SelectTrigger className="bg-secondary/50 border-border/50">
                   <SelectValue />
                 </SelectTrigger>
@@ -147,13 +145,12 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
                 type="number"
                 step="0.01"
                 min="0"
-                value={formData.amount}
-                onChange={(e) =>
-                  setFormData({ ...formData, amount: e.target.value })
-                }
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
                 placeholder="0,00"
                 required
                 className="bg-secondary/50 border-border/50"
+                autoComplete="off"
               />
             </div>
           </div>
@@ -163,31 +160,27 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
               <Label htmlFor="category">Categoria</Label>
               <Input
                 id="category"
-                value={formData.category}
-                onChange={(e) =>
-                  setFormData({ ...formData, category: e.target.value })
-                }
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
                 placeholder="Ex: Serviços"
                 required
                 className="bg-secondary/50 border-border/50"
+                autoComplete="off"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value: "confirmed" | "pending" | "paid") =>
-                  setFormData({ ...formData, status: value })
-                }
-              >
+              <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger className="bg-secondary/50 border-border/50">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">Em aberto</SelectItem>
-                  <SelectItem value="confirmed">Confirmado</SelectItem>
-                  <SelectItem value="paid">Pago</SelectItem>
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -198,10 +191,8 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             <Input
               id="date"
               type="date"
-              value={formData.date}
-              onChange={(e) =>
-                setFormData({ ...formData, date: e.target.value })
-              }
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
               required
               className="bg-secondary/50 border-border/50"
             />

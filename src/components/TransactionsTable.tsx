@@ -10,10 +10,14 @@ interface Transaction {
   category: string;
   type: "income" | "expense";
   amount: number;
-  status: "confirmed" | "pending" | "paid";
+  status: string;
 }
 
-const TransactionsTable = () => {
+interface TransactionsTableProps {
+  onRefresh?: () => void;
+}
+
+const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,6 +52,11 @@ const TransactionsTable = () => {
     fetchTransactions();
   }, [user]);
 
+  const handleSuccess = () => {
+    fetchTransactions();
+    onRefresh?.();
+  };
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr + "T00:00:00");
     return date.toLocaleDateString("pt-BR");
@@ -60,6 +69,35 @@ const TransactionsTable = () => {
     }).format(value);
   };
 
+  const getStatusLabel = (status: string) => {
+    const statusMap: Record<string, string> = {
+      em_aberto: "Em aberto",
+      a_vencer: "A vencer",
+      vencido: "Vencido",
+      pagamento_concluido: "Pagamento concluído",
+      // Legacy support
+      pending: "Em aberto",
+      confirmed: "Pagamento concluído",
+      paid: "Pagamento concluído",
+    };
+    return statusMap[status] || status;
+  };
+
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case "pagamento_concluido":
+      case "confirmed":
+      case "paid":
+        return "bg-primary/14 text-green-200";
+      case "a_vencer":
+        return "bg-warning/10 text-yellow-200";
+      case "vencido":
+        return "bg-destructive/10 text-red-200";
+      default:
+        return "bg-secondary/50 text-muted-foreground";
+    }
+  };
+
   return (
     <div className="rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-5">
       <div className="flex justify-between items-center mb-3 flex-wrap gap-3">
@@ -70,10 +108,7 @@ const TransactionsTable = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <AddTransactionDialog onSuccess={fetchTransactions} />
-          <button className="text-[13px] px-3 py-2 rounded-full border border-border/50 bg-secondary/60 text-muted-foreground hover:border-border hover:text-foreground transition-all">
-            Filtrar período
-          </button>
+          <AddTransactionDialog onSuccess={handleSuccess} />
         </div>
       </div>
 
@@ -122,17 +157,11 @@ const TransactionsTable = () => {
                   <td className="py-2 px-2">{formatCurrency(transaction.amount)}</td>
                   <td className="py-2 px-2">
                     <span
-                      className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full ${
-                        transaction.status === "confirmed" || transaction.status === "paid"
-                          ? "bg-primary/14 text-green-200"
-                          : "bg-warning/10 text-yellow-200"
-                      }`}
+                      className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full ${getStatusStyle(
+                        transaction.status
+                      )}`}
                     >
-                      {transaction.status === "confirmed"
-                        ? "Confirmado"
-                        : transaction.status === "paid"
-                        ? "Pago"
-                        : "Em aberto"}
+                      {getStatusLabel(transaction.status)}
                     </span>
                   </td>
                 </tr>
