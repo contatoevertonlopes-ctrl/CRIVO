@@ -328,119 +328,133 @@ const Transactions = () => {
     );
   }
 
-  const TransactionForm = ({ onSubmit, submitLabel }: { onSubmit: () => void; submitLabel: string }) => (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>Descrição *</Label>
-        <Input
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          placeholder="Ex: Salário, Aluguel..."
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
+  const TransactionForm = ({ onSubmit, submitLabel }: { onSubmit: () => void; submitLabel: string }) => {
+    // Prevent focus issues within the form
+    const handleFormClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+    };
+
+    return (
+      <div className="space-y-4" onClick={handleFormClick} onMouseDown={handleFormClick}>
         <div className="space-y-2">
-          <Label>Valor *</Label>
-          <Input
-            type="number"
-            value={formData.amount}
-            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-            placeholder="0,00"
+          <Label>Descrição *</Label>
+          <input
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            placeholder="Ex: Salário, Aluguel..."
+            autoComplete="off"
           />
         </div>
-        <div className="space-y-2">
-          <Label>Categoria *</Label>
-          <Input
-            value={formData.category}
-            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            placeholder="Ex: Serviços"
-          />
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Tipo</Label>
-          <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v as "income" | "expense" })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="income">Entrada</SelectItem>
-              <SelectItem value="expense">Saída</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Status</Label>
-          <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="em_aberto">Em aberto</SelectItem>
-              <SelectItem value="a_vencer">A vencer</SelectItem>
-              <SelectItem value="vencido">Vencido</SelectItem>
-              <SelectItem value="pagamento_concluido">Pagamento concluído</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Label>Data</Label>
-        <Input
-          type="date"
-          value={formData.date}
-          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-        />
-      </div>
-      
-      {/* Recurring Transaction - Pro Feature */}
-      <div className="relative p-4 rounded-xl border border-border bg-secondary/20">
-        {!subscribed && (
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm rounded-xl z-10 flex flex-col items-center justify-center gap-2">
-            <Lock className="w-5 h-5 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">Plano Pro</span>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Valor *</Label>
+            <input
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+              type="number"
+              value={formData.amount}
+              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+              placeholder="0,00"
+              autoComplete="off"
+            />
           </div>
-        )}
-        <div className="flex items-center gap-3">
-          <Checkbox
-            id="recurring"
-            checked={formData.is_recurring}
-            onCheckedChange={(checked) => setFormData({ ...formData, is_recurring: !!checked })}
-            disabled={!subscribed}
-          />
-          <div className="flex items-center gap-2">
-            <RefreshCw className="w-4 h-4 text-primary" />
-            <Label htmlFor="recurring" className="text-sm cursor-pointer">
-              Transação recorrente
-            </Label>
+          <div className="space-y-2">
+            <Label>Categoria *</Label>
+            <input
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              placeholder="Ex: Serviços"
+              autoComplete="off"
+            />
           </div>
         </div>
-        {formData.is_recurring && subscribed && (
-          <div className="mt-3 space-y-2">
-            <Label className="text-xs text-muted-foreground">Intervalo</Label>
-            <Select 
-              value={formData.recurring_interval} 
-              onValueChange={(v) => setFormData({ ...formData, recurring_interval: v })}
-            >
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Tipo</Label>
+            <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v as "income" | "expense" })}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="weekly">Semanal</SelectItem>
-                <SelectItem value="monthly">Mensal</SelectItem>
-                <SelectItem value="yearly">Anual</SelectItem>
+                <SelectItem value="income">Entrada</SelectItem>
+                <SelectItem value="expense">Saída</SelectItem>
               </SelectContent>
             </Select>
           </div>
-        )}
-      </div>
+          <div className="space-y-2">
+            <Label>Status</Label>
+            <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="em_aberto">Em aberto</SelectItem>
+                <SelectItem value="a_vencer">A vencer</SelectItem>
+                <SelectItem value="vencido">Vencido</SelectItem>
+                <SelectItem value="pagamento_concluido">Pagamento concluído</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Data</Label>
+          <input
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+            type="date"
+            value={formData.date}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+          />
+        </div>
+        
+        {/* Recurring Transaction - Pro Feature */}
+        <div className="relative p-4 rounded-xl border border-border bg-secondary/20">
+          {!subscribed && (
+            <div className="absolute inset-0 bg-background/60 backdrop-blur-sm rounded-xl z-10 flex flex-col items-center justify-center gap-2">
+              <Lock className="w-5 h-5 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Plano Pro</span>
+            </div>
+          )}
+          <div className="flex items-center gap-3">
+            <Checkbox
+              id="recurring"
+              checked={formData.is_recurring}
+              onCheckedChange={(checked) => setFormData({ ...formData, is_recurring: !!checked })}
+              disabled={!subscribed}
+            />
+            <div className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4 text-primary" />
+              <Label htmlFor="recurring" className="text-sm cursor-pointer">
+                Transação recorrente
+              </Label>
+            </div>
+          </div>
+          {formData.is_recurring && subscribed && (
+            <div className="mt-3 space-y-2">
+              <Label className="text-xs text-muted-foreground">Intervalo</Label>
+              <Select 
+                value={formData.recurring_interval} 
+                onValueChange={(v) => setFormData({ ...formData, recurring_interval: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="weekly">Semanal</SelectItem>
+                  <SelectItem value="monthly">Mensal</SelectItem>
+                  <SelectItem value="yearly">Anual</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
 
-      <Button onClick={onSubmit} className="w-full bg-primary hover:bg-primary/90">
-        {submitLabel}
-      </Button>
-    </div>
-  );
+        <Button onClick={onSubmit} className="w-full bg-primary hover:bg-primary/90">
+          {submitLabel}
+        </Button>
+      </div>
+    );
+  };
 
   return (
     <div className="flex min-h-screen bg-background">
