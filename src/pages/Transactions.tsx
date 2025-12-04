@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Search, Plus, Edit2, Trash2, ArrowLeft, Filter, Download, Lock, Crown, RefreshCw, Calendar } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import ImportTransactionsDialog from "@/components/ImportTransactionsDialog";
+import { startOfMonth, endOfMonth, subMonths, addMonths, format } from "date-fns";
 
 interface Transaction {
   id: string;
@@ -37,6 +38,7 @@ const Transactions = () => {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [periodFilter, setPeriodFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [minAmount, setMinAmount] = useState("");
@@ -114,6 +116,35 @@ const Transactions = () => {
       filtered = filtered.filter((t) => t.category === categoryFilter);
     }
 
+    // Period filter
+    if (periodFilter !== "all") {
+      const now = new Date();
+      let periodStart: Date;
+      let periodEnd: Date;
+
+      switch (periodFilter) {
+        case "last_month":
+          periodStart = startOfMonth(subMonths(now, 1));
+          periodEnd = endOfMonth(subMonths(now, 1));
+          break;
+        case "this_month":
+          periodStart = startOfMonth(now);
+          periodEnd = endOfMonth(now);
+          break;
+        case "next_month":
+          periodStart = startOfMonth(addMonths(now, 1));
+          periodEnd = endOfMonth(addMonths(now, 1));
+          break;
+        default:
+          periodStart = new Date(0);
+          periodEnd = new Date(9999, 11, 31);
+      }
+
+      const startStr = format(periodStart, "yyyy-MM-dd");
+      const endStr = format(periodEnd, "yyyy-MM-dd");
+      filtered = filtered.filter((t) => t.date >= startStr && t.date <= endStr);
+    }
+
     // Pro filters
     if (subscribed) {
       if (dateFrom) {
@@ -134,7 +165,7 @@ const Transactions = () => {
     }
 
     setFilteredTransactions(filtered);
-  }, [transactions, search, typeFilter, statusFilter, categoryFilter, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed]);
+  }, [transactions, search, typeFilter, statusFilter, categoryFilter, periodFilter, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed]);
 
   const categories = [...new Set(transactions.map((t) => t.category))];
 
@@ -555,7 +586,7 @@ const Transactions = () => {
             </div>
             
             {/* Basic Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -565,6 +596,17 @@ const Transactions = () => {
                   className="pl-10"
                 />
               </div>
+              <Select value={periodFilter} onValueChange={setPeriodFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Período" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os períodos</SelectItem>
+                  <SelectItem value="last_month">Mês passado</SelectItem>
+                  <SelectItem value="this_month">Este mês</SelectItem>
+                  <SelectItem value="next_month">Próximo mês</SelectItem>
+                </SelectContent>
+              </Select>
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="Tipo" />
