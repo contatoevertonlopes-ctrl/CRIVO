@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Search, Plus, Edit2, Trash2, ArrowLeft, Filter, Download, Lock, Crown, RefreshCw, Calendar } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
+import ImportTransactionsDialog from "@/components/ImportTransactionsDialog";
 
 interface Transaction {
   id: string;
@@ -432,7 +433,8 @@ const Transactions = () => {
                 Gerencie todas as suas entradas e saídas
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <ImportTransactionsDialog onSuccess={fetchTransactions} />
               <Button variant="outline" onClick={exportToCSV} className="gap-2">
                 <Download className="w-4 h-4" />
                 Exportar CSV

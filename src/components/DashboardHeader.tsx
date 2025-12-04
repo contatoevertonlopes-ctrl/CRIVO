@@ -1,3 +1,5 @@
+import NotificationsDropdown from "./NotificationsDropdown";
+
 const DashboardHeader = () => {
   return (
     <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -8,6 +10,7 @@ const DashboardHeader = () => {
         </p>
       </div>
       <div className="flex items-center gap-3 flex-wrap">
+        <NotificationsDropdown />
         <button className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-border/50 bg-secondary/60 text-[13px] text-muted-foreground hover:border-border hover:text-foreground transition-all">
           <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
           Período: Últimos 30 dias
