@@ -1,19 +1,54 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Loader2, Crown, Settings } from "lucide-react";
+import { toast } from "sonner";
 
 const Plans = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { subscribed, planType, loading, createCheckout, openCustomerPortal, checkSubscription } = useSubscription();
 
-  const handleSelectPlan = (plan: string) => {
+  useEffect(() => {
+    if (searchParams.get("success") === "true") {
+      toast.success("Assinatura realizada com sucesso!");
+      checkSubscription();
+    } else if (searchParams.get("canceled") === "true") {
+      toast.info("Checkout cancelado.");
+    }
+  }, [searchParams, checkSubscription]);
+
+  const handleSelectPlan = async (plan: string) => {
     if (!user) {
       navigate("/auth");
       return;
     }
-    // TODO: Implement payment flow
-    console.log("Selected plan:", plan);
+
+    if (plan === "free") {
+      navigate("/");
+      return;
+    }
+
+    const priceType = plan === "monthly" ? "monthly" : "annual";
+    const url = await createCheckout(priceType);
+    
+    if (url) {
+      window.open(url, "_blank");
+    } else {
+      toast.error("Erro ao iniciar checkout. Tente novamente.");
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    const url = await openCustomerPortal();
+    if (url) {
+      window.open(url, "_blank");
+    } else {
+      toast.error("Erro ao abrir portal. Tente novamente.");
+    }
   };
 
   const features = [
@@ -26,6 +61,13 @@ const Plans = () => {
     "Múltiplas contas",
     "Backup automático",
   ];
+
+  const isCurrentPlan = (plan: string) => {
+    if (plan === "free" && !subscribed) return true;
+    if (plan === "monthly" && subscribed && planType === "monthly") return true;
+    if (plan === "annual" && subscribed && planType === "annual") return true;
+    return false;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-black p-4 lg:p-8">
@@ -51,13 +93,44 @@ const Plans = () => {
             Desbloqueie todo o potencial do FinTrack Pro com previsões avançadas,
             exportação de dados e integrações automáticas.
           </p>
+
+          {subscribed && (
+            <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/50 text-primary">
+              <Crown className="w-4 h-4" />
+              <span className="text-sm font-medium">
+                Você é assinante Pro {planType === "annual" ? "Anual" : "Mensal"}
+              </span>
+            </div>
+          )}
         </div>
+
+        {/* Manage Subscription Button */}
+        {subscribed && (
+          <div className="flex justify-center mb-8">
+            <Button
+              variant="outline"
+              onClick={handleManageSubscription}
+              className="gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Gerenciar Assinatura
+            </Button>
+          </div>
+        )}
 
         {/* Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {/* Free Plan */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-6">
+          <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-bl from-background to-black border ${isCurrentPlan("free") ? "border-primary/60" : "border-secondary"} shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-6`}>
             <div className="absolute inset-[-40%] bg-[radial-gradient(circle_at_0%_0%,rgba(148,163,184,0.05),transparent_55%)] pointer-events-none"></div>
+            
+            {isCurrentPlan("free") && (
+              <div className="absolute top-4 right-4">
+                <span className="text-[11px] px-3 py-1 rounded-full bg-primary/20 border border-primary/50 text-green-200">
+                  Seu plano
+                </span>
+              </div>
+            )}
             
             <div className="relative z-10">
               <h3 className="text-lg font-semibold mb-2">Gratuito</h3>
@@ -73,8 +146,9 @@ const Plans = () => {
                 variant="outline"
                 className="w-full mb-6"
                 onClick={() => handleSelectPlan("free")}
+                disabled={isCurrentPlan("free")}
               >
-                Começar grátis
+                {isCurrentPlan("free") ? "Plano atual" : "Começar grátis"}
               </Button>
 
               <ul className="space-y-3">
@@ -89,8 +163,16 @@ const Plans = () => {
           </div>
 
           {/* Monthly Plan */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-6">
+          <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-bl from-background to-black border ${isCurrentPlan("monthly") ? "border-primary/60" : "border-secondary"} shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-6`}>
             <div className="absolute inset-[-40%] bg-[radial-gradient(circle_at_0%_0%,rgba(34,197,94,0.08),transparent_55%)] pointer-events-none"></div>
+            
+            {isCurrentPlan("monthly") && (
+              <div className="absolute top-4 right-4">
+                <span className="text-[11px] px-3 py-1 rounded-full bg-primary/20 border border-primary/50 text-green-200">
+                  Seu plano
+                </span>
+              </div>
+            )}
             
             <div className="relative z-10">
               <h3 className="text-lg font-semibold mb-2">Mensal</h3>
@@ -106,8 +188,15 @@ const Plans = () => {
                 variant="outline"
                 className="w-full mb-6 border-primary/50 hover:bg-primary/10"
                 onClick={() => handleSelectPlan("monthly")}
+                disabled={loading || isCurrentPlan("monthly")}
               >
-                Assinar mensal
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : isCurrentPlan("monthly") ? (
+                  "Plano atual"
+                ) : (
+                  "Assinar mensal"
+                )}
               </Button>
 
               <ul className="space-y-3">
@@ -122,13 +211,13 @@ const Plans = () => {
           </div>
 
           {/* Annual Plan */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-bl from-background to-black border border-primary/60 shadow-[0_0_60px_rgba(34,197,94,0.25)] p-6">
+          <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-bl from-background to-black border ${isCurrentPlan("annual") ? "border-primary" : "border-primary/60"} shadow-[0_0_60px_rgba(34,197,94,0.25)] p-6`}>
             <div className="absolute inset-[-40%] bg-[radial-gradient(circle_at_0%_0%,rgba(34,197,94,0.12),transparent_55%),radial-gradient(circle_at_100%_0,rgba(59,130,246,0.1),transparent_52%)] pointer-events-none"></div>
             
             {/* Popular badge */}
             <div className="absolute top-4 right-4">
               <span className="text-[11px] px-3 py-1 rounded-full bg-primary/20 border border-primary/50 text-green-200">
-                Mais popular
+                {isCurrentPlan("annual") ? "Seu plano" : "Mais popular"}
               </span>
             </div>
             
@@ -148,8 +237,15 @@ const Plans = () => {
               <Button
                 className="w-full mb-6 bg-gradient-to-r from-primary to-green-600 text-primary-foreground shadow-[0_8px_25px_rgba(34,197,94,0.5)] hover:shadow-[0_8px_30px_rgba(34,197,94,0.6)]"
                 onClick={() => handleSelectPlan("annual")}
+                disabled={loading || isCurrentPlan("annual")}
               >
-                Assinar anual ⭐
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : isCurrentPlan("annual") ? (
+                  "Plano atual"
+                ) : (
+                  "Assinar anual ⭐"
+                )}
               </Button>
 
               <ul className="space-y-3">
