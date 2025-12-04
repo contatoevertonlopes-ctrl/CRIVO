@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import Sidebar from "@/components/Sidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 import MetricCard from "@/components/MetricCard";
@@ -9,8 +11,16 @@ import TransactionsTable from "@/components/TransactionsTable";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 const Index = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [period, setPeriod] = useState(30);
   const { metrics, cashflowData, expensesByCategory, refetch } = useDashboardData(period);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth");
+    }
+  }, [user, loading, navigate]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -23,6 +33,18 @@ const Index = () => {
     const sign = value >= 0 ? "+" : "";
     return `${sign}${value.toFixed(1)}%`;
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Carregando...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen">
