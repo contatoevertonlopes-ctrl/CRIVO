@@ -1,8 +1,9 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useSidebarContext } from "@/contexts/SidebarContext";
-import { ChevronLeft, ChevronRight, LayoutDashboard, ArrowRightLeft, BarChart3, Settings, Crown, Shield } from "lucide-react";
+import { ChevronLeft, ChevronRight, LayoutDashboard, ArrowRightLeft, BarChart3, Settings, Crown, Shield, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Sidebar = () => {
@@ -10,6 +11,7 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
+  const { subscribed } = useSubscription();
   const { collapsed, toggle } = useSidebarContext();
 
   const navItems = [
@@ -125,24 +127,61 @@ const Sidebar = () => {
         {/* Bottom section */}
         <div className="mt-auto pt-3 border-t border-sidebar-border flex flex-col gap-3">
           {user ? (
-            <>
-              <div 
-                className={cn(
-                  "inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/40 bg-primary/10 text-[11px] text-green-200 cursor-pointer hover:bg-primary/20 transition-colors",
-                  collapsed && "justify-center px-2"
+            subscribed ? (
+              <>
+                <div 
+                  className={cn(
+                    "inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/40 bg-primary/10 text-[11px] text-green-200 cursor-pointer hover:bg-primary/20 transition-colors",
+                    collapsed && "justify-center px-2"
+                  )}
+                  onClick={() => navigate("/plans")}
+                  title={collapsed ? "Plano Pro Ativo" : undefined}
+                >
+                  <Crown className="w-4 h-4 shrink-0" />
+                  {!collapsed && <span>Plano Pro Ativo</span>}
+                </div>
+                {!collapsed && (
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Visualize fluxo de caixa, recorrências e previsões em tempo real.
+                  </p>
                 )}
+              </>
+            ) : (
+              /* Pro Offer for non-subscribers */
+              <div 
                 onClick={() => navigate("/plans")}
-                title={collapsed ? "Plano Pro" : undefined}
+                className={cn(
+                  "relative overflow-hidden rounded-xl cursor-pointer transition-all hover:scale-[1.02]",
+                  collapsed 
+                    ? "p-2 bg-gradient-to-b from-primary/20 to-primary/5 border border-primary/40" 
+                    : "p-3 bg-gradient-to-b from-primary/15 to-transparent border border-primary/40 shadow-[0_0_30px_rgba(34,197,94,0.2)]"
+                )}
+                title={collapsed ? "Assinar Pro" : undefined}
               >
-                <Crown className="w-4 h-4 shrink-0" />
-                {!collapsed && <span>Plano Premium Ativo</span>}
+                {collapsed ? (
+                  <div className="flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      <span className="text-xs font-semibold text-foreground">Assine o Pro</span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mb-2 leading-relaxed">
+                      Desbloqueie recorrências, filtros avançados e muito mais.
+                    </p>
+                    <div className="flex items-baseline gap-1 mb-2">
+                      <span className="text-sm font-bold text-primary">R$ 29</span>
+                      <span className="text-[10px] text-muted-foreground">/ mês</span>
+                    </div>
+                    <div className="text-[10px] text-center py-1.5 rounded-full bg-primary/20 text-primary font-medium">
+                      Ver planos →
+                    </div>
+                  </>
+                )}
               </div>
-              {!collapsed && (
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Visualize fluxo de caixa, recorrências e previsões em tempo real.
-                </p>
-              )}
-            </>
+            )
           ) : (
             <button
               onClick={() => navigate("/auth")}
