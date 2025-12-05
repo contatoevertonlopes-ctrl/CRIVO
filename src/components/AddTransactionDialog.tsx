@@ -39,6 +39,8 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   const [amount, setAmount] = useState("");
   const [status, setStatus] = useState("em_aberto");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [paidDate, setPaidDate] = useState("");
+  const [tag, setTag] = useState("");
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringInterval, setRecurringInterval] = useState("monthly");
 
@@ -63,6 +65,10 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
         amount: parseFloat(amount),
         status,
         date,
+        paid_date: paidDate || null,
+        tag: tag || null,
+        is_recurring: subscribed ? isRecurring : false,
+        recurring_interval: isRecurring ? recurringInterval : null,
       });
 
       if (error) throw error;
@@ -79,6 +85,8 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
       setAmount("");
       setStatus("em_aberto");
       setDate(new Date().toISOString().split("T")[0]);
+      setPaidDate("");
+      setTag("");
       setIsRecurring(false);
       setRecurringInterval("monthly");
       setOpen(false);
@@ -193,16 +201,43 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="date">Data de Vencimento</Label>
+              <Input
+                id="date"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+                className="bg-secondary/50 border-border/50"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="paidDate">Data de Pagamento</Label>
+              <Input
+                id="paidDate"
+                type="date"
+                value={paidDate}
+                onChange={(e) => setPaidDate(e.target.value)}
+                className="bg-secondary/50 border-border/50"
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="date">Data</Label>
-            <Input
-              id="date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-              className="bg-secondary/50 border-border/50"
-            />
+            <Label htmlFor="tag">Tag</Label>
+            <Select value={tag} onValueChange={setTag}>
+              <SelectTrigger className="bg-secondary/50 border-border/50">
+                <SelectValue placeholder="Selecione uma tag (opcional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fixa">Fixa</SelectItem>
+                <SelectItem value="variavel">Variável</SelectItem>
+                <SelectItem value="esporadica">Esporádica</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Recurring Transaction - Pro Feature */}
