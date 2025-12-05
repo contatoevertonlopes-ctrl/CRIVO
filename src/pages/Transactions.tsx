@@ -14,6 +14,7 @@ import { Search, Plus, Edit2, Trash2, ArrowLeft, Filter, Download, Lock, Crown, 
 import TransactionForm from "@/components/TransactionForm";
 import Sidebar from "@/components/Sidebar";
 import ImportTransactionsDialog from "@/components/ImportTransactionsDialog";
+import TransactionCard from "@/components/TransactionCard";
 import { startOfMonth, endOfMonth, subMonths, addMonths, format } from "date-fns";
 
 interface Transaction {
@@ -404,21 +405,45 @@ const Transactions = () => {
       <main className="flex-1 p-4 lg:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 sm:mb-8 pl-12 lg:pl-0">
-            <div>
-              <button
-                onClick={() => navigate("/")}
-                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span className="text-sm">Voltar</span>
-              </button>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Transações</h1>
-              <p className="text-muted-foreground text-xs sm:text-sm mt-1">
-                Gerencie suas entradas e saídas
-              </p>
+          <div className="flex flex-col gap-4 mb-4 sm:mb-8 pl-12 lg:pl-0">
+            <div className="flex items-start justify-between">
+              <div>
+                <button
+                  onClick={() => navigate("/")}
+                  className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span className="text-sm">Voltar</span>
+                </button>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Transações</h1>
+                <p className="text-muted-foreground text-xs sm:text-sm mt-1 hidden sm:block">
+                  Gerencie suas entradas e saídas
+                </p>
+              </div>
+              {/* Mobile: only add button */}
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} modal={false}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90 sm:hidden" onClick={resetForm}>
+                    <Plus className="w-4 h-4" />
+                    <span className="sr-only sm:not-sr-only">Nova</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] sm:max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Adicionar Transação</DialogTitle>
+                  </DialogHeader>
+                  <TransactionForm 
+                    formData={formData} 
+                    setFormData={setFormData} 
+                    onSubmit={handleAdd} 
+                    submitLabel="Adicionar" 
+                    subscribed={subscribed} 
+                  />
+                </DialogContent>
+              </Dialog>
             </div>
-            <div className="flex gap-2 flex-wrap">
+            {/* Desktop actions */}
+            <div className="hidden sm:flex gap-2 flex-wrap">
               <ImportTransactionsDialog onSuccess={fetchTransactions} />
               <Button variant="outline" onClick={exportToCSV} className="gap-2">
                 <Download className="w-4 h-4" />
@@ -467,113 +492,75 @@ const Transactions = () => {
 
           {/* Filters */}
           <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4 mb-4 sm:mb-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="flex items-center gap-2">
                 <Filter className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Filtros</span>
+                <span className="text-xs sm:text-sm font-medium">Filtros</span>
               </div>
               <button
                 onClick={() => setShowProFilters(!showProFilters)}
-                className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                className={`flex items-center gap-1.5 text-[10px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border transition-colors ${
                   subscribed 
                     ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20" 
                     : "border-border bg-secondary/50 text-muted-foreground"
                 }`}
               >
                 {subscribed ? <Crown className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
-                Filtros Pro
+                <span className="hidden sm:inline">Filtros</span> Pro
               </button>
             </div>
             
             {/* Basic Filters */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
-              <div className="relative col-span-2 sm:col-span-1">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-5 md:gap-4">
+              <div className="relative col-span-2">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-9 sm:h-10 text-sm"
                 />
               </div>
               <Select value={periodFilter} onValueChange={setPeriodFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                   <SelectValue placeholder="Período" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os períodos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="last_month">Mês passado</SelectItem>
                   <SelectItem value="this_month">Este mês</SelectItem>
                   <SelectItem value="next_month">Próximo mês</SelectItem>
                   <SelectItem value="custom">Personalizado</SelectItem>
                 </SelectContent>
               </Select>
-              
-              {periodFilter === "custom" && (
-                <div className="md:col-span-4 flex flex-col md:flex-row gap-4 mt-2 md:mt-0 items-center">
-                  <div className="flex items-center gap-2 flex-1">
-                    <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type="date"
-                      value={customDateFrom}
-                      onChange={(e) => setCustomDateFrom(e.target.value)}
-                      placeholder="Data inicial"
-                      className="flex-1"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2 flex-1">
-                    <span className="text-muted-foreground text-sm">até</span>
-                    <Input
-                      type="date"
-                      value={customDateTo}
-                      onChange={(e) => setCustomDateTo(e.target.value)}
-                      placeholder="Data final"
-                      className="flex-1"
-                    />
-                  </div>
-                  {(customDateFrom || customDateTo) && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setCustomDateFrom("");
-                        setCustomDateTo("");
-                      }}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      Limpar
-                    </Button>
-                  )}
-                </div>
-              )}
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                   <SelectValue placeholder="Tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os tipos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="income">Entradas</SelectItem>
                   <SelectItem value="expense">Saídas</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="em_aberto">Em aberto</SelectItem>
                   <SelectItem value="a_vencer">A vencer</SelectItem>
                   <SelectItem value="vencido">Vencido</SelectItem>
-                  <SelectItem value="pagamento_concluido">Pagamento concluído</SelectItem>
+                  <SelectItem value="pagamento_concluido">Pago</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                   <SelectValue placeholder="Categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas as categorias</SelectItem>
+                  <SelectItem value="all">Todas</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat} value={cat}>
                       {cat}
@@ -582,6 +569,42 @@ const Transactions = () => {
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* Custom period dates */}
+            {periodFilter === "custom" && (
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:gap-4 mt-3 items-center">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-muted-foreground hidden sm:block" />
+                  <Input
+                    type="date"
+                    value={customDateFrom}
+                    onChange={(e) => setCustomDateFrom(e.target.value)}
+                    className="h-9 sm:h-10 text-xs sm:text-sm"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="date"
+                    value={customDateTo}
+                    onChange={(e) => setCustomDateTo(e.target.value)}
+                    className="h-9 sm:h-10 text-xs sm:text-sm"
+                  />
+                </div>
+                {(customDateFrom || customDateTo) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setCustomDateFrom("");
+                      setCustomDateTo("");
+                    }}
+                    className="col-span-2 sm:col-auto text-muted-foreground hover:text-foreground h-9"
+                  >
+                    Limpar
+                  </Button>
+                )}
+              </div>
+            )}
 
             {/* Pro Filters */}
             {showProFilters && (
@@ -667,101 +690,117 @@ const Transactions = () => {
             )}
           </div>
 
-          {/* Transactions Table */}
-          <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] overflow-hidden">
+          {/* Transactions List */}
+          <div className="rounded-xl sm:rounded-2xl lg:rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] overflow-hidden">
             {loading ? (
-              <div className="text-center py-12 text-muted-foreground">Carregando...</div>
+              <div className="text-center py-12 text-muted-foreground text-sm">Carregando...</div>
             ) : filteredTransactions.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
+              <div className="text-center py-12 text-muted-foreground text-sm">
                 Nenhuma transação encontrada
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs sm:text-sm min-w-[700px]">
-                  <thead>
-                    <tr className="text-muted-foreground border-b border-secondary bg-secondary/30">
-                      <th className="text-left py-3 sm:py-4 px-3 sm:px-4 font-medium">Data</th>
-                      <th className="text-left py-3 sm:py-4 px-3 sm:px-4 font-medium">Descrição</th>
-                      <th className="text-left py-3 sm:py-4 px-3 sm:px-4 font-medium">Categoria</th>
-                      <th className="text-left py-3 sm:py-4 px-3 sm:px-4 font-medium">Tipo</th>
-                      <th className="text-left py-3 sm:py-4 px-3 sm:px-4 font-medium">Valor</th>
-                      <th className="text-left py-3 sm:py-4 px-3 sm:px-4 font-medium">Status</th>
-                      <th className="text-left py-3 sm:py-4 px-3 sm:px-4 font-medium">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredTransactions.map((transaction) => (
-                      <tr
-                        key={transaction.id}
-                        className="border-b border-secondary/50 hover:bg-secondary/30 transition-colors"
-                      >
-                        <td className="py-3 sm:py-4 px-3 sm:px-4 whitespace-nowrap">{formatDate(transaction.date)}</td>
-                        <td className="py-3 sm:py-4 px-3 sm:px-4 font-medium">
-                          <div className="flex items-center gap-2">
-                            <span className="truncate max-w-[150px]">{transaction.description}</span>
-                            {transaction.is_recurring && (
-                              <span title="Recorrente">
-                                <RefreshCw className="w-3 h-3 text-primary shrink-0" />
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3 sm:py-4 px-3 sm:px-4">{transaction.category}</td>
-                        <td className="py-3 sm:py-4 px-3 sm:px-4">
-                          <span
-                            className={`inline-flex items-center justify-center text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full ${
-                              transaction.type === "income"
-                                ? "bg-primary/14 text-green-200"
-                                : "bg-destructive/10 text-red-200"
-                            }`}
-                          >
-                            {transaction.type === "income" ? "Entrada" : "Saída"}
-                          </span>
-                        </td>
-                        <td className="py-3 sm:py-4 px-3 sm:px-4 whitespace-nowrap">{formatCurrency(transaction.amount)}</td>
-                        <td className="py-3 sm:py-4 px-3 sm:px-4">
-                          <span
-                            className={`inline-flex items-center justify-center text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap ${getStatusStyle(transaction.status)}`}
-                          >
-                            {getStatusLabel(transaction.status)}
-                          </span>
-                        </td>
-                        <td className="py-3 sm:py-4 px-3 sm:px-4">
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => handleDuplicate(transaction)}
-                              className="p-1 sm:p-1.5 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
-                              title="Duplicar"
-                            >
-                              <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            </button>
-                            <button
-                              onClick={() => openEditDialog(transaction)}
-                              className="p-1 sm:p-1.5 rounded-lg hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors"
-                              title="Editar"
-                            >
-                              <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(transaction.id)}
-                              className="p-1 sm:p-1.5 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
-                              title="Excluir"
-                            >
-                              <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            </button>
-                          </div>
-                        </td>
+              <>
+                {/* Mobile: Card view */}
+                <div className="md:hidden">
+                  {filteredTransactions.map((transaction) => (
+                    <TransactionCard
+                      key={transaction.id}
+                      transaction={transaction}
+                      onEdit={openEditDialog}
+                      onDelete={handleDelete}
+                      onDuplicate={handleDuplicate}
+                    />
+                  ))}
+                </div>
+                
+                {/* Desktop: Table view */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-muted-foreground border-b border-secondary bg-secondary/30">
+                        <th className="text-left py-4 px-4 font-medium">Data</th>
+                        <th className="text-left py-4 px-4 font-medium">Descrição</th>
+                        <th className="text-left py-4 px-4 font-medium">Categoria</th>
+                        <th className="text-left py-4 px-4 font-medium">Tipo</th>
+                        <th className="text-left py-4 px-4 font-medium">Valor</th>
+                        <th className="text-left py-4 px-4 font-medium">Status</th>
+                        <th className="text-left py-4 px-4 font-medium">Ações</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {filteredTransactions.map((transaction) => (
+                        <tr
+                          key={transaction.id}
+                          className="border-b border-secondary/50 hover:bg-secondary/30 transition-colors"
+                        >
+                          <td className="py-4 px-4 whitespace-nowrap">{formatDate(transaction.date)}</td>
+                          <td className="py-4 px-4 font-medium">
+                            <div className="flex items-center gap-2">
+                              <span className="truncate max-w-[200px]">{transaction.description}</span>
+                              {transaction.is_recurring && (
+                                <span title="Recorrente">
+                                  <RefreshCw className="w-3 h-3 text-primary shrink-0" />
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">{transaction.category}</td>
+                          <td className="py-4 px-4">
+                            <span
+                              className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full ${
+                                transaction.type === "income"
+                                  ? "bg-primary/14 text-green-200"
+                                  : "bg-destructive/10 text-red-200"
+                              }`}
+                            >
+                              {transaction.type === "income" ? "Entrada" : "Saída"}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4 whitespace-nowrap">{formatCurrency(transaction.amount)}</td>
+                          <td className="py-4 px-4">
+                            <span
+                              className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap ${getStatusStyle(transaction.status)}`}
+                            >
+                              {getStatusLabel(transaction.status)}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleDuplicate(transaction)}
+                                className="p-1.5 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
+                                title="Duplicar"
+                              >
+                                <Copy className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => openEditDialog(transaction)}
+                                className="p-1.5 rounded-lg hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors"
+                                title="Editar"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(transaction.id)}
+                                className="p-1.5 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+                                title="Excluir"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
 
           {/* Edit Dialog */}
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} modal={false}>
-            <DialogContent>
+            <DialogContent className="max-w-[95vw] sm:max-w-lg">
               <DialogHeader>
                 <DialogTitle>Editar Transação</DialogTitle>
               </DialogHeader>
