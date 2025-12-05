@@ -34,6 +34,26 @@ const Index = () => {
     return `${sign}${value.toFixed(1)}%`;
   };
 
+  const getPeriodLabel = () => {
+    switch (period) {
+      case 7: return "últimos 7 dias";
+      case 30: return "últimos 30 dias";
+      case 90: return "últimos 90 dias";
+      case 365: return "último ano";
+      default: return `últimos ${period} dias`;
+    }
+  };
+
+  const getPreviousPeriodLabel = () => {
+    switch (period) {
+      case 7: return "vs. semana anterior";
+      case 30: return "vs. mês anterior";
+      case 90: return "vs. trimestre anterior";
+      case 365: return "vs. ano anterior";
+      default: return `vs. período anterior`;
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -59,21 +79,21 @@ const Index = () => {
             title="Saldo atual"
             value={formatCurrency(metrics.currentBalance)}
             pill="Conta consolidada"
-            trend={`${formatPercent(metrics.balanceChange)} vs mês passado`}
+            trend={`${formatPercent(metrics.balanceChange)} ${getPreviousPeriodLabel()}`}
             trendUp={metrics.balanceChange >= 0}
           />
           <MetricCard
-            title="Entradas no mês"
+            title={`Entradas (${getPeriodLabel()})`}
             value={formatCurrency(metrics.monthlyIncome)}
             pill="Receitas"
-            trend={`${formatPercent(metrics.incomeChange)} vs. mês passado`}
+            trend={`${formatPercent(metrics.incomeChange)} ${getPreviousPeriodLabel()}`}
             trendUp={metrics.incomeChange >= 0}
           />
           <MetricCard
-            title="Saídas no mês"
+            title={`Saídas (${getPeriodLabel()})`}
             value={formatCurrency(metrics.monthlyExpenses)}
             pill="Despesas"
-            trend={`${formatPercent(metrics.expenseChange)} vs. mês passado`}
+            trend={`${formatPercent(metrics.expenseChange)} ${getPreviousPeriodLabel()}`}
             trendUp={metrics.expenseChange <= 0}
           />
           <MetricCard

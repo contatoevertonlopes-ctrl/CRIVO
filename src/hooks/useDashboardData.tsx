@@ -60,9 +60,9 @@ export const useDashboardData = (period: number = 30) => {
     try {
       // Get current date info
       const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+      const periodStartDate = new Date(now.getTime() - period * 24 * 60 * 60 * 1000);
+      const previousPeriodStart = new Date(now.getTime() - period * 2 * 24 * 60 * 60 * 1000);
+      const previousPeriodEnd = new Date(now.getTime() - period * 24 * 60 * 60 * 1000);
       const futureDate = new Date(now.getTime() + period * 24 * 60 * 60 * 1000);
 
       // Fetch all transactions
@@ -76,29 +76,34 @@ export const useDashboardData = (period: number = 30) => {
 
       const allTransactions = (transactions as Transaction[]) || [];
 
-      // Calculate metrics
-      const currentMonthTransactions = allTransactions.filter(
-        (t) => new Date(t.date) >= startOfMonth
+      // Filter transactions for current period (last X days)
+      const currentPeriodTransactions = allTransactions.filter(
+        (t) => new Date(t.date + "T00:00:00") >= periodStartDate
       );
-      const lastMonthTransactions = allTransactions.filter(
-        (t) => new Date(t.date) >= startOfLastMonth && new Date(t.date) <= endOfLastMonth
+      
+      // Filter transactions for previous period (for comparison)
+      const previousPeriodTransactions = allTransactions.filter(
+        (t) => {
+          const tDate = new Date(t.date + "T00:00:00");
+          return tDate >= previousPeriodStart && tDate < previousPeriodEnd;
+        }
       );
 
-      // Current month income/expenses
-      const monthlyIncome = currentMonthTransactions
+      // Current period income/expenses
+      const periodIncome = currentPeriodTransactions
         .filter((t) => t.type === "income" && (t.status === "pagamento_concluido" || t.status === "paid" || t.status === "confirmed"))
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
-      const monthlyExpenses = currentMonthTransactions
+      const periodExpenses = currentPeriodTransactions
         .filter((t) => t.type === "expense" && (t.status === "pagamento_concluido" || t.status === "paid" || t.status === "confirmed"))
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
-      // Last month for comparison
-      const lastMonthIncome = lastMonthTransactions
+      // Previous period for comparison
+      const previousPeriodIncome = previousPeriodTransactions
         .filter((t) => t.type === "income" && (t.status === "pagamento_concluido" || t.status === "paid" || t.status === "confirmed"))
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
-      const lastMonthExpenses = lastMonthTransactions
+      const previousPeriodExpenses = previousPeriodTransactions
         .filter((t) => t.type === "expense" && (t.status === "pagamento_concluido" || t.status === "paid" || t.status === "confirmed"))
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
@@ -113,10 +118,10 @@ export const useDashboardData = (period: number = 30) => {
 
       const currentBalance = totalIncome - totalExpenses;
 
-      // Future commitments (pending/upcoming transactions in next 30 days)
+      // Future commitments (pending/upcoming transactions in next X days)
       const futureCommitments = allTransactions
         .filter((t) => {
-          const tDate = new Date(t.date);
+          const tDate = new Date(t.date + "T00:00:00");
           return (
             t.type === "expense" &&
             (t.status === "em_aberto" || t.status === "a_vencer" || t.status === "pending") &&
@@ -132,26 +137,26 @@ export const useDashboardData = (period: number = 30) => {
           (t.status === "em_aberto" || t.status === "a_vencer" || t.status === "pending")
       ).length;
 
-      // Calculate changes
-      const lastMonthBalance = lastMonthIncome - lastMonthExpenses;
-      const currentMonthBalance = monthlyIncome - monthlyExpenses;
+      // Calculate changes compared to previous period
+      const previousBalance = previousPeriodIncome - previousPeriodExpenses;
+      const currentPeriodBalance = periodIncome - periodExpenses;
       const balanceChange =
-        lastMonthBalance !== 0
-          ? ((currentMonthBalance - lastMonthBalance) / Math.abs(lastMonthBalance)) * 100
+        previousBalance !== 0
+          ? ((currentPeriodBalance - previousBalance) / Math.abs(previousBalance)) * 100
           : 0;
       const incomeChange =
-        lastMonthIncome !== 0
-          ? ((monthlyIncome - lastMonthIncome) / lastMonthIncome) * 100
+        previousPeriodIncome !== 0
+          ? ((periodIncome - previousPeriodIncome) / previousPeriodIncome) * 100
           : 0;
       const expenseChange =
-        lastMonthExpenses !== 0
-          ? ((monthlyExpenses - lastMonthExpenses) / lastMonthExpenses) * 100
+        previousPeriodExpenses !== 0
+          ? ((periodExpenses - previousPeriodExpenses) / previousPeriodExpenses) * 100
           : 0;
 
       setMetrics({
         currentBalance,
-        monthlyIncome,
-        monthlyExpenses,
+        monthlyIncome: periodIncome,
+        monthlyExpenses: periodExpenses,
         futureCommitments,
         pendingCount,
         balanceChange,
@@ -191,7 +196,7 @@ export const useDashboardData = (period: number = 30) => {
 
       // Calculate expenses by category
       const categoryMap = new Map<string, number>();
-      currentMonthTransactions
+      currentPeriodTransactions
         .filter((t) => t.type === "expense")
         .forEach((t) => {
           const current = categoryMap.get(t.category) || 0;
