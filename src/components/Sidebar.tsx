@@ -51,7 +51,7 @@ const Sidebar = () => {
         {/* Logo */}
         <div className={cn("flex items-center gap-3 cursor-pointer", collapsed && "justify-center")} onClick={() => navigate("/")}>
           <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-primary via-primary to-green-900 flex items-center justify-center font-bold text-lg shadow-[0_0_40px_rgba(34,197,94,0.7)] shrink-0">
-            F
+            ​cw
           </div>
           {!collapsed && <div className="flex flex-col gap-0.5">
               <div className="text-base font-bold tracking-tight">Cloud Track </div>
