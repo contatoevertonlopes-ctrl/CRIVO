@@ -619,7 +619,7 @@ const Transactions = () => {
               </Select>
               
               {periodFilter === "custom" && (
-                <div className="md:col-span-4 flex flex-col md:flex-row gap-4 mt-2 md:mt-0">
+                <div className="md:col-span-4 flex flex-col md:flex-row gap-4 mt-2 md:mt-0 items-center">
                   <div className="flex items-center gap-2 flex-1">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
                     <Input
@@ -640,6 +640,19 @@ const Transactions = () => {
                       className="flex-1"
                     />
                   </div>
+                  {(customDateFrom || customDateTo) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setCustomDateFrom("");
+                        setCustomDateTo("");
+                      }}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      Limpar
+                    </Button>
+                  )}
                 </div>
               )}
               <Select value={typeFilter} onValueChange={setTypeFilter}>
