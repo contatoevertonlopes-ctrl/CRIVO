@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.create-coupon]
 verify_jwt = false
+
+[functions.get-prices]
+verify_jwt = false
