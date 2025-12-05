@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -440,7 +440,7 @@ const Transactions = () => {
                 </p>
               </div>
               {/* Mobile: only add button */}
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} modal={false}>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90 sm:hidden" onClick={resetForm}>
                     <Plus className="w-4 h-4" />
@@ -450,6 +450,7 @@ const Transactions = () => {
                 <DialogContent className="max-w-[95vw] sm:max-w-lg">
                   <DialogHeader>
                     <DialogTitle>Adicionar Transação</DialogTitle>
+                    <DialogDescription>Preencha os campos para adicionar uma nova transação.</DialogDescription>
                   </DialogHeader>
                   <TransactionForm 
                     formData={formData} 
@@ -468,7 +469,7 @@ const Transactions = () => {
                 <Download className="w-4 h-4" />
                 Exportar CSV
               </Button>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} modal={false}>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="gap-2 bg-primary hover:bg-primary/90" onClick={resetForm}>
                     <Plus className="w-4 h-4" />
@@ -478,6 +479,7 @@ const Transactions = () => {
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Adicionar Transação</DialogTitle>
+                    <DialogDescription>Preencha os campos para adicionar uma nova transação.</DialogDescription>
                   </DialogHeader>
                   <TransactionForm 
                     formData={formData} 
