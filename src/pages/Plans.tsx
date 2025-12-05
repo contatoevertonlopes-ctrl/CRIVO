@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { usePrices } from "@/hooks/usePrices";
 import { Button } from "@/components/ui/button";
 import { Check, Loader2, Crown, Settings } from "lucide-react";
 import { toast } from "sonner";
@@ -11,6 +12,7 @@ const Plans = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { subscribed, planType, loading, createCheckout, openCustomerPortal, checkSubscription } = useSubscription();
+  const { prices, formatPrice } = usePrices();
 
   useEffect(() => {
     if (searchParams.get("success") === "true") {
@@ -177,7 +179,7 @@ const Plans = () => {
             <div className="relative z-10">
               <h3 className="text-base sm:text-lg font-semibold mb-2">Mensal</h3>
               <div className="flex items-baseline gap-1 mb-3 sm:mb-4">
-                <span className="text-2xl sm:text-3xl font-bold">R$ 15,90</span>
+                <span className="text-2xl sm:text-3xl font-bold">R$ {formatPrice(prices.monthly.amount)}</span>
                 <span className="text-sm text-muted-foreground">/ mês</span>
               </div>
               <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6">
@@ -224,11 +226,11 @@ const Plans = () => {
             <div className="relative z-10">
               <h3 className="text-base sm:text-lg font-semibold mb-2">Anual</h3>
               <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-2xl sm:text-3xl font-bold">R$ 139</span>
+                <span className="text-2xl sm:text-3xl font-bold">R$ {formatPrice(prices.annual.amount)}</span>
                 <span className="text-sm text-muted-foreground">/ ano</span>
               </div>
               <p className="text-[10px] sm:text-xs text-primary mb-3 sm:mb-4">
-                Equivale a ~R$ 11,58/mês • Economize 27%
+                Equivale a ~R$ {formatPrice(prices.annual.monthlyEquivalent)}/mês • Economize {prices.annual.savings}%
               </p>
               <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6">
                 Perfeito para quem leva os números a sério.
