@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Upload, FileText, AlertCircle, Settings2 } from "lucide-react";
+import { Upload, FileText, AlertCircle, Settings2, Eye, EyeOff } from "lucide-react";
 
 interface ImportTransactionsDialogProps {
   onSuccess: () => void;
@@ -60,6 +60,9 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     category: "",
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [rawContent, setRawContent] = useState<string>("");
+  const [showRawPreview, setShowRawPreview] = useState(false);
+  const [fileType, setFileType] = useState<"csv" | "ofx" | "">("");
 
   const parseCSVWithMapping = (headers: string[], data: string[][], mapping: ColumnMapping): ParsedTransaction[] => {
     const transactions: ParsedTransaction[] = [];
@@ -288,14 +291,18 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     setPreview([]);
     setCsvHeaders([]);
     setCsvData([]);
+    setShowRawPreview(false);
     
     const content = await file.text();
+    setRawContent(content.substring(0, 3000)); // Store first 3000 chars for preview
     
     if (file.name.toLowerCase().endsWith(".csv")) {
+      setFileType("csv");
       const { headers, data } = parseCSVRaw(content);
       
       if (headers.length === 0 || data.length === 0) {
         toast.error("Arquivo CSV vazio ou inválido.");
+        setShowRawPreview(true);
         return;
       }
       
@@ -335,16 +342,19 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
       }
       
     } else if (file.name.toLowerCase().endsWith(".ofx") || file.name.toLowerCase().endsWith(".qfx")) {
+      setFileType("ofx");
       const parsed = parseOFX(content);
       
       if (parsed.length === 0) {
         toast.error("Nenhuma transação encontrada no arquivo.");
+        setShowRawPreview(true);
         return;
       }
       
       setPreview(parsed.slice(0, 10));
       toast.success(`${parsed.length} transações encontradas`);
     } else {
+      setFileType("");
       toast.error("Formato não suportado. Use CSV ou OFX.");
     }
   };
@@ -451,6 +461,9 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     setCsvHeaders([]);
     setCsvData([]);
     setShowMapping(false);
+    setRawContent("");
+    setShowRawPreview(false);
+    setFileType("");
     setColumnMapping({ date: "", description: "", amount: "", credit: "", debit: "", category: "" });
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -514,6 +527,85 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
               </label>
             </div>
           </div>
+
+          {/* Raw File Preview Section */}
+          {rawContent && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2 text-sm">
+                  <Eye className="w-4 h-4" />
+                  Estrutura do Arquivo
+                </Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowRawPreview(!showRawPreview)}
+                  className="text-xs gap-1"
+                >
+                  {showRawPreview ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                  {showRawPreview ? "Ocultar" : "Mostrar"}
+                </Button>
+              </div>
+              
+              {showRawPreview && (
+                <div className="p-3 rounded-xl border border-border bg-secondary/10 space-y-3">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="px-2 py-0.5 rounded bg-primary/20 text-primary font-medium uppercase">
+                      {fileType || "arquivo"}
+                    </span>
+                    <span>{fileName}</span>
+                  </div>
+                  
+                  {fileType === "csv" && csvHeaders.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Cabeçalhos detectados:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {csvHeaders.map((header, i) => (
+                          <span 
+                            key={i} 
+                            className="px-2 py-1 text-xs rounded bg-secondary border border-border"
+                          >
+                            {header}
+                          </span>
+                        ))}
+                      </div>
+                      {csvData.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-xs font-medium text-muted-foreground mb-1">
+                            Primeiras {Math.min(3, csvData.length)} linhas de dados:
+                          </p>
+                          <div className="overflow-x-auto">
+                            <table className="text-xs w-full border-collapse">
+                              <tbody>
+                                {csvData.slice(0, 3).map((row, i) => (
+                                  <tr key={i} className="border-b border-border/50">
+                                    {row.slice(0, 6).map((cell, j) => (
+                                      <td key={j} className="px-2 py-1 text-muted-foreground max-w-[150px] truncate">
+                                        {cell || <span className="text-muted-foreground/50">vazio</span>}
+                                      </td>
+                                    ))}
+                                    {row.length > 6 && <td className="px-2 py-1 text-muted-foreground/50">...</td>}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground">Conteúdo bruto (primeiros 1000 caracteres):</p>
+                    <pre className="text-xs p-2 rounded bg-background border border-border overflow-x-auto max-h-40 overflow-y-auto whitespace-pre-wrap break-all font-mono">
+                      {rawContent.substring(0, 1000)}
+                      {rawContent.length > 1000 && "..."}
+                    </pre>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Column Mapping Section */}
           {csvHeaders.length > 0 && (
