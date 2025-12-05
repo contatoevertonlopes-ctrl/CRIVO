@@ -13,6 +13,7 @@ interface TransactionFormData {
   date: string;
   is_recurring: boolean;
   recurring_interval: string;
+  paid_date: string;
 }
 
 interface TransactionFormProps {
@@ -87,14 +88,25 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
           </Select>
         </div>
       </div>
-      <div className="space-y-2">
-        <Label>Data</Label>
-        <input
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-          type="date"
-          value={formData.date}
-          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Data de Vencimento</Label>
+          <input
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+            type="date"
+            value={formData.date}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Data de Pagamento</Label>
+          <input
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+            type="date"
+            value={formData.paid_date}
+            onChange={(e) => setFormData({ ...formData, paid_date: e.target.value })}
+          />
+        </div>
       </div>
       
       {/* Recurring Transaction - Pro Feature */}
