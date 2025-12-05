@@ -2,7 +2,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Lock } from "lucide-react";
+import { RefreshCw, Lock, Tag } from "lucide-react";
 
 interface TransactionFormData {
   description: string;
@@ -14,6 +14,7 @@ interface TransactionFormData {
   is_recurring: boolean;
   recurring_interval: string;
   paid_date: string;
+  tag: string;
 }
 
 interface TransactionFormProps {
@@ -107,6 +108,25 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
             onChange={(e) => setFormData({ ...formData, paid_date: e.target.value })}
           />
         </div>
+      </div>
+      
+      {/* Tag field */}
+      <div className="space-y-2">
+        <Label className="flex items-center gap-2">
+          <Tag className="w-4 h-4" />
+          Classificação
+        </Label>
+        <Select value={formData.tag || "none"} onValueChange={(v) => setFormData({ ...formData, tag: v === "none" ? "" : v })}>
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione uma classificação" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Nenhuma</SelectItem>
+            <SelectItem value="fixa">Fixa</SelectItem>
+            <SelectItem value="variavel">Variável</SelectItem>
+            <SelectItem value="esporadica">Esporádica</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       
       {/* Recurring Transaction - Pro Feature */}

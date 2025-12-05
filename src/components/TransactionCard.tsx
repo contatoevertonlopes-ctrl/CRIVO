@@ -11,6 +11,7 @@ interface Transaction {
   status: string;
   is_recurring?: boolean;
   paid_date?: string;
+  tag?: string;
 }
 
 interface TransactionCardProps {
@@ -34,29 +35,23 @@ const TransactionCard = ({ transaction, onEdit, onDelete, onDuplicate, onStatusC
     }).format(value);
   };
 
-  const getStatusLabel = (status: string) => {
-    const statusMap: Record<string, string> = {
-      em_aberto: "Em aberto",
-      a_vencer: "A vencer",
-      vencido: "Vencido",
-      pagamento_concluido: "Pago",
-      pending: "Em aberto",
-      confirmed: "Pago",
-      paid: "Pago",
+  const getTagLabel = (tag: string) => {
+    const tagMap: Record<string, string> = {
+      fixa: "Fixa",
+      variavel: "Variável",
+      esporadica: "Esporádica",
     };
-    return statusMap[status] || status;
+    return tagMap[tag] || tag;
   };
 
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "pagamento_concluido":
-      case "confirmed":
-      case "paid":
-        return "bg-primary/14 text-green-200";
-      case "a_vencer":
-        return "bg-warning/10 text-yellow-200";
-      case "vencido":
-        return "bg-destructive/10 text-red-200";
+  const getTagStyle = (tag: string) => {
+    switch (tag) {
+      case "fixa":
+        return "bg-blue-500/20 text-blue-300";
+      case "variavel":
+        return "bg-orange-500/20 text-orange-300";
+      case "esporadica":
+        return "bg-purple-500/20 text-purple-300";
       default:
         return "bg-secondary/50 text-muted-foreground";
     }
@@ -76,6 +71,14 @@ const TransactionCard = ({ transaction, onEdit, onDelete, onDuplicate, onStatusC
             <span>{formatDate(transaction.date)}</span>
             <span>•</span>
             <span>{transaction.category}</span>
+            {transaction.tag && (
+              <>
+                <span>•</span>
+                <span className={`px-1.5 py-0.5 rounded text-[10px] ${getTagStyle(transaction.tag)}`}>
+                  {getTagLabel(transaction.tag)}
+                </span>
+              </>
+            )}
             {transaction.paid_date && (
               <>
                 <span>•</span>

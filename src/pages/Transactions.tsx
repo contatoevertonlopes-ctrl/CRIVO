@@ -29,6 +29,7 @@ interface Transaction {
   is_recurring?: boolean;
   recurring_interval?: string;
   paid_date?: string;
+  tag?: string;
 }
 
 const Transactions = () => {
@@ -66,6 +67,7 @@ const Transactions = () => {
     is_recurring: false,
     recurring_interval: "monthly",
     paid_date: "",
+    tag: "",
   });
 
   useEffect(() => {
@@ -224,6 +226,7 @@ const Transactions = () => {
         date: formData.date,
         is_recurring: subscribed ? formData.is_recurring : false,
         recurring_interval: formData.is_recurring ? formData.recurring_interval : null,
+        tag: formData.tag || null,
       });
 
       if (error) throw error;
@@ -254,6 +257,7 @@ const Transactions = () => {
           is_recurring: subscribed ? formData.is_recurring : false,
           recurring_interval: formData.is_recurring ? formData.recurring_interval : null,
           paid_date: formData.paid_date || null,
+          tag: formData.tag || null,
         })
         .eq("id", editingTransaction.id)
         .eq("user_id", user.id);
@@ -323,6 +327,7 @@ const Transactions = () => {
       is_recurring: transaction.is_recurring || false,
       recurring_interval: transaction.recurring_interval || "monthly",
       paid_date: transaction.paid_date || "",
+      tag: transaction.tag || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -338,6 +343,7 @@ const Transactions = () => {
       is_recurring: false,
       recurring_interval: "monthly",
       paid_date: "",
+      tag: "",
     });
   };
 
@@ -794,6 +800,7 @@ const Transactions = () => {
                           </div>
                         </th>
                         <th className="text-left py-4 px-4 font-medium">Status</th>
+                        <th className="text-left py-4 px-4 font-medium">Tag</th>
                         <th className="text-left py-4 px-4 font-medium">Data Pgto</th>
                         <th className="text-left py-4 px-4 font-medium">Ações</th>
                       </tr>
@@ -834,6 +841,19 @@ const Transactions = () => {
                               currentStatus={transaction.status}
                               onStatusChange={fetchTransactions}
                             />
+                          </td>
+                          <td className="py-4 px-4">
+                            {transaction.tag && (
+                              <span className={`inline-flex items-center text-[10px] px-2 py-0.5 rounded-full ${
+                                transaction.tag === "fixa" 
+                                  ? "bg-blue-500/20 text-blue-300"
+                                  : transaction.tag === "variavel"
+                                  ? "bg-orange-500/20 text-orange-300"
+                                  : "bg-purple-500/20 text-purple-300"
+                              }`}>
+                                {transaction.tag === "fixa" ? "Fixa" : transaction.tag === "variavel" ? "Variável" : "Esporádica"}
+                              </span>
+                            )}
                           </td>
                           <td className="py-4 px-4 whitespace-nowrap text-muted-foreground">
                             {transaction.paid_date ? formatDate(transaction.paid_date) : "-"}
