@@ -1,0 +1,84 @@
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface StatusSelectorProps {
+  transactionId: string;
+  currentStatus: string;
+  onStatusChange?: () => void;
+  size?: "sm" | "md";
+}
+
+const STATUS_OPTIONS = [
+  { value: "em_aberto", label: "Em aberto" },
+  { value: "a_vencer", label: "A vencer" },
+  { value: "vencido", label: "Vencido" },
+  { value: "pagamento_concluido", label: "Pago" },
+];
+
+const StatusSelector = ({ transactionId, currentStatus, onStatusChange, size = "md" }: StatusSelectorProps) => {
+  // Normalize legacy status values
+  const normalizeStatus = (status: string) => {
+    const legacyMap: Record<string, string> = {
+      pending: "em_aberto",
+      confirmed: "pagamento_concluido",
+      paid: "pagamento_concluido",
+    };
+    return legacyMap[status] || status;
+  };
+
+  const getStatusStyle = (status: string) => {
+    const normalized = normalizeStatus(status);
+    switch (normalized) {
+      case "pagamento_concluido":
+        return "bg-primary/20 border-primary/30 text-primary";
+      case "a_vencer":
+        return "bg-warning/20 border-warning/30 text-warning";
+      case "vencido":
+        return "bg-destructive/20 border-destructive/30 text-destructive";
+      default:
+        return "bg-secondary/50 border-secondary text-muted-foreground";
+    }
+  };
+
+  const handleStatusChange = async (newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from("transactions")
+        .update({ status: newStatus })
+        .eq("id", transactionId);
+
+      if (error) throw error;
+      
+      toast.success("Status atualizado");
+      onStatusChange?.();
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Erro ao atualizar status");
+    }
+  };
+
+  const normalizedStatus = normalizeStatus(currentStatus);
+  const sizeClasses = size === "sm" 
+    ? "h-7 text-[10px] px-2 min-w-[90px]" 
+    : "h-8 text-xs px-2.5 min-w-[100px]";
+
+  return (
+    <Select value={normalizedStatus} onValueChange={handleStatusChange}>
+      <SelectTrigger 
+        className={`${sizeClasses} rounded-full border ${getStatusStyle(normalizedStatus)} focus:ring-0 focus:ring-offset-0 [&>svg]:h-3 [&>svg]:w-3`}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {STATUS_OPTIONS.map((option) => (
+          <SelectItem key={option.value} value={option.value} className="text-xs">
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+};
+
+export default StatusSelector;

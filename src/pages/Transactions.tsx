@@ -15,6 +15,7 @@ import TransactionForm from "@/components/TransactionForm";
 import Sidebar from "@/components/Sidebar";
 import ImportTransactionsDialog from "@/components/ImportTransactionsDialog";
 import TransactionCard from "@/components/TransactionCard";
+import StatusSelector from "@/components/StatusSelector";
 import { startOfMonth, endOfMonth, subMonths, addMonths, format } from "date-fns";
 
 interface Transaction {
@@ -709,6 +710,7 @@ const Transactions = () => {
                       onEdit={openEditDialog}
                       onDelete={handleDelete}
                       onDuplicate={handleDuplicate}
+                      onStatusChange={fetchTransactions}
                     />
                   ))}
                 </div>
@@ -758,11 +760,11 @@ const Transactions = () => {
                           </td>
                           <td className="py-4 px-4 whitespace-nowrap">{formatCurrency(transaction.amount)}</td>
                           <td className="py-4 px-4">
-                            <span
-                              className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap ${getStatusStyle(transaction.status)}`}
-                            >
-                              {getStatusLabel(transaction.status)}
-                            </span>
+                            <StatusSelector
+                              transactionId={transaction.id}
+                              currentStatus={transaction.status}
+                              onStatusChange={fetchTransactions}
+                            />
                           </td>
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-1">

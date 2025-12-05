@@ -1,4 +1,5 @@
 import { Copy, Edit2, RefreshCw, Trash2 } from "lucide-react";
+import StatusSelector from "./StatusSelector";
 
 interface Transaction {
   id: string;
@@ -16,9 +17,10 @@ interface TransactionCardProps {
   onEdit: (transaction: Transaction) => void;
   onDelete: (id: string) => void;
   onDuplicate: (transaction: Transaction) => void;
+  onStatusChange?: () => void;
 }
 
-const TransactionCard = ({ transaction, onEdit, onDelete, onDuplicate }: TransactionCardProps) => {
+const TransactionCard = ({ transaction, onEdit, onDelete, onDuplicate, onStatusChange }: TransactionCardProps) => {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr + "T00:00:00");
     return date.toLocaleDateString("pt-BR");
@@ -91,9 +93,12 @@ const TransactionCard = ({ transaction, onEdit, onDelete, onDuplicate }: Transac
           }`}>
             {transaction.type === "income" ? "Entrada" : "Saída"}
           </span>
-          <span className={`text-[10px] px-2 py-0.5 rounded-full ${getStatusStyle(transaction.status)}`}>
-            {getStatusLabel(transaction.status)}
-          </span>
+          <StatusSelector
+            transactionId={transaction.id}
+            currentStatus={transaction.status}
+            onStatusChange={onStatusChange}
+            size="sm"
+          />
         </div>
         
         <div className="flex items-center gap-1">
