@@ -335,6 +335,9 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     toast.success(`${parsed.length} transações encontradas`);
   };
 
+  const normalizeDescription = (desc: string) => 
+    desc.toLowerCase().trim().replace(/\s+/g, " ");
+
   const handleImport = async () => {
     if (!user || preview.length === 0) return;
 
@@ -352,7 +355,34 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
         transactions = parseOFX(content);
       }
 
-      const toInsert = transactions.map(t => ({
+      // Fetch existing transactions to check for duplicates
+      const { data: existingTransactions } = await supabase
+        .from("transactions")
+        .select("date, description, amount")
+        .eq("user_id", user.id);
+
+      // Create a Set of existing transaction signatures for fast lookup
+      const existingSignatures = new Set(
+        (existingTransactions || []).map(t => 
+          `${t.date}|${normalizeDescription(t.description)}|${Number(t.amount).toFixed(2)}`
+        )
+      );
+
+      // Filter out duplicates
+      const uniqueTransactions = transactions.filter(t => {
+        const signature = `${t.date}|${normalizeDescription(t.description)}|${t.amount.toFixed(2)}`;
+        return !existingSignatures.has(signature);
+      });
+
+      const duplicatesCount = transactions.length - uniqueTransactions.length;
+
+      if (uniqueTransactions.length === 0) {
+        toast.info("Todas as transações já existem no sistema.");
+        setLoading(false);
+        return;
+      }
+
+      const toInsert = uniqueTransactions.map(t => ({
         user_id: user.id,
         date: t.date,
         description: t.description,
@@ -366,7 +396,11 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
 
       if (error) throw error;
 
-      toast.success(`${transactions.length} transações importadas com sucesso!`);
+      const successMsg = duplicatesCount > 0
+        ? `${uniqueTransactions.length} transações importadas (${duplicatesCount} duplicatas ignoradas)`
+        : `${uniqueTransactions.length} transações importadas com sucesso!`;
+      
+      toast.success(successMsg);
       setOpen(false);
       resetState();
       onSuccess();
