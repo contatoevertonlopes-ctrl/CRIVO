@@ -24,6 +24,8 @@ import {
   DollarSign,
   Save,
   Loader2,
+  Tag,
+  Percent,
 } from "lucide-react";
 
 interface UserWithDetails {
@@ -73,6 +75,14 @@ const Admin = () => {
   // Stripe product IDs
   const MONTHLY_PRODUCT_ID = "prod_TXoqM83X412xRF";
   const ANNUAL_PRODUCT_ID = "prod_TXoru4mtSgWkWf";
+
+  // Coupon state
+  const [couponName, setCouponName] = useState("");
+  const [discountType, setDiscountType] = useState("percent");
+  const [discountValue, setDiscountValue] = useState("");
+  const [couponDuration, setCouponDuration] = useState("once");
+  const [durationMonths, setDurationMonths] = useState("");
+  const [creatingCoupon, setCreatingCoupon] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
@@ -265,6 +275,42 @@ const Admin = () => {
     }
   };
 
+  const createCoupon = async () => {
+    if (!couponName || !discountValue) {
+      toast.error("Preencha o nome e o valor do desconto");
+      return;
+    }
+
+    setCreatingCoupon(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão não encontrada");
+
+      const { data, error } = await supabase.functions.invoke("create-coupon", {
+        body: { 
+          name: couponName, 
+          discountType, 
+          discountValue: parseFloat(discountValue),
+          duration: couponDuration,
+          durationInMonths: couponDuration === "repeating" ? durationMonths : undefined,
+        },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      toast.success(`Cupom "${couponName}" criado com sucesso!`);
+      setCouponName("");
+      setDiscountValue("");
+      setDurationMonths("");
+    } catch (error) {
+      console.error("Error creating coupon:", error);
+      toast.error("Erro ao criar cupom no Stripe");
+    } finally {
+      setCreatingCoupon(false);
+    }
+  };
+
   if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -420,6 +466,100 @@ const Admin = () => {
                   <Save className="w-4 h-4" />
                 )}
                 Atualizar Preço Anual
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Coupon Management */}
+        <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Tag className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium">Criar Cupom de Desconto</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Nome do Cupom</Label>
+              <Input
+                placeholder="Ex: DESCONTO10"
+                value={couponName}
+                onChange={(e) => setCouponName(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Tipo de Desconto</Label>
+              <Select value={discountType} onValueChange={setDiscountType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="percent">Porcentagem (%)</SelectItem>
+                  <SelectItem value="amount">Valor Fixo (R$)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>{discountType === "percent" ? "Desconto (%)" : "Desconto (R$)"}</Label>
+              <div className="flex items-center gap-2">
+                {discountType === "percent" ? (
+                  <Percent className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <span className="text-muted-foreground">R$</span>
+                )}
+                <Input
+                  type="number"
+                  placeholder={discountType === "percent" ? "10" : "20.00"}
+                  value={discountValue}
+                  onChange={(e) => setDiscountValue(e.target.value)}
+                  min="0"
+                  max={discountType === "percent" ? "100" : undefined}
+                  step={discountType === "percent" ? "1" : "0.01"}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Duração</Label>
+              <Select value={couponDuration} onValueChange={setCouponDuration}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="once">Uma vez</SelectItem>
+                  <SelectItem value="repeating">Repetir por X meses</SelectItem>
+                  <SelectItem value="forever">Para sempre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {couponDuration === "repeating" && (
+              <div className="space-y-2">
+                <Label>Quantidade de Meses</Label>
+                <Input
+                  type="number"
+                  placeholder="3"
+                  value={durationMonths}
+                  onChange={(e) => setDurationMonths(e.target.value)}
+                  min="1"
+                />
+              </div>
+            )}
+
+            <div className="flex items-end">
+              <Button 
+                onClick={createCoupon}
+                disabled={creatingCoupon || !couponName || !discountValue}
+                className="w-full gap-2"
+              >
+                {creatingCoupon ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Tag className="w-4 h-4" />
+                )}
+                Criar Cupom
               </Button>
             </div>
           </div>
