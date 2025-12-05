@@ -53,6 +53,7 @@ const Transactions = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [showProFilters, setShowProFilters] = useState(false);
+  const [sortOrder, setSortOrder] = useState<string>("date_desc");
 
   const [formData, setFormData] = useState({
     description: "",
@@ -176,8 +177,25 @@ const Transactions = () => {
       }
     }
 
+    // Apply sorting
+    switch (sortOrder) {
+      case "amount_desc":
+        filtered = [...filtered].sort((a, b) => b.amount - a.amount);
+        break;
+      case "amount_asc":
+        filtered = [...filtered].sort((a, b) => a.amount - b.amount);
+        break;
+      case "date_asc":
+        filtered = [...filtered].sort((a, b) => a.date.localeCompare(b.date));
+        break;
+      case "date_desc":
+      default:
+        filtered = [...filtered].sort((a, b) => b.date.localeCompare(a.date));
+        break;
+    }
+
     setFilteredTransactions(filtered);
-  }, [transactions, search, typeFilter, statusFilter, categoryFilter, periodFilter, customDateFrom, customDateTo, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed]);
+  }, [transactions, search, typeFilter, statusFilter, categoryFilter, periodFilter, customDateFrom, customDateTo, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed, sortOrder]);
 
   const categories = [...new Set(transactions.map((t) => t.category))];
 
@@ -512,7 +530,7 @@ const Transactions = () => {
             </div>
             
             {/* Basic Filters */}
-            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-5 md:gap-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-6 md:gap-4">
               <div className="relative col-span-2">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -554,6 +572,17 @@ const Transactions = () => {
                   <SelectItem value="a_vencer">A vencer</SelectItem>
                   <SelectItem value="vencido">Vencido</SelectItem>
                   <SelectItem value="pagamento_concluido">Pago</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={sortOrder} onValueChange={setSortOrder}>
+                <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                  <SelectValue placeholder="Ordenar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date_desc">Data (recente)</SelectItem>
+                  <SelectItem value="date_asc">Data (antiga)</SelectItem>
+                  <SelectItem value="amount_desc">Maior valor</SelectItem>
+                  <SelectItem value="amount_asc">Menor valor</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
