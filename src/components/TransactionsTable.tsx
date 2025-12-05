@@ -3,6 +3,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AddTransactionDialog from "./AddTransactionDialog";
 import StatusSelector from "./StatusSelector";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Filter, Tag } from "lucide-react";
 
 interface Transaction {
   id: string;
@@ -12,6 +20,8 @@ interface Transaction {
   type: "income" | "expense";
   amount: number;
   status: string;
+  paid_date?: string | null;
+  tag?: string | null;
 }
 
 interface TransactionsTableProps {
@@ -22,6 +32,9 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [tagFilter, setTagFilter] = useState("all");
 
   const fetchTransactions = async () => {
     if (!user) {
@@ -32,12 +45,26 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("transactions")
         .select("*")
         .eq("user_id", user.id)
         .order("date", { ascending: false })
-        .limit(10);
+        .limit(20);
+
+      if (statusFilter !== "all") {
+        query = query.eq("status", statusFilter);
+      }
+
+      if (typeFilter !== "all") {
+        query = query.eq("type", typeFilter);
+      }
+
+      if (tagFilter !== "all") {
+        query = query.eq("tag", tagFilter);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setTransactions((data as Transaction[]) || []);
@@ -51,14 +78,15 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
 
   useEffect(() => {
     fetchTransactions();
-  }, [user]);
+  }, [user, statusFilter, typeFilter, tagFilter]);
 
   const handleSuccess = () => {
     fetchTransactions();
     onRefresh?.();
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return "-";
     const date = new Date(dateStr + "T00:00:00");
     return date.toLocaleDateString("pt-BR");
   };
@@ -70,30 +98,24 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
     }).format(value);
   };
 
-  const getStatusLabel = (status: string) => {
-    const statusMap: Record<string, string> = {
-      em_aberto: "Em aberto",
-      a_vencer: "A vencer",
-      vencido: "Vencido",
-      pagamento_concluido: "Pagamento concluído",
-      // Legacy support
-      pending: "Em aberto",
-      confirmed: "Pagamento concluído",
-      paid: "Pagamento concluído",
+  const getTagLabel = (tag: string | null | undefined) => {
+    if (!tag) return null;
+    const tagMap: Record<string, string> = {
+      fixa: "Fixa",
+      variavel: "Variável",
+      esporadica: "Esporádica",
     };
-    return statusMap[status] || status;
+    return tagMap[tag] || tag;
   };
 
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "pagamento_concluido":
-      case "confirmed":
-      case "paid":
-        return "bg-primary/14 text-green-200";
-      case "a_vencer":
-        return "bg-warning/10 text-yellow-200";
-      case "vencido":
-        return "bg-destructive/10 text-red-200";
+  const getTagStyle = (tag: string | null | undefined) => {
+    switch (tag) {
+      case "fixa":
+        return "bg-blue-500/20 text-blue-300";
+      case "variavel":
+        return "bg-purple-500/20 text-purple-300";
+      case "esporadica":
+        return "bg-orange-500/20 text-orange-300";
       default:
         return "bg-secondary/50 text-muted-foreground";
     }
@@ -113,7 +135,47 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
         </div>
       </div>
 
-      <div className="overflow-x-auto mt-3">
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2 mb-4 items-center">
+        <Filter className="w-4 h-4 text-muted-foreground" />
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[140px] h-8 text-xs">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos Status</SelectItem>
+            <SelectItem value="em_aberto">Em aberto</SelectItem>
+            <SelectItem value="a_vencer">A vencer</SelectItem>
+            <SelectItem value="vencido">Vencido</SelectItem>
+            <SelectItem value="pagamento_concluido">Pago</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-[120px] h-8 text-xs">
+            <SelectValue placeholder="Tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos Tipos</SelectItem>
+            <SelectItem value="income">Entrada</SelectItem>
+            <SelectItem value="expense">Saída</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={tagFilter} onValueChange={setTagFilter}>
+          <SelectTrigger className="w-[130px] h-8 text-xs">
+            <SelectValue placeholder="Tag" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas Tags</SelectItem>
+            <SelectItem value="fixa">Fixa</SelectItem>
+            <SelectItem value="variavel">Variável</SelectItem>
+            <SelectItem value="esporadica">Esporádica</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="overflow-x-auto">
         {loading ? (
           <div className="text-center py-8 text-muted-foreground">
             Carregando...
@@ -127,9 +189,11 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
           <table className="w-full text-xs border-collapse">
             <thead>
               <tr className="text-muted-foreground border-b border-secondary">
-                <th className="text-left py-2 px-2 font-normal">Data</th>
+                <th className="text-left py-2 px-2 font-normal">Vencimento</th>
+                <th className="text-left py-2 px-2 font-normal">Pagamento</th>
                 <th className="text-left py-2 px-2 font-normal">Descrição</th>
                 <th className="text-left py-2 px-2 font-normal">Categoria</th>
+                <th className="text-left py-2 px-2 font-normal">Tag</th>
                 <th className="text-left py-2 px-2 font-normal">Tipo</th>
                 <th className="text-left py-2 px-2 font-normal">Valor</th>
                 <th className="text-left py-2 px-2 font-normal">Status</th>
@@ -142,8 +206,23 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
                   className="border-b border-secondary/90 hover:bg-secondary/80 transition-colors"
                 >
                   <td className="py-2 px-2">{formatDate(transaction.date)}</td>
+                  <td className="py-2 px-2 text-muted-foreground">
+                    {formatDate(transaction.paid_date)}
+                  </td>
                   <td className="py-2 px-2">{transaction.description}</td>
                   <td className="py-2 px-2">{transaction.category}</td>
+                  <td className="py-2 px-2">
+                    {transaction.tag && (
+                      <span
+                        className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full ${getTagStyle(
+                          transaction.tag
+                        )}`}
+                      >
+                        <Tag className="w-3 h-3" />
+                        {getTagLabel(transaction.tag)}
+                      </span>
+                    )}
+                  </td>
                   <td className="py-2 px-2">
                     <span
                       className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full ${
