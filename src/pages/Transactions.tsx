@@ -200,6 +200,8 @@ const Transactions = () => {
         type: formData.type,
         status: formData.status,
         date: formData.date,
+        is_recurring: subscribed ? formData.is_recurring : false,
+        recurring_interval: formData.is_recurring ? formData.recurring_interval : null,
       });
 
       if (error) throw error;
@@ -227,6 +229,8 @@ const Transactions = () => {
           type: formData.type,
           status: formData.status,
           date: formData.date,
+          is_recurring: subscribed ? formData.is_recurring : false,
+          recurring_interval: formData.is_recurring ? formData.recurring_interval : null,
         })
         .eq("id", editingTransaction.id)
         .eq("user_id", user.id);
