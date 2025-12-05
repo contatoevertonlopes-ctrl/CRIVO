@@ -43,6 +43,7 @@ const Transactions = () => {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [tagFilter, setTagFilter] = useState<string>("all");
   const [periodFilter, setPeriodFilter] = useState<string>("all");
   const [customDateFrom, setCustomDateFrom] = useState("");
   const [customDateTo, setCustomDateTo] = useState("");
@@ -126,6 +127,10 @@ const Transactions = () => {
       filtered = filtered.filter((t) => t.category === categoryFilter);
     }
 
+    if (tagFilter !== "all") {
+      filtered = filtered.filter((t) => t.tag === tagFilter);
+    }
+
     // Period filter
     if (periodFilter !== "all") {
       const now = new Date();
@@ -199,7 +204,7 @@ const Transactions = () => {
     }
 
     setFilteredTransactions(filtered);
-  }, [transactions, search, typeFilter, statusFilter, categoryFilter, periodFilter, customDateFrom, customDateTo, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed, sortOrder]);
+  }, [transactions, search, typeFilter, statusFilter, categoryFilter, tagFilter, periodFilter, customDateFrom, customDateTo, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed, sortOrder]);
 
   const categories = [...new Set(transactions.map((t) => t.category))];
 
@@ -543,7 +548,7 @@ const Transactions = () => {
             </div>
             
             {/* Basic Filters */}
-            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-5 md:gap-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-6 md:gap-4">
               <div className="col-span-2 md:col-span-1 space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Buscar</Label>
                 <div className="relative">
@@ -612,6 +617,20 @@ const Transactions = () => {
                         {cat}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Tag</Label>
+                <Select value={tagFilter} onValueChange={setTagFilter}>
+                  <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                    <SelectValue placeholder="Tag" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="fixa">Fixa</SelectItem>
+                    <SelectItem value="variavel">Variável</SelectItem>
+                    <SelectItem value="esporadica">Esporádica</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
