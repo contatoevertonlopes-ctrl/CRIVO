@@ -64,6 +64,40 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
   const [showRawPreview, setShowRawPreview] = useState(false);
   const [fileType, setFileType] = useState<"csv" | "ofx" | "">("");
 
+  // Auto-categorization based on keywords in description
+  const categoryKeywords: Record<string, string[]> = {
+    "Alimentação": ["restaurante", "lanchonete", "pizzaria", "ifood", "uber eats", "rappi", "mercado", "supermercado", "padaria", "açougue", "hortifruti", "food", "burger", "mcdonald", "subway", "starbucks", "café", "cafeteria"],
+    "Transporte": ["uber", "99", "taxi", "combustível", "gasolina", "etanol", "posto", "estacionamento", "pedágio", "ipva", "seguro auto", "oficina", "borracharia", "onibus", "metro", "trem"],
+    "Moradia": ["aluguel", "condomínio", "iptu", "luz", "energia", "água", "gás", "internet", "telefone", "celular", "tv cabo", "netflix", "spotify", "amazon prime", "hbo", "disney"],
+    "Saúde": ["farmácia", "drogaria", "hospital", "clínica", "médico", "dentista", "laboratório", "exame", "plano de saúde", "unimed", "bradesco saúde", "sulamerica"],
+    "Educação": ["escola", "faculdade", "universidade", "curso", "livro", "livraria", "papelaria", "udemy", "coursera", "alura"],
+    "Lazer": ["cinema", "teatro", "show", "ingresso", "parque", "viagem", "hotel", "airbnb", "booking", "decolar", "latam", "gol", "azul"],
+    "Compras": ["shopping", "loja", "magazine", "americanas", "amazon", "mercado livre", "aliexpress", "shein", "renner", "c&a", "riachuelo", "zara"],
+    "Serviços": ["banco", "tarifa", "iof", "ted", "pix", "doc", "anuidade", "cartão", "seguro"],
+    "Salário": ["salário", "salario", "pagamento", "folha", "holerite", "pro-labore", "prolabore", "remuneração"],
+    "Investimentos": ["investimento", "aplicação", "resgate", "dividendo", "jcp", "rendimento", "cdb", "tesouro", "ações", "fii"],
+    "Freelance": ["freelance", "projeto", "consultoria", "serviço prestado", "nota fiscal", "nf-e"],
+  };
+
+  const autoCategorize = (description: string, existingCategory?: string): string => {
+    // If already has a meaningful category, keep it
+    if (existingCategory && existingCategory !== "Importado" && existingCategory.trim()) {
+      return existingCategory;
+    }
+    
+    const descLower = description.toLowerCase();
+    
+    for (const [category, keywords] of Object.entries(categoryKeywords)) {
+      for (const keyword of keywords) {
+        if (descLower.includes(keyword.toLowerCase())) {
+          return category;
+        }
+      }
+    }
+    
+    return "Outros";
+  };
+
   const parseCSVWithMapping = (headers: string[], data: string[][], mapping: ColumnMapping): ParsedTransaction[] => {
     const transactions: ParsedTransaction[] = [];
     
@@ -124,12 +158,13 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
       }
       
       if (!isNaN(amount) && amount > 0 && description) {
+        const finalCategory = autoCategorize(description, category);
         transactions.push({
           date: parseDate(dateStr),
           description: description.substring(0, 100),
           amount,
           type,
-          category: category || "Importado",
+          category: finalCategory,
           status: "em_aberto",
         });
       }
@@ -226,12 +261,13 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     const memo = extractOFXField(block, "MEMO") || extractOFXField(block, "NAME") || "Transação importada";
     
     if (!isNaN(amount) && amountStr) {
+      const description = memo.substring(0, 100).trim();
       return {
         date: parseOFXDate(datePosted),
-        description: memo.substring(0, 100).trim(),
+        description,
         amount: Math.abs(amount),
         type: amount < 0 || trnType === "DEBIT" ? "expense" : "income",
-        category: "Importado",
+        category: autoCategorize(description),
         status: "em_aberto",
       };
     }
