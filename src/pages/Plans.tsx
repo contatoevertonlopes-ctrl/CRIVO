@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -6,10 +6,9 @@ import { usePrices } from "@/hooks/usePrices";
 import { Button } from "@/components/ui/button";
 import { Check, Loader2, Crown, Settings } from "lucide-react";
 import { toast } from "sonner";
+
 const Plans = () => {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const {
@@ -20,10 +19,10 @@ const Plans = () => {
     openCustomerPortal,
     checkSubscription
   } = useSubscription();
-  const {
-    prices,
-    formatPrice
-  } = usePrices();
+  const { prices, formatPrice } = usePrices();
+  
+  const [checkoutLoading, setCheckoutLoading] = useState<"monthly" | "annual" | null>(null);
+
   useEffect(() => {
     if (searchParams.get("success") === "true") {
       toast.success("Assinatura realizada com sucesso!");
@@ -32,6 +31,7 @@ const Plans = () => {
       toast.info("Checkout cancelado.");
     }
   }, [searchParams, checkSubscription]);
+
   const handleSelectPlan = async (plan: string) => {
     if (!user) {
       navigate("/auth");
@@ -41,12 +41,19 @@ const Plans = () => {
       navigate("/");
       return;
     }
+    
     const priceType = plan === "monthly" ? "monthly" : "annual";
-    const url = await createCheckout(priceType);
-    if (url) {
-      window.open(url, "_blank");
-    } else {
-      toast.error("Erro ao iniciar checkout. Tente novamente.");
+    setCheckoutLoading(priceType);
+    
+    try {
+      const url = await createCheckout(priceType);
+      if (url) {
+        window.open(url, "_blank");
+      } else {
+        toast.error("Erro ao iniciar checkout. Tente novamente.");
+      }
+    } finally {
+      setCheckoutLoading(null);
     }
   };
   const handleManageSubscription = async () => {
@@ -159,8 +166,8 @@ const Plans = () => {
                 Cancele quando quiser. Ideal para testar.
               </p>
               
-              <Button variant="outline" className="w-full mb-4 sm:mb-6 border-primary/50 hover:bg-primary/10" onClick={() => handleSelectPlan("monthly")} disabled={loading || isCurrentPlan("monthly")}>
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : isCurrentPlan("monthly") ? "Plano atual" : "Assinar mensal"}
+              <Button variant="outline" className="w-full mb-4 sm:mb-6 border-primary/50 hover:bg-primary/10" onClick={() => handleSelectPlan("monthly")} disabled={checkoutLoading !== null || isCurrentPlan("monthly")}>
+                {checkoutLoading === "monthly" ? <Loader2 className="w-4 h-4 animate-spin" /> : isCurrentPlan("monthly") ? "Plano atual" : "Assinar mensal"}
               </Button>
 
               <ul className="space-y-2 sm:space-y-3">
@@ -196,8 +203,8 @@ const Plans = () => {
                 Perfeito para quem leva os números a sério.
               </p>
               
-              <Button className="w-full mb-4 sm:mb-6 bg-gradient-to-r from-primary to-green-600 text-primary-foreground shadow-[0_8px_25px_rgba(34,197,94,0.5)] hover:shadow-[0_8px_30px_rgba(34,197,94,0.6)]" onClick={() => handleSelectPlan("annual")} disabled={loading || isCurrentPlan("annual")}>
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : isCurrentPlan("annual") ? "Plano atual" : "Assinar anual ⭐"}
+              <Button className="w-full mb-4 sm:mb-6 bg-gradient-to-r from-primary to-green-600 text-primary-foreground shadow-[0_8px_25px_rgba(34,197,94,0.5)] hover:shadow-[0_8px_30px_rgba(34,197,94,0.6)]" onClick={() => handleSelectPlan("annual")} disabled={checkoutLoading !== null || isCurrentPlan("annual")}>
+                {checkoutLoading === "annual" ? <Loader2 className="w-4 h-4 animate-spin" /> : isCurrentPlan("annual") ? "Plano atual" : "Assinar anual ⭐"}
               </Button>
 
               <ul className="space-y-2 sm:space-y-3">
