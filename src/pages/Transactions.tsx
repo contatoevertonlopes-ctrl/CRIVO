@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Search, Plus, Edit2, Trash2, ArrowLeft, Filter, Download, Lock, Crown, RefreshCw, Calendar } from "lucide-react";
+import { Search, Plus, Edit2, Trash2, ArrowLeft, Filter, Download, Lock, Crown, RefreshCw, Calendar, Copy } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import ImportTransactionsDialog from "@/components/ImportTransactionsDialog";
 import { startOfMonth, endOfMonth, subMonths, addMonths, format } from "date-fns";
@@ -256,6 +256,30 @@ const Transactions = () => {
     } catch (error) {
       console.error("Error deleting transaction:", error);
       toast.error("Erro ao excluir transação");
+    }
+  };
+
+  const handleDuplicate = async (transaction: Transaction) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase.from("transactions").insert({
+        user_id: user.id,
+        description: transaction.description,
+        amount: transaction.amount,
+        category: transaction.category,
+        type: transaction.type,
+        status: "em_aberto",
+        date: new Date().toISOString().split("T")[0],
+      });
+
+      if (error) throw error;
+
+      toast.success("Transação duplicada com sucesso!");
+      fetchTransactions();
+    } catch (error) {
+      console.error("Error duplicating transaction:", error);
+      toast.error("Erro ao duplicar transação");
     }
   };
 
@@ -838,14 +862,23 @@ const Transactions = () => {
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-2">
                             <button
+                              onClick={() => handleDuplicate(transaction)}
+                              className="p-1.5 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
+                              title="Duplicar"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </button>
+                            <button
                               onClick={() => openEditDialog(transaction)}
                               className="p-1.5 rounded-lg hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors"
+                              title="Editar"
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleDelete(transaction.id)}
                               className="p-1.5 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+                              title="Excluir"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
