@@ -21,6 +21,9 @@ import {
   CheckCircle,
   XCircle,
   RefreshCw,
+  DollarSign,
+  Save,
+  Loader2,
 } from "lucide-react";
 
 interface UserWithDetails {
@@ -60,6 +63,16 @@ const Admin = () => {
   const [planFilter, setPlanFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  
+  // Pricing state
+  const [monthlyPrice, setMonthlyPrice] = useState("29");
+  const [annualPrice, setAnnualPrice] = useState("269");
+  const [updatingMonthly, setUpdatingMonthly] = useState(false);
+  const [updatingAnnual, setUpdatingAnnual] = useState(false);
+
+  // Stripe product IDs
+  const MONTHLY_PRODUCT_ID = "prod_TXoqM83X412xRF";
+  const ANNUAL_PRODUCT_ID = "prod_TXoru4mtSgWkWf";
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
@@ -228,6 +241,30 @@ const Admin = () => {
     return new Date(dateStr).toLocaleDateString("pt-BR");
   };
 
+  const updatePrice = async (productId: string, amount: number, interval: "month" | "year") => {
+    const setUpdating = interval === "month" ? setUpdatingMonthly : setUpdatingAnnual;
+    setUpdating(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão não encontrada");
+
+      const { data, error } = await supabase.functions.invoke("update-price", {
+        body: { productId, newAmount: amount, interval },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      toast.success(`Preço ${interval === "month" ? "mensal" : "anual"} atualizado com sucesso!`);
+    } catch (error) {
+      console.error("Error updating price:", error);
+      toast.error("Erro ao atualizar preço no Stripe");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -311,6 +348,80 @@ const Admin = () => {
               <span className="text-xs sm:text-sm text-muted-foreground">Receita/Ano</span>
             </div>
             <p className="text-lg sm:text-3xl font-bold text-yellow-400">{formatCurrency(revenue.total_revenue)}</p>
+          </div>
+        </div>
+
+        {/* Pricing Management */}
+        <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <DollarSign className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium">Gerenciar Preços da Assinatura</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Monthly Price */}
+            <div className="space-y-3 p-4 rounded-xl bg-secondary/30 border border-border/50">
+              <div className="flex items-center gap-2">
+                <Crown className="w-4 h-4 text-primary" />
+                <Label className="font-medium">Plano Mensal</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">R$</span>
+                <Input
+                  type="number"
+                  value={monthlyPrice}
+                  onChange={(e) => setMonthlyPrice(e.target.value)}
+                  className="flex-1"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              <Button 
+                onClick={() => updatePrice(MONTHLY_PRODUCT_ID, parseFloat(monthlyPrice), "month")}
+                disabled={updatingMonthly}
+                className="w-full gap-2"
+                size="sm"
+              >
+                {updatingMonthly ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                Atualizar Preço Mensal
+              </Button>
+            </div>
+
+            {/* Annual Price */}
+            <div className="space-y-3 p-4 rounded-xl bg-secondary/30 border border-border/50">
+              <div className="flex items-center gap-2">
+                <Crown className="w-4 h-4 text-yellow-400" />
+                <Label className="font-medium">Plano Anual</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">R$</span>
+                <Input
+                  type="number"
+                  value={annualPrice}
+                  onChange={(e) => setAnnualPrice(e.target.value)}
+                  className="flex-1"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              <Button 
+                onClick={() => updatePrice(ANNUAL_PRODUCT_ID, parseFloat(annualPrice), "year")}
+                disabled={updatingAnnual}
+                className="w-full gap-2"
+                size="sm"
+              >
+                {updatingAnnual ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                Atualizar Preço Anual
+              </Button>
+            </div>
           </div>
         </div>
 
