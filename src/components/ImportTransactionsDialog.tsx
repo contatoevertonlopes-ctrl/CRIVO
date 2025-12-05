@@ -136,17 +136,27 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
   };
 
   const parseCSVRaw = (content: string): { headers: string[]; data: string[][] } => {
-    const lines = content.trim().split("\n");
+    // Remove BOM if present
+    const cleanContent = content.replace(/^\uFEFF/, "").trim();
+    // Normalize line endings
+    const normalizedContent = cleanContent.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    const lines = normalizedContent.split("\n").filter(line => line.trim());
+    
     if (lines.length === 0) return { headers: [], data: [] };
     
-    const separator = lines[0].includes(";") ? ";" : ",";
-    const headers = lines[0].split(separator).map(h => h.trim().replace(/"/g, ""));
+    // Detect separator - check for semicolon, tab, or comma
+    const firstLine = lines[0];
+    let separator = ",";
+    if (firstLine.includes(";")) separator = ";";
+    else if (firstLine.includes("\t")) separator = "\t";
+    
+    const headers = firstLine.split(separator).map(h => h.trim().replace(/^["']|["']$/g, ""));
     
     const data: string[][] = [];
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
-      const parts = line.split(separator).map(p => p.trim().replace(/"/g, ""));
+      const parts = line.split(separator).map(p => p.trim().replace(/^["']|["']$/g, ""));
       if (parts.length >= 2) {
         data.push(parts);
       }
@@ -158,25 +168,41 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
   const parseOFX = (content: string): ParsedTransaction[] => {
     const transactions: ParsedTransaction[] = [];
     
+    // Remove BOM and normalize content
+    const cleanContent = content.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    
     // Try XML-style with closing tags first
     let stmtTrnRegex = /<STMTTRN>([\s\S]*?)<\/STMTTRN>/gi;
     let match;
     let found = false;
     
-    while ((match = stmtTrnRegex.exec(content)) !== null) {
+    while ((match = stmtTrnRegex.exec(cleanContent)) !== null) {
       found = true;
       const block = match[1];
       const transaction = parseOFXBlock(block);
       if (transaction) transactions.push(transaction);
     }
     
-    // If no matches, try SGML-style without closing tags
+    // If no matches, try SGML-style without closing tags (more common in Brazilian banks)
     if (!found) {
-      const blocks = content.split(/<STMTTRN>/i);
+      // Split by STMTTRN tag - handles both <STMTTRN> and <STMTTRN>\n formats
+      const blocks = cleanContent.split(/<STMTTRN>/i);
       
       for (let i = 1; i < blocks.length; i++) {
         let block = blocks[i];
-        const endIndex = block.search(/<\/(STMTTRN|BANKTRANLIST|STMTRS|OFX)>/i);
+        // Find end of this transaction block
+        const nextTrnIndex = block.search(/<STMTTRN>/i);
+        const endTagIndex = block.search(/<\/(STMTTRN|BANKTRANLIST|STMTRS|OFX)>/i);
+        
+        let endIndex = -1;
+        if (nextTrnIndex > 0 && endTagIndex > 0) {
+          endIndex = Math.min(nextTrnIndex, endTagIndex);
+        } else if (nextTrnIndex > 0) {
+          endIndex = nextTrnIndex;
+        } else if (endTagIndex > 0) {
+          endIndex = endTagIndex;
+        }
+        
         if (endIndex > 0) {
           block = block.substring(0, endIndex);
         }
@@ -210,8 +236,15 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
   };
 
   const extractOFXField = (block: string, field: string): string => {
-    const regex = new RegExp(`<${field}>([^<\\r\\n]+)`, "i");
-    const match = block.match(regex);
+    // Handle both formats: <FIELD>value and <FIELD>value</FIELD>
+    // Also handle values that may span to the next line
+    const regexWithClose = new RegExp(`<${field}>([^<]*)</${field}>`, "i");
+    const regexNoClose = new RegExp(`<${field}>([^<\\n]+)`, "i");
+    
+    let match = block.match(regexWithClose);
+    if (!match) {
+      match = block.match(regexNoClose);
+    }
     return match ? match[1].trim() : "";
   };
 
