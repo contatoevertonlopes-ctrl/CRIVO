@@ -111,7 +111,7 @@ const Auth = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="lopesevertonn@gmail.com" required className="bg-secondary/50 border-border/50" />
+                <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="ex@gmail.com" required className="bg-secondary/50 border-border/50" />
               </div>
 
               <div className="space-y-2">
