@@ -84,7 +84,7 @@ const Auth = () => {
             F
           </div>
           <div className="flex flex-col">
-            <div className="text-xl font-bold tracking-tight">ClubWord Track </div>
+            <div className="text-xl font-bold tracking-tight">Club Finance Track</div>
             <div className="text-xs text-muted-foreground uppercase tracking-[0.14em]">
               Dashboard Financeiro
             </div>
