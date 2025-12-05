@@ -10,8 +10,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
-import { Upload, FileText, AlertCircle } from "lucide-react";
+import { Upload, FileText, AlertCircle, Settings2 } from "lucide-react";
 
 interface ImportTransactionsDialogProps {
   onSuccess: () => void;
@@ -26,45 +33,85 @@ interface ParsedTransaction {
   status: "pending";
 }
 
+interface ColumnMapping {
+  date: string;
+  description: string;
+  amount: string;
+  category: string;
+}
+
 const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) => {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<ParsedTransaction[]>([]);
   const [fileName, setFileName] = useState("");
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [csvData, setCsvData] = useState<string[][]>([]);
+  const [showMapping, setShowMapping] = useState(false);
+  const [columnMapping, setColumnMapping] = useState<ColumnMapping>({
+    date: "",
+    description: "",
+    amount: "",
+    category: "",
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const parseCSV = (content: string): ParsedTransaction[] => {
-    const lines = content.trim().split("\n");
+  const parseCSVWithMapping = (headers: string[], data: string[][], mapping: ColumnMapping): ParsedTransaction[] => {
     const transactions: ParsedTransaction[] = [];
     
-    // Skip header line
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
+    const dateIndex = headers.indexOf(mapping.date);
+    const descriptionIndex = headers.indexOf(mapping.description);
+    const amountIndex = headers.indexOf(mapping.amount);
+    const categoryIndex = mapping.category ? headers.indexOf(mapping.category) : -1;
+
+    if (dateIndex === -1 || descriptionIndex === -1 || amountIndex === -1) {
+      return [];
+    }
+
+    for (const row of data) {
+      if (row.length <= Math.max(dateIndex, descriptionIndex, amountIndex)) continue;
       
-      // Handle both comma and semicolon separators
-      const separator = line.includes(";") ? ";" : ",";
-      const parts = line.split(separator).map(p => p.trim().replace(/"/g, ""));
+      const dateStr = row[dateIndex]?.trim();
+      const description = row[descriptionIndex]?.trim();
+      const amountStr = row[amountIndex]?.trim();
+      const category = categoryIndex >= 0 ? row[categoryIndex]?.trim() : "Importado";
       
-      if (parts.length >= 3) {
-        const [dateStr, description, amountStr, category = "Importado"] = parts;
-        const amount = parseFloat(amountStr.replace(",", ".").replace(/[^\d.-]/g, ""));
-        
-        if (!isNaN(amount) && description) {
-          transactions.push({
-            date: parseDate(dateStr),
-            description: description.substring(0, 100),
-            amount: Math.abs(amount),
-            type: amount < 0 ? "expense" : "income",
-            category: category || "Importado",
-            status: "pending",
-          });
-        }
+      const amount = parseFloat(amountStr.replace(",", ".").replace(/[^\d.-]/g, ""));
+      
+      if (!isNaN(amount) && description) {
+        transactions.push({
+          date: parseDate(dateStr),
+          description: description.substring(0, 100),
+          amount: Math.abs(amount),
+          type: amount < 0 ? "expense" : "income",
+          category: category || "Importado",
+          status: "pending",
+        });
       }
     }
     
     return transactions;
+  };
+
+  const parseCSVRaw = (content: string): { headers: string[]; data: string[][] } => {
+    const lines = content.trim().split("\n");
+    if (lines.length === 0) return { headers: [], data: [] };
+    
+    const separator = lines[0].includes(";") ? ";" : ",";
+    const headers = lines[0].split(separator).map(h => h.trim().replace(/"/g, ""));
+    
+    const data: string[][] = [];
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      const parts = line.split(separator).map(p => p.trim().replace(/"/g, ""));
+      if (parts.length >= 2) {
+        data.push(parts);
+      }
+    }
+    
+    return { headers, data };
   };
 
   const parseOFX = (content: string): ParsedTransaction[] => {
@@ -84,11 +131,9 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     
     // If no matches, try SGML-style without closing tags
     if (!found) {
-      // Split by STMTTRN tags (SGML style - no closing tags)
       const blocks = content.split(/<STMTTRN>/i);
       
       for (let i = 1; i < blocks.length; i++) {
-        // Get content until next major tag or end
         let block = blocks[i];
         const endIndex = block.search(/<\/(STMTTRN|BANKTRANLIST|STMTRS|OFX)>/i);
         if (endIndex > 0) {
@@ -100,7 +145,6 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
       }
     }
     
-    console.log("OFX parsed transactions:", transactions.length);
     return transactions;
   };
 
@@ -131,11 +175,10 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
   };
 
   const parseDate = (dateStr: string): string => {
-    // Handle common date formats
     const formats = [
-      /(\d{4})-(\d{2})-(\d{2})/, // YYYY-MM-DD
-      /(\d{2})\/(\d{2})\/(\d{4})/, // DD/MM/YYYY
-      /(\d{2})-(\d{2})-(\d{4})/, // DD-MM-YYYY
+      /(\d{4})-(\d{2})-(\d{2})/,
+      /(\d{2})\/(\d{2})\/(\d{4})/,
+      /(\d{2})-(\d{2})-(\d{4})/,
     ];
     
     for (const format of formats) {
@@ -153,7 +196,6 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
   };
 
   const parseOFXDate = (dateStr: string): string => {
-    // OFX date format: YYYYMMDD or YYYYMMDDHHMMSS
     if (dateStr.length >= 8) {
       const year = dateStr.substring(0, 4);
       const month = dateStr.substring(4, 6);
@@ -168,25 +210,79 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     if (!file) return;
 
     setFileName(file.name);
+    setShowMapping(false);
+    setPreview([]);
+    setCsvHeaders([]);
+    setCsvData([]);
+    
     const content = await file.text();
     
-    let parsed: ParsedTransaction[] = [];
-    
     if (file.name.toLowerCase().endsWith(".csv")) {
-      parsed = parseCSV(content);
+      const { headers, data } = parseCSVRaw(content);
+      
+      if (headers.length === 0 || data.length === 0) {
+        toast.error("Arquivo CSV vazio ou inválido.");
+        return;
+      }
+      
+      setCsvHeaders(headers);
+      setCsvData(data);
+      
+      // Try auto-detect common column names
+      const autoMapping: ColumnMapping = {
+        date: headers.find(h => /data|date|dt/i.test(h)) || "",
+        description: headers.find(h => /descri|memo|hist|name|titulo/i.test(h)) || "",
+        amount: headers.find(h => /valor|amount|value|quantia/i.test(h)) || "",
+        category: headers.find(h => /categ|tipo|type/i.test(h)) || "",
+      };
+      
+      setColumnMapping(autoMapping);
+      
+      // If auto-detection found required fields, show preview
+      if (autoMapping.date && autoMapping.description && autoMapping.amount) {
+        const parsed = parseCSVWithMapping(headers, data, autoMapping);
+        if (parsed.length > 0) {
+          setPreview(parsed.slice(0, 10));
+          toast.success(`${parsed.length} transações encontradas`);
+        } else {
+          setShowMapping(true);
+          toast.info("Configure o mapeamento de colunas abaixo.");
+        }
+      } else {
+        setShowMapping(true);
+        toast.info("Configure o mapeamento de colunas abaixo.");
+      }
+      
     } else if (file.name.toLowerCase().endsWith(".ofx") || file.name.toLowerCase().endsWith(".qfx")) {
-      parsed = parseOFX(content);
+      const parsed = parseOFX(content);
+      
+      if (parsed.length === 0) {
+        toast.error("Nenhuma transação encontrada no arquivo.");
+        return;
+      }
+      
+      setPreview(parsed.slice(0, 10));
+      toast.success(`${parsed.length} transações encontradas`);
     } else {
       toast.error("Formato não suportado. Use CSV ou OFX.");
+    }
+  };
+
+  const handleApplyMapping = () => {
+    if (!columnMapping.date || !columnMapping.description || !columnMapping.amount) {
+      toast.error("Mapeie pelo menos Data, Descrição e Valor.");
       return;
     }
-
+    
+    const parsed = parseCSVWithMapping(csvHeaders, csvData, columnMapping);
+    
     if (parsed.length === 0) {
-      toast.error("Nenhuma transação encontrada no arquivo.");
+      toast.error("Nenhuma transação válida encontrada com o mapeamento atual.");
       return;
     }
-
+    
     setPreview(parsed.slice(0, 10));
+    setShowMapping(false);
     toast.success(`${parsed.length} transações encontradas`);
   };
 
@@ -202,7 +298,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
       let transactions: ParsedTransaction[];
       
       if (file.name.toLowerCase().endsWith(".csv")) {
-        transactions = parseCSV(content);
+        transactions = parseCSVWithMapping(csvHeaders, csvData, columnMapping);
       } else {
         transactions = parseOFX(content);
       }
@@ -223,9 +319,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
 
       toast.success(`${transactions.length} transações importadas com sucesso!`);
       setOpen(false);
-      setPreview([]);
-      setFileName("");
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      resetState();
       onSuccess();
     } catch (error: any) {
       console.error("Import error:", error);
@@ -233,6 +327,16 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetState = () => {
+    setPreview([]);
+    setFileName("");
+    setCsvHeaders([]);
+    setCsvData([]);
+    setShowMapping(false);
+    setColumnMapping({ date: "", description: "", amount: "", category: "" });
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const formatCurrency = (value: number) => {
@@ -245,10 +349,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
   return (
     <Dialog open={open} onOpenChange={(v) => {
       setOpen(v);
-      if (!v) {
-        setPreview([]);
-        setFileName("");
-      }
+      if (!v) resetState();
     }}>
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
@@ -268,7 +369,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
               <div className="text-sm">
                 <p className="font-medium mb-1">Formatos suportados:</p>
                 <ul className="text-muted-foreground space-y-1">
-                  <li>• <strong>CSV:</strong> Colunas: Data, Descrição, Valor, Categoria (opcional)</li>
+                  <li>• <strong>CSV:</strong> Com mapeamento manual de colunas</li>
                   <li>• <strong>OFX/QFX:</strong> Formato padrão de extratos bancários</li>
                 </ul>
               </div>
@@ -297,6 +398,115 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
               </label>
             </div>
           </div>
+
+          {/* Column Mapping Section */}
+          {csvHeaders.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2">
+                  <Settings2 className="w-4 h-4" />
+                  Mapeamento de Colunas
+                </Label>
+                {!showMapping && preview.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowMapping(true)}
+                    className="text-xs"
+                  >
+                    Editar mapeamento
+                  </Button>
+                )}
+              </div>
+              
+              {showMapping && (
+                <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-3">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Colunas encontradas: {csvHeaders.join(", ")}
+                  </p>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Data *</Label>
+                      <Select
+                        value={columnMapping.date}
+                        onValueChange={(v) => setColumnMapping(prev => ({ ...prev, date: v }))}
+                      >
+                        <SelectTrigger className="bg-background">
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {csvHeaders.map((h) => (
+                            <SelectItem key={h} value={h}>{h}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label className="text-xs">Descrição *</Label>
+                      <Select
+                        value={columnMapping.description}
+                        onValueChange={(v) => setColumnMapping(prev => ({ ...prev, description: v }))}
+                      >
+                        <SelectTrigger className="bg-background">
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {csvHeaders.map((h) => (
+                            <SelectItem key={h} value={h}>{h}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label className="text-xs">Valor *</Label>
+                      <Select
+                        value={columnMapping.amount}
+                        onValueChange={(v) => setColumnMapping(prev => ({ ...prev, amount: v }))}
+                      >
+                        <SelectTrigger className="bg-background">
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {csvHeaders.map((h) => (
+                            <SelectItem key={h} value={h}>{h}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label className="text-xs">Categoria (opcional)</Label>
+                      <Select
+                        value={columnMapping.category}
+                        onValueChange={(v) => setColumnMapping(prev => ({ ...prev, category: v }))}
+                      >
+                        <SelectTrigger className="bg-background">
+                          <SelectValue placeholder="Nenhuma" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Nenhuma</SelectItem>
+                          {csvHeaders.map((h) => (
+                            <SelectItem key={h} value={h}>{h}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <Button
+                    onClick={handleApplyMapping}
+                    size="sm"
+                    className="w-full mt-2"
+                  >
+                    Aplicar Mapeamento
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
 
           {preview.length > 0 && (
             <div className="space-y-2">
@@ -350,7 +560,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
               disabled={loading || preview.length === 0}
               className="flex-1 bg-primary hover:bg-primary/90"
             >
-              {loading ? "Importando..." : `Importar ${preview.length} transações`}
+              {loading ? "Importando..." : `Importar ${preview.length > 0 ? preview.length : ""} transações`}
             </Button>
           </div>
         </div>
