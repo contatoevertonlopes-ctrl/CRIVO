@@ -37,6 +37,8 @@ interface ColumnMapping {
   date: string;
   description: string;
   amount: string;
+  credit: string;
+  debit: string;
   category: string;
 }
 
@@ -53,6 +55,8 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     date: "",
     description: "",
     amount: "",
+    credit: "",
+    debit: "",
     category: "",
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -62,29 +66,66 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     
     const dateIndex = headers.indexOf(mapping.date);
     const descriptionIndex = headers.indexOf(mapping.description);
-    const amountIndex = headers.indexOf(mapping.amount);
+    const amountIndex = mapping.amount ? headers.indexOf(mapping.amount) : -1;
+    const creditIndex = mapping.credit ? headers.indexOf(mapping.credit) : -1;
+    const debitIndex = mapping.debit ? headers.indexOf(mapping.debit) : -1;
     const categoryIndex = mapping.category ? headers.indexOf(mapping.category) : -1;
 
-    if (dateIndex === -1 || descriptionIndex === -1 || amountIndex === -1) {
+    // Need date, description, and either amount OR credit/debit columns
+    const hasAmountColumn = amountIndex !== -1;
+    const hasCreditDebitColumns = creditIndex !== -1 || debitIndex !== -1;
+    
+    if (dateIndex === -1 || descriptionIndex === -1 || (!hasAmountColumn && !hasCreditDebitColumns)) {
       return [];
     }
 
     for (const row of data) {
-      if (row.length <= Math.max(dateIndex, descriptionIndex, amountIndex)) continue;
+      const maxIndex = Math.max(dateIndex, descriptionIndex, amountIndex, creditIndex, debitIndex);
+      if (row.length <= maxIndex) continue;
       
       const dateStr = row[dateIndex]?.trim();
       const description = row[descriptionIndex]?.trim();
-      const amountStr = row[amountIndex]?.trim();
       const category = categoryIndex >= 0 ? row[categoryIndex]?.trim() : "Importado";
       
-      const amount = parseFloat(amountStr.replace(",", ".").replace(/[^\d.-]/g, ""));
+      let amount = 0;
+      let type: "income" | "expense" = "expense";
       
-      if (!isNaN(amount) && description) {
+      if (hasCreditDebitColumns) {
+        // Parse credit/debit columns
+        const creditStr = creditIndex >= 0 ? row[creditIndex]?.trim() : "";
+        const debitStr = debitIndex >= 0 ? row[debitIndex]?.trim() : "";
+        
+        const creditAmount = parseFloat(creditStr.replace(",", ".").replace(/[^\d.-]/g, "")) || 0;
+        const debitAmount = parseFloat(debitStr.replace(",", ".").replace(/[^\d.-]/g, "")) || 0;
+        
+        if (creditAmount > 0) {
+          amount = Math.abs(creditAmount);
+          type = "income";
+        } else if (debitAmount > 0) {
+          amount = Math.abs(debitAmount);
+          type = "expense";
+        } else if (creditAmount < 0) {
+          // Some banks use negative in credit column for debits
+          amount = Math.abs(creditAmount);
+          type = "expense";
+        } else if (debitAmount < 0) {
+          amount = Math.abs(debitAmount);
+          type = "income";
+        }
+      } else {
+        // Single amount column
+        const amountStr = row[amountIndex]?.trim();
+        amount = parseFloat(amountStr.replace(",", ".").replace(/[^\d.-]/g, ""));
+        type = amount < 0 ? "expense" : "income";
+        amount = Math.abs(amount);
+      }
+      
+      if (!isNaN(amount) && amount > 0 && description) {
         transactions.push({
           date: parseDate(dateStr),
           description: description.substring(0, 100),
-          amount: Math.abs(amount),
-          type: amount < 0 ? "expense" : "income",
+          amount,
+          type,
           category: category || "Importado",
           status: "pending",
         });
@@ -229,17 +270,24 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
       setCsvData(data);
       
       // Try auto-detect common column names
+      // Detect credit/debit columns
+      const creditCol = headers.find(h => /cr[eé]dito|credit|entrada|deposito/i.test(h)) || "";
+      const debitCol = headers.find(h => /d[eé]bito|debit|sa[ií]da|retirada/i.test(h)) || "";
+      
       const autoMapping: ColumnMapping = {
         date: headers.find(h => /data|date|dt/i.test(h)) || "",
         description: headers.find(h => /descri|memo|hist|name|titulo/i.test(h)) || "",
-        amount: headers.find(h => /valor|amount|value|quantia/i.test(h)) || "",
+        amount: creditCol || debitCol ? "" : (headers.find(h => /valor|amount|value|quantia/i.test(h)) || ""),
+        credit: creditCol,
+        debit: debitCol,
         category: headers.find(h => /categ|tipo|type/i.test(h)) || "",
       };
       
       setColumnMapping(autoMapping);
       
       // If auto-detection found required fields, show preview
-      if (autoMapping.date && autoMapping.description && autoMapping.amount) {
+      const hasAmountMapping = autoMapping.amount || autoMapping.credit || autoMapping.debit;
+      if (autoMapping.date && autoMapping.description && hasAmountMapping) {
         const parsed = parseCSVWithMapping(headers, data, autoMapping);
         if (parsed.length > 0) {
           setPreview(parsed.slice(0, 10));
@@ -269,8 +317,9 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
   };
 
   const handleApplyMapping = () => {
-    if (!columnMapping.date || !columnMapping.description || !columnMapping.amount) {
-      toast.error("Mapeie pelo menos Data, Descrição e Valor.");
+    const hasAmountMapping = columnMapping.amount || columnMapping.credit || columnMapping.debit;
+    if (!columnMapping.date || !columnMapping.description || !hasAmountMapping) {
+      toast.error("Mapeie Data, Descrição e Valor (ou Crédito/Débito).");
       return;
     }
     
@@ -335,7 +384,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     setCsvHeaders([]);
     setCsvData([]);
     setShowMapping(false);
-    setColumnMapping({ date: "", description: "", amount: "", category: "" });
+    setColumnMapping({ date: "", description: "", amount: "", credit: "", debit: "", category: "" });
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -461,15 +510,16 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
                     </div>
                     
                     <div className="space-y-1">
-                      <Label className="text-xs">Valor *</Label>
+                      <Label className="text-xs">Valor (única coluna)</Label>
                       <Select
                         value={columnMapping.amount}
-                        onValueChange={(v) => setColumnMapping(prev => ({ ...prev, amount: v }))}
+                        onValueChange={(v) => setColumnMapping(prev => ({ ...prev, amount: v, credit: "", debit: "" }))}
                       >
                         <SelectTrigger className="bg-background">
-                          <SelectValue placeholder="Selecione..." />
+                          <SelectValue placeholder="Nenhuma" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="">Nenhuma</SelectItem>
                           {csvHeaders.map((h) => (
                             <SelectItem key={h} value={h}>{h}</SelectItem>
                           ))}
@@ -493,6 +543,49 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-2 border-t border-border/50">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Ou use colunas separadas de Crédito/Débito:
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-primary">Crédito (Entradas)</Label>
+                        <Select
+                          value={columnMapping.credit}
+                          onValueChange={(v) => setColumnMapping(prev => ({ ...prev, credit: v, amount: "" }))}
+                        >
+                          <SelectTrigger className="bg-background">
+                            <SelectValue placeholder="Nenhuma" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Nenhuma</SelectItem>
+                            {csvHeaders.map((h) => (
+                              <SelectItem key={h} value={h}>{h}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <Label className="text-xs text-destructive">Débito (Saídas)</Label>
+                        <Select
+                          value={columnMapping.debit}
+                          onValueChange={(v) => setColumnMapping(prev => ({ ...prev, debit: v, amount: "" }))}
+                        >
+                          <SelectTrigger className="bg-background">
+                            <SelectValue placeholder="Nenhuma" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Nenhuma</SelectItem>
+                            {csvHeaders.map((h) => (
+                              <SelectItem key={h} value={h}>{h}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
                   
