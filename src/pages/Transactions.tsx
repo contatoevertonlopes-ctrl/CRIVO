@@ -16,6 +16,8 @@ import Sidebar from "@/components/Sidebar";
 import ImportTransactionsDialog from "@/components/ImportTransactionsDialog";
 import TransactionCard from "@/components/TransactionCard";
 import StatusSelector from "@/components/StatusSelector";
+import TransactionPagination from "@/components/TransactionPagination";
+import { sortTransactionsByPriority } from "@/utils/transactionSort";
 import { startOfMonth, endOfMonth, subMonths, addMonths, format } from "date-fns";
 
 interface Transaction {
@@ -56,7 +58,9 @@ const Transactions = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [showProFilters, setShowProFilters] = useState(false);
-  const [sortOrder, setSortOrder] = useState<"date_desc" | "date_asc" | "amount_desc" | "amount_asc">("date_desc");
+  const [sortOrder, setSortOrder] = useState<"date_desc" | "date_asc" | "amount_desc" | "amount_asc" | "priority">("priority");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const [formData, setFormData] = useState({
     description: "",
@@ -198,12 +202,16 @@ const Transactions = () => {
         filtered = [...filtered].sort((a, b) => a.date.localeCompare(b.date));
         break;
       case "date_desc":
-      default:
         filtered = [...filtered].sort((a, b) => b.date.localeCompare(a.date));
+        break;
+      case "priority":
+      default:
+        filtered = sortTransactionsByPriority(filtered);
         break;
     }
 
     setFilteredTransactions(filtered);
+    setCurrentPage(1); // Reset to page 1 when filters change
   }, [transactions, search, typeFilter, statusFilter, categoryFilter, tagFilter, periodFilter, customDateFrom, customDateTo, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed, sortOrder]);
 
   const categories = [...new Set(transactions.map((t) => t.category))];
@@ -766,18 +774,25 @@ const Transactions = () => {
               </div>
             ) : (
               <>
-                {/* Mobile: Card view */}
+                {/* Mobile: Card view with pagination */}
                 <div className="md:hidden">
-                  {filteredTransactions.map((transaction) => (
-                    <TransactionCard
-                      key={transaction.id}
-                      transaction={transaction}
-                      onEdit={openEditDialog}
-                      onDelete={handleDelete}
-                      onDuplicate={handleDuplicate}
-                      onStatusChange={fetchTransactions}
-                    />
-                  ))}
+                  {filteredTransactions
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((transaction) => (
+                      <TransactionCard
+                        key={transaction.id}
+                        transaction={transaction}
+                        onEdit={openEditDialog}
+                        onDelete={handleDelete}
+                        onDuplicate={handleDuplicate}
+                        onStatusChange={fetchTransactions}
+                      />
+                    ))}
+                  <TransactionPagination
+                    currentPage={currentPage}
+                    totalPages={Math.ceil(filteredTransactions.length / itemsPerPage)}
+                    onPageChange={setCurrentPage}
+                  />
                 </div>
                 
                 {/* Desktop: Table view */}
@@ -825,7 +840,9 @@ const Transactions = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredTransactions.map((transaction) => (
+                      {filteredTransactions
+                        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                        .map((transaction) => (
                         <tr
                           key={transaction.id}
                           className="border-b border-secondary/50 hover:bg-secondary/30 transition-colors"
@@ -906,6 +923,11 @@ const Transactions = () => {
                       ))}
                     </tbody>
                   </table>
+                  <TransactionPagination
+                    currentPage={currentPage}
+                    totalPages={Math.ceil(filteredTransactions.length / itemsPerPage)}
+                    onPageChange={setCurrentPage}
+                  />
                 </div>
               </>
             )}
