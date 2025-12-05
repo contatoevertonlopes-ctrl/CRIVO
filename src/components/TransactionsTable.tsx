@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AddTransactionDialog from "./AddTransactionDialog";
+import StatusSelector from "./StatusSelector";
 
 interface Transaction {
   id: string;
@@ -156,13 +157,12 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
                   </td>
                   <td className="py-2 px-2">{formatCurrency(transaction.amount)}</td>
                   <td className="py-2 px-2">
-                    <span
-                      className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full ${getStatusStyle(
-                        transaction.status
-                      )}`}
-                    >
-                      {getStatusLabel(transaction.status)}
-                    </span>
+                    <StatusSelector
+                      transactionId={transaction.id}
+                      currentStatus={transaction.status}
+                      onStatusChange={fetchTransactions}
+                      size="sm"
+                    />
                   </td>
                 </tr>
               ))}
