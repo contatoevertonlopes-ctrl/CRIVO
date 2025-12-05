@@ -70,31 +70,58 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
   const parseOFX = (content: string): ParsedTransaction[] => {
     const transactions: ParsedTransaction[] = [];
     
-    // Simple OFX parser
-    const stmtTrnRegex = /<STMTTRN>([\s\S]*?)<\/STMTTRN>/gi;
+    // Try XML-style with closing tags first
+    let stmtTrnRegex = /<STMTTRN>([\s\S]*?)<\/STMTTRN>/gi;
     let match;
+    let found = false;
     
     while ((match = stmtTrnRegex.exec(content)) !== null) {
+      found = true;
       const block = match[1];
+      const transaction = parseOFXBlock(block);
+      if (transaction) transactions.push(transaction);
+    }
+    
+    // If no matches, try SGML-style without closing tags
+    if (!found) {
+      // Split by STMTTRN tags (SGML style - no closing tags)
+      const blocks = content.split(/<STMTTRN>/i);
       
-      const trnType = extractOFXField(block, "TRNTYPE");
-      const datePosted = extractOFXField(block, "DTPOSTED");
-      const amount = parseFloat(extractOFXField(block, "TRNAMT").replace(",", "."));
-      const memo = extractOFXField(block, "MEMO") || extractOFXField(block, "NAME") || "Transação importada";
-      
-      if (!isNaN(amount)) {
-        transactions.push({
-          date: parseOFXDate(datePosted),
-          description: memo.substring(0, 100),
-          amount: Math.abs(amount),
-          type: amount < 0 || trnType === "DEBIT" ? "expense" : "income",
-          category: "Importado",
-          status: "pending",
-        });
+      for (let i = 1; i < blocks.length; i++) {
+        // Get content until next major tag or end
+        let block = blocks[i];
+        const endIndex = block.search(/<\/(STMTTRN|BANKTRANLIST|STMTRS|OFX)>/i);
+        if (endIndex > 0) {
+          block = block.substring(0, endIndex);
+        }
+        
+        const transaction = parseOFXBlock(block);
+        if (transaction) transactions.push(transaction);
       }
     }
     
+    console.log("OFX parsed transactions:", transactions.length);
     return transactions;
+  };
+
+  const parseOFXBlock = (block: string): ParsedTransaction | null => {
+    const trnType = extractOFXField(block, "TRNTYPE");
+    const datePosted = extractOFXField(block, "DTPOSTED");
+    const amountStr = extractOFXField(block, "TRNAMT");
+    const amount = parseFloat(amountStr.replace(",", "."));
+    const memo = extractOFXField(block, "MEMO") || extractOFXField(block, "NAME") || "Transação importada";
+    
+    if (!isNaN(amount) && amountStr) {
+      return {
+        date: parseOFXDate(datePosted),
+        description: memo.substring(0, 100).trim(),
+        amount: Math.abs(amount),
+        type: amount < 0 || trnType === "DEBIT" ? "expense" : "income",
+        category: "Importado",
+        status: "pending",
+      };
+    }
+    return null;
   };
 
   const extractOFXField = (block: string, field: string): string => {
