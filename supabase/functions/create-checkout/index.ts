@@ -7,11 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PRICES = {
-  monthly: "price_1SajDCA22gVNuvUZ7dyE7bor",
-  annual: "price_1SajDPA22gVNuvUZZOEksGyJ",
-};
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -24,9 +19,8 @@ serve(async (req) => {
 
   try {
     const { priceType } = await req.json();
-    const priceId = PRICES[priceType as keyof typeof PRICES];
     
-    if (!priceId) {
+    if (!priceType || !["monthly", "annual"].includes(priceType)) {
       throw new Error("Invalid price type");
     }
 
@@ -44,6 +38,30 @@ serve(async (req) => {
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
+
+    // Fetch active prices dynamically from Stripe
+    const productName = priceType === "annual" ? "Plano Pro Anual" : "Plano Pro Mensal";
+    const products = await stripe.products.search({
+      query: `name:"${productName}" AND active:"true"`,
+    });
+
+    if (products.data.length === 0) {
+      throw new Error(`Product not found: ${productName}`);
+    }
+
+    const product = products.data[0];
+    const prices = await stripe.prices.list({
+      product: product.id,
+      active: true,
+      limit: 1,
+    });
+
+    if (prices.data.length === 0) {
+      throw new Error(`No active price found for product: ${productName}`);
+    }
+
+    const priceId = prices.data[0].id;
+    console.log("[CREATE-CHECKOUT] Using price:", priceId);
 
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
