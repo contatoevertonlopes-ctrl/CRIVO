@@ -39,6 +39,8 @@ const Transactions = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [periodFilter, setPeriodFilter] = useState<string>("all");
+  const [customDateFrom, setCustomDateFrom] = useState("");
+  const [customDateTo, setCustomDateTo] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [minAmount, setMinAmount] = useState("");
@@ -135,14 +137,21 @@ const Transactions = () => {
           periodStart = startOfMonth(addMonths(now, 1));
           periodEnd = endOfMonth(addMonths(now, 1));
           break;
+        case "custom":
+          if (customDateFrom && customDateTo) {
+            filtered = filtered.filter((t) => t.date >= customDateFrom && t.date <= customDateTo);
+          }
+          break;
         default:
           periodStart = new Date(0);
           periodEnd = new Date(9999, 11, 31);
       }
 
-      const startStr = format(periodStart, "yyyy-MM-dd");
-      const endStr = format(periodEnd, "yyyy-MM-dd");
-      filtered = filtered.filter((t) => t.date >= startStr && t.date <= endStr);
+      if (periodFilter !== "custom") {
+        const startStr = format(periodStart!, "yyyy-MM-dd");
+        const endStr = format(periodEnd!, "yyyy-MM-dd");
+        filtered = filtered.filter((t) => t.date >= startStr && t.date <= endStr);
+      }
     }
 
     // Pro filters
@@ -165,7 +174,7 @@ const Transactions = () => {
     }
 
     setFilteredTransactions(filtered);
-  }, [transactions, search, typeFilter, statusFilter, categoryFilter, periodFilter, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed]);
+  }, [transactions, search, typeFilter, statusFilter, categoryFilter, periodFilter, customDateFrom, customDateTo, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed]);
 
   const categories = [...new Set(transactions.map((t) => t.category))];
 
@@ -605,8 +614,34 @@ const Transactions = () => {
                   <SelectItem value="last_month">Mês passado</SelectItem>
                   <SelectItem value="this_month">Este mês</SelectItem>
                   <SelectItem value="next_month">Próximo mês</SelectItem>
+                  <SelectItem value="custom">Personalizado</SelectItem>
                 </SelectContent>
               </Select>
+              
+              {periodFilter === "custom" && (
+                <div className="md:col-span-4 flex flex-col md:flex-row gap-4 mt-2 md:mt-0">
+                  <div className="flex items-center gap-2 flex-1">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="date"
+                      value={customDateFrom}
+                      onChange={(e) => setCustomDateFrom(e.target.value)}
+                      placeholder="Data inicial"
+                      className="flex-1"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 flex-1">
+                    <span className="text-muted-foreground text-sm">até</span>
+                    <Input
+                      type="date"
+                      value={customDateTo}
+                      onChange={(e) => setCustomDateTo(e.target.value)}
+                      placeholder="Data final"
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+              )}
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="Tipo" />
