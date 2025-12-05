@@ -40,14 +40,9 @@ const Sidebar = () => {
   }];
   return <>
       {/* Mobile menu button - always visible on mobile */}
-      {collapsed && (
-        <button 
-          onClick={toggle}
-          className="lg:hidden fixed top-4 left-4 z-50 w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center hover:bg-primary/20 transition-colors"
-        >
+      {collapsed && <button onClick={toggle} className="lg:hidden fixed top-4 left-4 z-50 w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center hover:bg-primary/20 transition-colors">
           <ChevronRight className="w-5 h-5 text-foreground" />
-        </button>
-      )}
+        </button>}
 
       {/* Mobile overlay */}
       {!collapsed && <div className="lg:hidden fixed inset-0 bg-black/50 z-40" onClick={toggle} />}
@@ -64,9 +59,9 @@ const Sidebar = () => {
             ​cw
           </div>
           {!collapsed && <div className="flex flex-col gap-0.5">
-              <div className="text-base font-bold tracking-tight">Cloud Track </div>
+              <div className="text-base font-bold tracking-tight text-inherit">Club Finance Track </div>
               <div className="text-[11px] text-muted-foreground uppercase tracking-[0.14em]">
-                Dashboard Cloud track 
+                Dashboard Club Finance track 
               </div>
             </div>}
         </div>
