@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.update-transaction-status]
 verify_jwt = false
+
+[functions.update-price]
+verify_jwt = false
