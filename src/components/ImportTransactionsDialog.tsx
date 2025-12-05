@@ -329,69 +329,95 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     setCsvData([]);
     setShowRawPreview(false);
     
-    const content = await file.text();
-    setRawContent(content.substring(0, 3000)); // Store first 3000 chars for preview
-    
-    if (file.name.toLowerCase().endsWith(".csv")) {
-      setFileType("csv");
-      const { headers, data } = parseCSVRaw(content);
+    try {
+      const content = await file.text();
+      setRawContent(content.substring(0, 3000)); // Store first 3000 chars for preview
       
-      if (headers.length === 0 || data.length === 0) {
-        toast.error("Arquivo CSV vazio ou inválido.");
-        setShowRawPreview(true);
-        return;
-      }
-      
-      setCsvHeaders(headers);
-      setCsvData(data);
-      
-      // Try auto-detect common column names
-      // Detect credit/debit columns
-      const creditCol = headers.find(h => /cr[eé]dito|credit|entrada|deposito/i.test(h)) || "";
-      const debitCol = headers.find(h => /d[eé]bito|debit|sa[ií]da|retirada/i.test(h)) || "";
-      
-      const autoMapping: ColumnMapping = {
-        date: headers.find(h => /data|date|dt/i.test(h)) || "",
-        description: headers.find(h => /descri|memo|hist|name|titulo/i.test(h)) || "",
-        amount: creditCol || debitCol ? "" : (headers.find(h => /valor|amount|value|quantia/i.test(h)) || ""),
-        credit: creditCol,
-        debit: debitCol,
-        category: headers.find(h => /categ|tipo|type/i.test(h)) || "",
-      };
-      
-      setColumnMapping(autoMapping);
-      
-      // If auto-detection found required fields, show preview
-      const hasAmountMapping = autoMapping.amount || autoMapping.credit || autoMapping.debit;
-      if (autoMapping.date && autoMapping.description && hasAmountMapping) {
-        const parsed = parseCSVWithMapping(headers, data, autoMapping);
-        if (parsed.length > 0) {
+      if (file.name.toLowerCase().endsWith(".csv")) {
+        setFileType("csv");
+        
+        try {
+          const { headers, data } = parseCSVRaw(content);
+          
+          if (headers.length === 0 || data.length === 0) {
+            toast.error("Arquivo CSV vazio ou inválido.");
+            setShowRawPreview(true);
+            return;
+          }
+          
+          setCsvHeaders(headers);
+          setCsvData(data);
+          
+          // Try auto-detect common column names
+          // Detect credit/debit columns
+          const creditCol = headers.find(h => /cr[eé]dito|credit|entrada|deposito/i.test(h)) || "";
+          const debitCol = headers.find(h => /d[eé]bito|debit|sa[ií]da|retirada/i.test(h)) || "";
+          
+          const autoMapping: ColumnMapping = {
+            date: headers.find(h => /data|date|dt/i.test(h)) || "",
+            description: headers.find(h => /descri|memo|hist|name|titulo/i.test(h)) || "",
+            amount: creditCol || debitCol ? "" : (headers.find(h => /valor|amount|value|quantia/i.test(h)) || ""),
+            credit: creditCol,
+            debit: debitCol,
+            category: headers.find(h => /categ|tipo|type/i.test(h)) || "",
+          };
+          
+          setColumnMapping(autoMapping);
+          
+          // If auto-detection found required fields, show preview
+          const hasAmountMapping = autoMapping.amount || autoMapping.credit || autoMapping.debit;
+          if (autoMapping.date && autoMapping.description && hasAmountMapping) {
+            try {
+              const parsed = parseCSVWithMapping(headers, data, autoMapping);
+              if (parsed.length > 0) {
+                setPreview(parsed.slice(0, 10));
+                toast.success(`${parsed.length} transações encontradas`);
+              } else {
+                setShowMapping(true);
+                toast.info("Configure o mapeamento de colunas abaixo.");
+              }
+            } catch (parseError) {
+              console.error("CSV parsing error:", parseError);
+              setShowMapping(true);
+              toast.info("Configure o mapeamento de colunas manualmente.");
+            }
+          } else {
+            setShowMapping(true);
+            toast.info("Configure o mapeamento de colunas abaixo.");
+          }
+        } catch (csvError) {
+          console.error("CSV processing error:", csvError);
+          toast.error("Erro ao processar CSV. Verifique o formato do arquivo.");
+          setShowRawPreview(true);
+        }
+        
+      } else if (file.name.toLowerCase().endsWith(".ofx") || file.name.toLowerCase().endsWith(".qfx")) {
+        setFileType("ofx");
+        
+        try {
+          const parsed = parseOFX(content);
+          
+          if (parsed.length === 0) {
+            toast.error("Nenhuma transação encontrada no arquivo.");
+            setShowRawPreview(true);
+            return;
+          }
+          
           setPreview(parsed.slice(0, 10));
           toast.success(`${parsed.length} transações encontradas`);
-        } else {
-          setShowMapping(true);
-          toast.info("Configure o mapeamento de colunas abaixo.");
+        } catch (ofxError) {
+          console.error("OFX processing error:", ofxError);
+          toast.error("Erro ao processar OFX. Verifique o formato do arquivo.");
+          setShowRawPreview(true);
         }
       } else {
-        setShowMapping(true);
-        toast.info("Configure o mapeamento de colunas abaixo.");
+        setFileType("");
+        toast.error("Formato não suportado. Use CSV ou OFX.");
       }
-      
-    } else if (file.name.toLowerCase().endsWith(".ofx") || file.name.toLowerCase().endsWith(".qfx")) {
-      setFileType("ofx");
-      const parsed = parseOFX(content);
-      
-      if (parsed.length === 0) {
-        toast.error("Nenhuma transação encontrada no arquivo.");
-        setShowRawPreview(true);
-        return;
-      }
-      
-      setPreview(parsed.slice(0, 10));
-      toast.success(`${parsed.length} transações encontradas`);
-    } else {
-      setFileType("");
-      toast.error("Formato não suportado. Use CSV ou OFX.");
+    } catch (error) {
+      console.error("File read error:", error);
+      toast.error("Erro ao ler arquivo.");
+      setShowRawPreview(true);
     }
   };
 
@@ -402,16 +428,21 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
       return;
     }
     
-    const parsed = parseCSVWithMapping(csvHeaders, csvData, columnMapping);
-    
-    if (parsed.length === 0) {
-      toast.error("Nenhuma transação válida encontrada com o mapeamento atual.");
-      return;
+    try {
+      const parsed = parseCSVWithMapping(csvHeaders, csvData, columnMapping);
+      
+      if (parsed.length === 0) {
+        toast.error("Nenhuma transação válida encontrada com o mapeamento atual.");
+        return;
+      }
+      
+      setPreview(parsed.slice(0, 10));
+      setShowMapping(false);
+      toast.success(`${parsed.length} transações encontradas`);
+    } catch (error) {
+      console.error("Mapping error:", error);
+      toast.error("Erro ao aplicar mapeamento. Verifique os dados.");
     }
-    
-    setPreview(parsed.slice(0, 10));
-    setShowMapping(false);
-    toast.success(`${parsed.length} transações encontradas`);
   };
 
   const normalizeDescription = (desc: string) => 
