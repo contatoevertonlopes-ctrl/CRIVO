@@ -82,19 +82,19 @@ serve(async (req) => {
     const newPrice = await stripe.prices.create(newPriceData);
     logStep("New price created", { priceId: newPrice.id, amount: newPrice.unit_amount });
 
-    // Archive old prices with the same interval
+    // Update product's default price FIRST (before archiving old prices)
+    await stripe.products.update(productId, {
+      default_price: newPrice.id,
+    });
+    logStep("Updated product default price");
+
+    // Archive old prices with the same interval (now safe since default was updated)
     for (const oldPrice of existingPrices.data) {
       if (oldPrice.recurring?.interval === (interval === "year" ? "year" : "month")) {
         await stripe.prices.update(oldPrice.id, { active: false });
         logStep("Archived old price", { priceId: oldPrice.id });
       }
     }
-
-    // Update product's default price
-    await stripe.products.update(productId, {
-      default_price: newPrice.id,
-    });
-    logStep("Updated product default price");
 
     return new Response(JSON.stringify({ 
       success: true, 
