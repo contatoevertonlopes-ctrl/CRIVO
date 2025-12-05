@@ -177,7 +177,7 @@ const Plans = () => {
             <div className="relative z-10">
               <h3 className="text-base sm:text-lg font-semibold mb-2">Mensal</h3>
               <div className="flex items-baseline gap-1 mb-3 sm:mb-4">
-                <span className="text-2xl sm:text-3xl font-bold">R$ 29</span>
+                <span className="text-2xl sm:text-3xl font-bold">R$ 15,90</span>
                 <span className="text-sm text-muted-foreground">/ mês</span>
               </div>
               <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6">
@@ -224,11 +224,11 @@ const Plans = () => {
             <div className="relative z-10">
               <h3 className="text-base sm:text-lg font-semibold mb-2">Anual</h3>
               <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-2xl sm:text-3xl font-bold">R$ 269</span>
+                <span className="text-2xl sm:text-3xl font-bold">R$ 139</span>
                 <span className="text-sm text-muted-foreground">/ ano</span>
               </div>
               <p className="text-[10px] sm:text-xs text-primary mb-3 sm:mb-4">
-                Equivale a ~R$ 22,42/mês • Economize 23%
+                Equivale a ~R$ 11,58/mês • Economize 27%
               </p>
               <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6">
                 Perfeito para quem leva os números a sério.
