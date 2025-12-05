@@ -69,7 +69,7 @@ const Plans = () => {
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
           <div className="flex items-center justify-center gap-3 mb-4 sm:mb-6">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-green-900 items-center justify-center font-bold text-xl sm:text-2xl shadow-lg flex flex-row bg-primary">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-green-900 items-center justify-center font-bold text-xl sm:text-2xl flex flex-row bg-[#0f7be7] shadow-sm">
               CF
             </div>
             <div className="flex flex-col text-left">
