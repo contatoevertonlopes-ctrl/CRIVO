@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Upload, FileText, AlertCircle, Settings2, Eye, EyeOff } from "lucide-react";
+import * as XLSX from "xlsx";
 
 interface ImportTransactionsDialogProps {
   onSuccess: () => void;
@@ -62,7 +63,29 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [rawContent, setRawContent] = useState<string>("");
   const [showRawPreview, setShowRawPreview] = useState(false);
-  const [fileType, setFileType] = useState<"csv" | "ofx" | "">("");
+  const [fileType, setFileType] = useState<"csv" | "ofx" | "xlsx" | "">("");
+
+  const parseXLSX = async (file: File): Promise<{ headers: string[]; data: string[][] }> => {
+    const arrayBuffer = await file.arrayBuffer();
+    const workbook = XLSX.read(arrayBuffer, { type: "array" });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    
+    // Convert to array of arrays
+    const rawData: (string | number | undefined)[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    
+    if (rawData.length === 0) return { headers: [], data: [] };
+    
+    // First row as headers
+    const headers = (rawData[0] || []).map(h => String(h || "").trim());
+    
+    // Rest as data
+    const data = rawData.slice(1).map(row => 
+      (row || []).map(cell => String(cell ?? "").trim())
+    ).filter(row => row.some(cell => cell.length > 0));
+    
+    return { headers, data };
+  };
 
   // Auto-categorization based on keywords in description
   const categoryKeywords: Record<string, string[]> = {
@@ -410,9 +433,67 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
           toast.error("Erro ao processar OFX. Verifique o formato do arquivo.");
           setShowRawPreview(true);
         }
+      } else if (file.name.toLowerCase().endsWith(".xlsx") || file.name.toLowerCase().endsWith(".xls")) {
+        setFileType("xlsx");
+        
+        try {
+          const { headers, data } = await parseXLSX(file);
+          
+          if (headers.length === 0 || data.length === 0) {
+            toast.error("Arquivo Excel vazio ou inválido.");
+            setShowRawPreview(true);
+            return;
+          }
+          
+          // Set raw content preview for xlsx
+          setRawContent(`Planilha Excel: ${file.name}\nColunas: ${headers.join(", ")}\nLinhas de dados: ${data.length}`);
+          
+          setCsvHeaders(headers);
+          setCsvData(data);
+          
+          // Try auto-detect common column names
+          const creditCol = headers.find(h => /cr[eé]dito|credit|entrada|deposito/i.test(h)) || "";
+          const debitCol = headers.find(h => /d[eé]bito|debit|sa[ií]da|retirada/i.test(h)) || "";
+          
+          const autoMapping: ColumnMapping = {
+            date: headers.find(h => /data|date|dt/i.test(h)) || "",
+            description: headers.find(h => /descri|memo|hist|name|titulo/i.test(h)) || "",
+            amount: creditCol || debitCol ? "" : (headers.find(h => /valor|amount|value|quantia/i.test(h)) || ""),
+            credit: creditCol,
+            debit: debitCol,
+            category: headers.find(h => /categ|tipo|type/i.test(h)) || "",
+          };
+          
+          setColumnMapping(autoMapping);
+          
+          const hasAmountMapping = autoMapping.amount || autoMapping.credit || autoMapping.debit;
+          if (autoMapping.date && autoMapping.description && hasAmountMapping) {
+            try {
+              const parsed = parseCSVWithMapping(headers, data, autoMapping);
+              if (parsed.length > 0) {
+                setPreview(parsed.slice(0, 10));
+                toast.success(`${parsed.length} transações encontradas`);
+              } else {
+                setShowMapping(true);
+                toast.info("Configure o mapeamento de colunas abaixo.");
+              }
+            } catch (parseError) {
+              console.error("Excel parsing error:", parseError);
+              setShowMapping(true);
+              toast.info("Configure o mapeamento de colunas manualmente.");
+            }
+          } else {
+            setShowMapping(true);
+            toast.info("Configure o mapeamento de colunas abaixo.");
+          }
+        } catch (xlsxError) {
+          console.error("Excel processing error:", xlsxError);
+          toast.error("Erro ao processar Excel. Verifique o formato do arquivo.");
+          setShowRawPreview(true);
+        }
       } else {
         setFileType("");
-        toast.error("Formato não suportado. Use CSV ou OFX.");
+        toast.error("Formato não suportado. Use CSV, OFX ou Excel.");
       }
     } catch (error) {
       console.error("File read error:", error);
@@ -566,6 +647,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
                 <p className="font-medium mb-1">Formatos suportados:</p>
                 <ul className="text-muted-foreground space-y-1">
                   <li>• <strong>CSV:</strong> Com mapeamento manual de colunas</li>
+                  <li>• <strong>Excel (.xlsx):</strong> Planilhas com mapeamento de colunas</li>
                   <li>• <strong>OFX/QFX:</strong> Formato padrão de extratos bancários</li>
                 </ul>
               </div>
@@ -578,7 +660,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".csv,.ofx,.qfx"
+                accept=".csv,.ofx,.qfx,.xlsx,.xls"
                 onChange={handleFileChange}
                 className="hidden"
                 id="file-input"
@@ -589,7 +671,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
               >
                 <FileText className="w-5 h-5 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">
-                  {fileName || "Clique para selecionar arquivo CSV ou OFX"}
+                  {fileName || "Clique para selecionar arquivo CSV, Excel ou OFX"}
                 </span>
               </label>
             </div>
