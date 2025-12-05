@@ -87,6 +87,7 @@ export type Database = {
           parent_transaction_id: string | null
           recurring_interval: string | null
           status: string
+          tag: string | null
           type: string
           updated_at: string
           user_id: string
@@ -103,6 +104,7 @@ export type Database = {
           parent_transaction_id?: string | null
           recurring_interval?: string | null
           status?: string
+          tag?: string | null
           type: string
           updated_at?: string
           user_id: string
@@ -119,6 +121,7 @@ export type Database = {
           parent_transaction_id?: string | null
           recurring_interval?: string | null
           status?: string
+          tag?: string | null
           type?: string
           updated_at?: string
           user_id?: string
