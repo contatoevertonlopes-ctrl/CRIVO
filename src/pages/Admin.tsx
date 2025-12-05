@@ -404,8 +404,6 @@ const Admin = () => {
                     <th className="text-left py-4 px-4 font-medium">Plano</th>
                     <th className="text-left py-4 px-4 font-medium">Status</th>
                     <th className="text-left py-4 px-4 font-medium">Transações</th>
-                    <th className="text-left py-4 px-4 font-medium">Receitas</th>
-                    <th className="text-left py-4 px-4 font-medium">Despesas</th>
                     <th className="text-left py-4 px-4 font-medium">Ações</th>
                   </tr>
                 </thead>
@@ -453,8 +451,6 @@ const Admin = () => {
                         </span>
                       </td>
                       <td className="py-4 px-4">{u.total_transactions}</td>
-                      <td className="py-4 px-4 text-green-400">{formatCurrency(u.total_income)}</td>
-                      <td className="py-4 px-4 text-red-400">{formatCurrency(u.total_expenses)}</td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2">
                           {u.subscription_plan === "free" ? (
