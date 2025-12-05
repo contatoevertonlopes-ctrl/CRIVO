@@ -33,7 +33,7 @@ const PlansCard = () => {
           <div className="relative overflow-hidden rounded-2xl p-3 border border-border/40 bg-secondary/98">
             <div className="text-xs text-muted-foreground mb-1">Plano Mensal</div>
             <div className="flex items-baseline gap-1 mb-1">
-              <span className="text-xl font-bold">R$ 29</span>
+              <span className="text-xl font-bold">R$ 15,90</span>
               <span className="text-[11px] text-muted-foreground">/ mês</span>
             </div>
             <div className="text-[11px] text-muted-foreground mb-2">
@@ -51,11 +51,11 @@ const PlansCard = () => {
           <div className="relative overflow-hidden rounded-2xl p-3 border border-primary/80 bg-secondary/98 shadow-[0_0_40px_rgba(34,197,94,0.3)]">
             <div className="text-xs text-muted-foreground mb-1">Plano Anual</div>
             <div className="flex items-baseline gap-1 mb-1">
-              <span className="text-xl font-bold">R$ 269</span>
+              <span className="text-xl font-bold">R$ 139</span>
               <span className="text-[11px] text-muted-foreground">/ ano</span>
             </div>
             <div className="text-[11px] text-muted-foreground mb-2">
-              Equivale a <strong>~R$ 22,42/mês</strong>. Perfeito para quem leva os números a sério.
+              Equivale a <strong>~R$ 11,58/mês</strong>. Perfeito para quem leva os números a sério.
             </div>
             <button 
               onClick={() => navigate("/plans")}
