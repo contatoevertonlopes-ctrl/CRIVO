@@ -30,7 +30,7 @@ interface ParsedTransaction {
   amount: number;
   type: "income" | "expense";
   category: string;
-  status: "pending";
+  status: "em_aberto";
 }
 
 interface ColumnMapping {
@@ -127,7 +127,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
           amount,
           type,
           category: category || "Importado",
-          status: "pending",
+          status: "em_aberto",
         });
       }
     }
@@ -203,7 +203,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
         amount: Math.abs(amount),
         type: amount < 0 || trnType === "DEBIT" ? "expense" : "income",
         category: "Importado",
-        status: "pending",
+        status: "em_aberto",
       };
     }
     return null;
