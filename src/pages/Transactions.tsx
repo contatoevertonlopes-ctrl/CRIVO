@@ -28,6 +28,7 @@ interface Transaction {
   status: string;
   is_recurring?: boolean;
   recurring_interval?: string;
+  paid_date?: string;
 }
 
 const Transactions = () => {
@@ -64,6 +65,7 @@ const Transactions = () => {
     date: new Date().toISOString().split("T")[0],
     is_recurring: false,
     recurring_interval: "monthly",
+    paid_date: "",
   });
 
   useEffect(() => {
@@ -251,6 +253,7 @@ const Transactions = () => {
           date: formData.date,
           is_recurring: subscribed ? formData.is_recurring : false,
           recurring_interval: formData.is_recurring ? formData.recurring_interval : null,
+          paid_date: formData.paid_date || null,
         })
         .eq("id", editingTransaction.id)
         .eq("user_id", user.id);
@@ -319,6 +322,7 @@ const Transactions = () => {
       date: transaction.date,
       is_recurring: transaction.is_recurring || false,
       recurring_interval: transaction.recurring_interval || "monthly",
+      paid_date: transaction.paid_date || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -333,6 +337,7 @@ const Transactions = () => {
       date: new Date().toISOString().split("T")[0],
       is_recurring: false,
       recurring_interval: "monthly",
+      paid_date: "",
     });
   };
 
@@ -789,6 +794,7 @@ const Transactions = () => {
                           </div>
                         </th>
                         <th className="text-left py-4 px-4 font-medium">Status</th>
+                        <th className="text-left py-4 px-4 font-medium">Data Pgto</th>
                         <th className="text-left py-4 px-4 font-medium">Ações</th>
                       </tr>
                     </thead>
@@ -829,6 +835,9 @@ const Transactions = () => {
                               onStatusChange={fetchTransactions}
                             />
                           </td>
+                          <td className="py-4 px-4 whitespace-nowrap text-muted-foreground">
+                            {transaction.paid_date ? formatDate(transaction.paid_date) : "-"}
+                          </td>
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-1">
                               <button
@@ -864,10 +873,11 @@ const Transactions = () => {
           </div>
 
           {/* Edit Dialog */}
-          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} modal={false}>
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
             <DialogContent className="max-w-[95vw] sm:max-w-lg">
               <DialogHeader>
                 <DialogTitle>Editar Transação</DialogTitle>
+                <DialogDescription>Modifique os campos da transação.</DialogDescription>
               </DialogHeader>
               <TransactionForm 
                 formData={formData} 

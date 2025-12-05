@@ -83,6 +83,7 @@ export type Database = {
           description: string
           id: string
           is_recurring: boolean | null
+          paid_date: string | null
           parent_transaction_id: string | null
           recurring_interval: string | null
           status: string
@@ -98,6 +99,7 @@ export type Database = {
           description: string
           id?: string
           is_recurring?: boolean | null
+          paid_date?: string | null
           parent_transaction_id?: string | null
           recurring_interval?: string | null
           status?: string
@@ -113,6 +115,7 @@ export type Database = {
           description?: string
           id?: string
           is_recurring?: boolean | null
+          paid_date?: string | null
           parent_transaction_id?: string | null
           recurring_interval?: string | null
           status?: string

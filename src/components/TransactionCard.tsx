@@ -10,6 +10,7 @@ interface Transaction {
   amount: number;
   status: string;
   is_recurring?: boolean;
+  paid_date?: string;
 }
 
 interface TransactionCardProps {
@@ -71,10 +72,16 @@ const TransactionCard = ({ transaction, onEdit, onDelete, onDuplicate, onStatusC
               <RefreshCw className="w-3 h-3 text-primary shrink-0" />
             )}
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
             <span>{formatDate(transaction.date)}</span>
             <span>•</span>
             <span>{transaction.category}</span>
+            {transaction.paid_date && (
+              <>
+                <span>•</span>
+                <span className="text-primary">Pago em {formatDate(transaction.paid_date)}</span>
+              </>
+            )}
           </div>
         </div>
         <div className="text-right shrink-0">
