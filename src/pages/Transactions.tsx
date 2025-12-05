@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Search, Plus, Edit2, Trash2, ArrowLeft, Filter, Download, Lock, Crown, RefreshCw, Calendar, Copy } from "lucide-react";
+import { Search, Plus, Edit2, Trash2, ArrowLeft, Filter, Download, Lock, Crown, RefreshCw, Calendar, Copy, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
 import TransactionForm from "@/components/TransactionForm";
 import Sidebar from "@/components/Sidebar";
 import ImportTransactionsDialog from "@/components/ImportTransactionsDialog";
@@ -530,8 +530,8 @@ const Transactions = () => {
             </div>
             
             {/* Basic Filters */}
-            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-6 md:gap-4">
-              <div className="relative col-span-2">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-5 md:gap-4">
+              <div className="relative col-span-2 md:col-span-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar..."
@@ -572,17 +572,6 @@ const Transactions = () => {
                   <SelectItem value="a_vencer">A vencer</SelectItem>
                   <SelectItem value="vencido">Vencido</SelectItem>
                   <SelectItem value="pagamento_concluido">Pago</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={sortOrder} onValueChange={setSortOrder}>
-                <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
-                  <SelectValue placeholder="Ordenar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="date_desc">Data (recente)</SelectItem>
-                  <SelectItem value="date_asc">Data (antiga)</SelectItem>
-                  <SelectItem value="amount_desc">Maior valor</SelectItem>
-                  <SelectItem value="amount_asc">Menor valor</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -749,11 +738,39 @@ const Transactions = () => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-muted-foreground border-b border-secondary bg-secondary/30">
-                        <th className="text-left py-4 px-4 font-medium">Data</th>
+                        <th 
+                          className="text-left py-4 px-4 font-medium cursor-pointer hover:text-foreground transition-colors select-none"
+                          onClick={() => setSortOrder(sortOrder === "date_desc" ? "date_asc" : "date_desc")}
+                        >
+                          <div className="flex items-center gap-1">
+                            Data
+                            {sortOrder === "date_desc" ? (
+                              <ChevronDown className="w-4 h-4 text-primary" />
+                            ) : sortOrder === "date_asc" ? (
+                              <ChevronUp className="w-4 h-4 text-primary" />
+                            ) : (
+                              <ArrowUpDown className="w-3.5 h-3.5 opacity-50" />
+                            )}
+                          </div>
+                        </th>
                         <th className="text-left py-4 px-4 font-medium">Descrição</th>
                         <th className="text-left py-4 px-4 font-medium">Categoria</th>
                         <th className="text-left py-4 px-4 font-medium">Tipo</th>
-                        <th className="text-left py-4 px-4 font-medium">Valor</th>
+                        <th 
+                          className="text-left py-4 px-4 font-medium cursor-pointer hover:text-foreground transition-colors select-none"
+                          onClick={() => setSortOrder(sortOrder === "amount_desc" ? "amount_asc" : "amount_desc")}
+                        >
+                          <div className="flex items-center gap-1">
+                            Valor
+                            {sortOrder === "amount_desc" ? (
+                              <ChevronDown className="w-4 h-4 text-primary" />
+                            ) : sortOrder === "amount_asc" ? (
+                              <ChevronUp className="w-4 h-4 text-primary" />
+                            ) : (
+                              <ArrowUpDown className="w-3.5 h-3.5 opacity-50" />
+                            )}
+                          </div>
+                        </th>
                         <th className="text-left py-4 px-4 font-medium">Status</th>
                         <th className="text-left py-4 px-4 font-medium">Ações</th>
                       </tr>
