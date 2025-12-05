@@ -105,18 +105,18 @@ const Settings = () => {
     <div className="flex min-h-screen">
       <Sidebar />
       
-      <main className="flex-1 p-5 lg:p-6 flex flex-col gap-5">
-        <div>
-          <h1 className="text-xl font-semibold mb-1">Configurações</h1>
-          <p className="text-sm text-muted-foreground">
+      <main className="flex-1 p-4 sm:p-5 lg:p-6 flex flex-col gap-4 sm:gap-5">
+        <div className="pl-12 lg:pl-0">
+          <h1 className="text-lg sm:text-xl font-semibold mb-1">Configurações</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Gerencie sua conta e preferências
           </p>
         </div>
 
-        <div className="grid gap-6 max-w-2xl">
+        <div className="grid gap-4 sm:gap-6 max-w-2xl">
           {/* Profile Section */}
-          <div className="rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-6">
-            <h2 className="text-lg font-semibold mb-4">Perfil</h2>
+          <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold mb-4">Perfil</h2>
             
             <form onSubmit={handleUpdateProfile} className="space-y-4">
               <div className="space-y-2">
@@ -156,10 +156,10 @@ const Settings = () => {
           </div>
 
           {/* Subscription Section */}
-          <div className={`rounded-3xl bg-gradient-to-bl from-background to-black border shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-6 ${
+          <div className={`rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-black border shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-4 sm:p-6 ${
             isPro ? "border-primary/40" : "border-secondary"
           }`}>
-            <h2 className="text-lg font-semibold mb-4">Assinatura</h2>
+            <h2 className="text-base sm:text-lg font-semibold mb-4">Assinatura</h2>
             
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -187,8 +187,8 @@ const Settings = () => {
           </div>
 
           {/* Logout Section */}
-          <div className="rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-6">
-            <h2 className="text-lg font-semibold mb-4">Conta</h2>
+          <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold mb-4">Conta</h2>
             
             <Button
               variant="destructive"

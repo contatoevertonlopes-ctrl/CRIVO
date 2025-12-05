@@ -167,7 +167,7 @@ const Reports = () => {
       <main className="flex-1 p-4 lg:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 sm:mb-8 pl-12 lg:pl-0">
             <div>
               <button
                 onClick={() => navigate("/")}
@@ -176,13 +176,13 @@ const Reports = () => {
                 <ArrowLeft className="w-4 h-4" />
                 <span className="text-sm">Voltar</span>
               </button>
-              <h1 className="text-2xl lg:text-3xl font-bold">Relatórios & Gráficos</h1>
-              <p className="text-muted-foreground text-sm mt-1">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Relatórios & Gráficos</h1>
+              <p className="text-muted-foreground text-xs sm:text-sm mt-1">
                 Análise detalhada das suas finanças
               </p>
             </div>
             <Select value={period} onValueChange={setPeriod}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-40 sm:w-48">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -194,50 +194,50 @@ const Reports = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4 text-primary" />
-                <p className="text-sm text-muted-foreground">Total Entradas</p>
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
+              <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                <p className="text-xs sm:text-sm text-muted-foreground">Total Entradas</p>
               </div>
-              <p className="text-2xl font-bold text-primary">{formatCurrency(stats.totalIncome)}</p>
+              <p className="text-lg sm:text-2xl font-bold text-primary">{formatCurrency(stats.totalIncome)}</p>
             </div>
-            <div className="rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingDown className="w-4 h-4 text-destructive" />
-                <p className="text-sm text-muted-foreground">Total Saídas</p>
+            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
+              <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-destructive" />
+                <p className="text-xs sm:text-sm text-muted-foreground">Total Saídas</p>
               </div>
-              <p className="text-2xl font-bold text-destructive">{formatCurrency(stats.totalExpense)}</p>
+              <p className="text-lg sm:text-2xl font-bold text-destructive">{formatCurrency(stats.totalExpense)}</p>
             </div>
-            <div className="rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <BarChart3 className="w-4 h-4 text-blue-400" />
-                <p className="text-sm text-muted-foreground">Saldo Total</p>
+            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
+              <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
+                <p className="text-xs sm:text-sm text-muted-foreground">Saldo Total</p>
               </div>
-              <p className={`text-2xl font-bold ${stats.balance >= 0 ? "text-primary" : "text-destructive"}`}>
+              <p className={`text-lg sm:text-2xl font-bold ${stats.balance >= 0 ? "text-primary" : "text-destructive"}`}>
                 {formatCurrency(stats.balance)}
               </p>
             </div>
-            <div className="rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <PieChart className="w-4 h-4 text-yellow-400" />
-                <p className="text-sm text-muted-foreground">Categorias</p>
+            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
+              <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                <PieChart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-400" />
+                <p className="text-xs sm:text-sm text-muted-foreground">Categorias</p>
               </div>
-              <p className="text-2xl font-bold">{categoryData.length}</p>
+              <p className="text-lg sm:text-2xl font-bold">{categoryData.length}</p>
             </div>
           </div>
 
           {/* Charts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Area Chart - Fluxo de Caixa */}
-            <div className="rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-5">
-              <h3 className="text-sm font-medium mb-4">Fluxo de Caixa Mensal</h3>
+            <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-4 sm:p-5">
+              <h3 className="text-xs sm:text-sm font-medium mb-3 sm:mb-4">Fluxo de Caixa Mensal</h3>
               {loading ? (
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                <div className="h-48 sm:h-64 flex items-center justify-center text-muted-foreground">
                   Carregando...
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height={280}>
+                <ResponsiveContainer width="100%" height={window.innerWidth < 640 ? 200 : 280}>
                   <AreaChart data={monthlyData}>
                     <defs>
                       <linearGradient id="colorEntradas" x1="0" y1="0" x2="0" y2="1">
@@ -250,13 +250,14 @@ const Reports = () => {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(217 33% 17%)" />
-                    <XAxis dataKey="month" stroke="hsl(220 9% 46%)" fontSize={12} />
-                    <YAxis stroke="hsl(220 9% 46%)" fontSize={12} tickFormatter={(v) => `R$${v / 1000}k`} />
+                    <XAxis dataKey="month" stroke="hsl(220 9% 46%)" fontSize={10} />
+                    <YAxis stroke="hsl(220 9% 46%)" fontSize={10} tickFormatter={(v) => `R$${v / 1000}k`} width={45} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "hsl(222 47% 5%)",
                         border: "1px solid hsl(217 33% 17%)",
                         borderRadius: "8px",
+                        fontSize: "12px",
                       }}
                       formatter={(value: number) => formatCurrency(value)}
                     />
@@ -269,24 +270,24 @@ const Reports = () => {
 
             {/* Pie Chart - Despesas por Categoria */}
             <ProFeatureOverlay>
-              <div className="rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-5">
-                <h3 className="text-sm font-medium mb-4">Despesas por Categoria</h3>
+              <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-4 sm:p-5">
+                <h3 className="text-xs sm:text-sm font-medium mb-3 sm:mb-4">Despesas por Categoria</h3>
                 {loading ? (
-                  <div className="h-64 flex items-center justify-center text-muted-foreground">
+                  <div className="h-48 sm:h-64 flex items-center justify-center text-muted-foreground">
                     Carregando...
                   </div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={280}>
+                  <ResponsiveContainer width="100%" height={window.innerWidth < 640 ? 200 : 280}>
                     <RechartsPie>
                       <Pie
                         data={categoryData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
+                        innerRadius={window.innerWidth < 640 ? 40 : 60}
+                        outerRadius={window.innerWidth < 640 ? 70 : 100}
                         paddingAngle={2}
                         dataKey="value"
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        label={({ name, percent }) => `${name.substring(0, 8)}${name.length > 8 ? '...' : ''} ${(percent * 100).toFixed(0)}%`}
                         labelLine={false}
                       >
                         {categoryData.map((entry, index) => (
@@ -298,6 +299,7 @@ const Reports = () => {
                           backgroundColor: "hsl(222 47% 5%)",
                           border: "1px solid hsl(217 33% 17%)",
                           borderRadius: "8px",
+                          fontSize: "12px",
                         }}
                         formatter={(value: number) => formatCurrency(value)}
                       />
@@ -309,27 +311,28 @@ const Reports = () => {
 
             {/* Bar Chart - Comparativo Mensal */}
             <ProFeatureOverlay>
-              <div className="rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-5">
-                <h3 className="text-sm font-medium mb-4">Comparativo de Saldo Mensal</h3>
+              <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-4 sm:p-5">
+                <h3 className="text-xs sm:text-sm font-medium mb-3 sm:mb-4">Comparativo de Saldo Mensal</h3>
                 {loading ? (
-                  <div className="h-64 flex items-center justify-center text-muted-foreground">
+                  <div className="h-48 sm:h-64 flex items-center justify-center text-muted-foreground">
                     Carregando...
                   </div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={280}>
+                  <ResponsiveContainer width="100%" height={window.innerWidth < 640 ? 200 : 280}>
                     <BarChart data={monthlyData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(217 33% 17%)" />
-                      <XAxis dataKey="month" stroke="hsl(220 9% 46%)" fontSize={12} />
-                      <YAxis stroke="hsl(220 9% 46%)" fontSize={12} tickFormatter={(v) => `R$${v / 1000}k`} />
+                      <XAxis dataKey="month" stroke="hsl(220 9% 46%)" fontSize={10} />
+                      <YAxis stroke="hsl(220 9% 46%)" fontSize={10} tickFormatter={(v) => `R$${v / 1000}k`} width={45} />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: "hsl(222 47% 5%)",
                           border: "1px solid hsl(217 33% 17%)",
                           borderRadius: "8px",
+                          fontSize: "12px",
                         }}
                         formatter={(value: number) => formatCurrency(value)}
                       />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: "12px" }} />
                       <Bar dataKey="saldo" fill="hsl(217 91% 60%)" name="Saldo" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -339,20 +342,20 @@ const Reports = () => {
 
             {/* Médias */}
             <ProFeatureOverlay>
-              <div className="rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-5">
-                <h3 className="text-sm font-medium mb-4">Análise de Médias</h3>
-                <div className="space-y-4">
-                  <div className="p-4 rounded-xl bg-secondary/30 border border-border">
-                    <p className="text-sm text-muted-foreground mb-1">Média por Entrada</p>
-                    <p className="text-xl font-bold text-primary">{formatCurrency(stats.avgIncome)}</p>
+              <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-4 sm:p-5">
+                <h3 className="text-xs sm:text-sm font-medium mb-3 sm:mb-4">Análise de Médias</h3>
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="p-3 sm:p-4 rounded-xl bg-secondary/30 border border-border">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">Média por Entrada</p>
+                    <p className="text-lg sm:text-xl font-bold text-primary">{formatCurrency(stats.avgIncome)}</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-secondary/30 border border-border">
-                    <p className="text-sm text-muted-foreground mb-1">Média por Saída</p>
-                    <p className="text-xl font-bold text-destructive">{formatCurrency(stats.avgExpense)}</p>
+                  <div className="p-3 sm:p-4 rounded-xl bg-secondary/30 border border-border">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">Média por Saída</p>
+                    <p className="text-lg sm:text-xl font-bold text-destructive">{formatCurrency(stats.avgExpense)}</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-secondary/30 border border-border">
-                    <p className="text-sm text-muted-foreground mb-1">Total de Transações</p>
-                    <p className="text-xl font-bold">{transactions.length}</p>
+                  <div className="p-3 sm:p-4 rounded-xl bg-secondary/30 border border-border">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total de Transações</p>
+                    <p className="text-lg sm:text-xl font-bold">{transactions.length}</p>
                   </div>
                 </div>
               </div>

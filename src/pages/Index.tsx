@@ -70,7 +70,7 @@ const Index = () => {
     <div className="flex min-h-screen">
       <Sidebar />
       
-      <main className="flex-1 p-5 lg:p-6 flex flex-col gap-5 min-w-0">
+      <main className="flex-1 p-4 sm:p-5 lg:p-6 flex flex-col gap-4 sm:gap-5 min-w-0">
         <DashboardHeader period={period} onPeriodChange={setPeriod} />
         
         {/* Summary Metrics */}

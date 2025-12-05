@@ -404,7 +404,7 @@ const Transactions = () => {
       <main className="flex-1 p-4 lg:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 sm:mb-8 pl-12 lg:pl-0">
             <div>
               <button
                 onClick={() => navigate("/")}
@@ -413,9 +413,9 @@ const Transactions = () => {
                 <ArrowLeft className="w-4 h-4" />
                 <span className="text-sm">Voltar</span>
               </button>
-              <h1 className="text-2xl lg:text-3xl font-bold">Transações</h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Gerencie todas as suas entradas e saídas
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Transações</h1>
+              <p className="text-muted-foreground text-xs sm:text-sm mt-1">
+                Gerencie suas entradas e saídas
               </p>
             </div>
             <div className="flex gap-2 flex-wrap">
@@ -448,25 +448,25 @@ const Transactions = () => {
           </div>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-4">
-              <p className="text-sm text-muted-foreground mb-1">Total Entradas</p>
-              <p className="text-2xl font-bold text-primary">{formatCurrency(totals.income)}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Entradas</p>
+              <p className="text-lg sm:text-2xl font-bold text-primary">{formatCurrency(totals.income)}</p>
             </div>
-            <div className="rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-4">
-              <p className="text-sm text-muted-foreground mb-1">Total Saídas</p>
-              <p className="text-2xl font-bold text-destructive">{formatCurrency(totals.expense)}</p>
+            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Saídas</p>
+              <p className="text-lg sm:text-2xl font-bold text-destructive">{formatCurrency(totals.expense)}</p>
             </div>
-            <div className="rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-4">
-              <p className="text-sm text-muted-foreground mb-1">Saldo</p>
-              <p className={`text-2xl font-bold ${totals.income - totals.expense >= 0 ? "text-primary" : "text-destructive"}`}>
+            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Saldo</p>
+              <p className={`text-lg sm:text-2xl font-bold ${totals.income - totals.expense >= 0 ? "text-primary" : "text-destructive"}`}>
                 {formatCurrency(totals.income - totals.expense)}
               </p>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-4 mb-6">
+          <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4 mb-4 sm:mb-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Filter className="w-4 h-4 text-muted-foreground" />
@@ -486,8 +486,8 @@ const Transactions = () => {
             </div>
             
             {/* Basic Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="relative">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
+              <div className="relative col-span-2 sm:col-span-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar..."
@@ -668,7 +668,7 @@ const Transactions = () => {
           </div>
 
           {/* Transactions Table */}
-          <div className="rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] overflow-hidden">
+          <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] overflow-hidden">
             {loading ? (
               <div className="text-center py-12 text-muted-foreground">Carregando...</div>
             ) : filteredTransactions.length === 0 ? (
@@ -677,16 +677,16 @@ const Transactions = () => {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-xs sm:text-sm min-w-[700px]">
                   <thead>
                     <tr className="text-muted-foreground border-b border-secondary bg-secondary/30">
-                      <th className="text-left py-4 px-4 font-medium">Data</th>
-                      <th className="text-left py-4 px-4 font-medium">Descrição</th>
-                      <th className="text-left py-4 px-4 font-medium">Categoria</th>
-                      <th className="text-left py-4 px-4 font-medium">Tipo</th>
-                      <th className="text-left py-4 px-4 font-medium">Valor</th>
-                      <th className="text-left py-4 px-4 font-medium">Status</th>
-                      <th className="text-left py-4 px-4 font-medium">Ações</th>
+                      <th className="text-left py-3 sm:py-4 px-3 sm:px-4 font-medium">Data</th>
+                      <th className="text-left py-3 sm:py-4 px-3 sm:px-4 font-medium">Descrição</th>
+                      <th className="text-left py-3 sm:py-4 px-3 sm:px-4 font-medium">Categoria</th>
+                      <th className="text-left py-3 sm:py-4 px-3 sm:px-4 font-medium">Tipo</th>
+                      <th className="text-left py-3 sm:py-4 px-3 sm:px-4 font-medium">Valor</th>
+                      <th className="text-left py-3 sm:py-4 px-3 sm:px-4 font-medium">Status</th>
+                      <th className="text-left py-3 sm:py-4 px-3 sm:px-4 font-medium">Ações</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -695,21 +695,21 @@ const Transactions = () => {
                         key={transaction.id}
                         className="border-b border-secondary/50 hover:bg-secondary/30 transition-colors"
                       >
-                        <td className="py-4 px-4">{formatDate(transaction.date)}</td>
-                        <td className="py-4 px-4 font-medium">
+                        <td className="py-3 sm:py-4 px-3 sm:px-4 whitespace-nowrap">{formatDate(transaction.date)}</td>
+                        <td className="py-3 sm:py-4 px-3 sm:px-4 font-medium">
                           <div className="flex items-center gap-2">
-                            {transaction.description}
+                            <span className="truncate max-w-[150px]">{transaction.description}</span>
                             {transaction.is_recurring && (
                               <span title="Recorrente">
-                                <RefreshCw className="w-3 h-3 text-primary" />
+                                <RefreshCw className="w-3 h-3 text-primary shrink-0" />
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="py-4 px-4">{transaction.category}</td>
-                        <td className="py-4 px-4">
+                        <td className="py-3 sm:py-4 px-3 sm:px-4">{transaction.category}</td>
+                        <td className="py-3 sm:py-4 px-3 sm:px-4">
                           <span
-                            className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full ${
+                            className={`inline-flex items-center justify-center text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full ${
                               transaction.type === "income"
                                 ? "bg-primary/14 text-green-200"
                                 : "bg-destructive/10 text-red-200"
@@ -718,36 +718,36 @@ const Transactions = () => {
                             {transaction.type === "income" ? "Entrada" : "Saída"}
                           </span>
                         </td>
-                        <td className="py-4 px-4">{formatCurrency(transaction.amount)}</td>
-                        <td className="py-4 px-4">
+                        <td className="py-3 sm:py-4 px-3 sm:px-4 whitespace-nowrap">{formatCurrency(transaction.amount)}</td>
+                        <td className="py-3 sm:py-4 px-3 sm:px-4">
                           <span
-                            className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full ${getStatusStyle(transaction.status)}`}
+                            className={`inline-flex items-center justify-center text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap ${getStatusStyle(transaction.status)}`}
                           >
                             {getStatusLabel(transaction.status)}
                           </span>
                         </td>
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-2">
+                        <td className="py-3 sm:py-4 px-3 sm:px-4">
+                          <div className="flex items-center gap-1">
                             <button
                               onClick={() => handleDuplicate(transaction)}
-                              className="p-1.5 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
+                              className="p-1 sm:p-1.5 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
                               title="Duplicar"
                             >
-                              <Copy className="w-4 h-4" />
+                              <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </button>
                             <button
                               onClick={() => openEditDialog(transaction)}
-                              className="p-1.5 rounded-lg hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors"
+                              className="p-1 sm:p-1.5 rounded-lg hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors"
                               title="Editar"
                             >
-                              <Edit2 className="w-4 h-4" />
+                              <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </button>
                             <button
                               onClick={() => handleDelete(transaction.id)}
-                              className="p-1.5 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+                              className="p-1 sm:p-1.5 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
                               title="Excluir"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </button>
                           </div>
                         </td>

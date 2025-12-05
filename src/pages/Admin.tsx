@@ -242,9 +242,9 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
             <button
               onClick={() => navigate("/")}
@@ -254,78 +254,78 @@ const Admin = () => {
               <span className="text-sm">Voltar</span>
             </button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center">
+                <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold">Painel Administrativo</h1>
-                <p className="text-muted-foreground text-sm">
-                  Gerencie usuários, planos e visualize métricas
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Painel Administrativo</h1>
+                <p className="text-muted-foreground text-xs sm:text-sm">
+                  Gerencie usuários, planos e métricas
                 </p>
               </div>
             </div>
           </div>
           <Button onClick={fetchData} variant="outline" className="gap-2">
             <RefreshCw className="w-4 h-4" />
-            Atualizar dados
+            Atualizar
           </Button>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="rounded-2xl bg-gradient-to-br from-card/80 to-background border border-secondary p-5">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                <Users className="w-5 h-5 text-blue-400" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <div className="rounded-xl sm:rounded-2xl bg-gradient-to-br from-card/80 to-background border border-secondary p-3 sm:p-5">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
               </div>
-              <span className="text-sm text-muted-foreground">Total de Usuários</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">Usuários</span>
             </div>
-            <p className="text-3xl font-bold">{revenue.total_users}</p>
+            <p className="text-xl sm:text-3xl font-bold">{revenue.total_users}</p>
           </div>
 
-          <div className="rounded-2xl bg-gradient-to-br from-card/80 to-background border border-secondary p-5">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                <Crown className="w-5 h-5 text-primary" />
+          <div className="rounded-xl sm:rounded-2xl bg-gradient-to-br from-card/80 to-background border border-secondary p-3 sm:p-5">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
-              <span className="text-sm text-muted-foreground">Assinaturas Ativas</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">Assinaturas</span>
             </div>
-            <p className="text-3xl font-bold text-primary">{revenue.active_subscriptions}</p>
+            <p className="text-xl sm:text-3xl font-bold text-primary">{revenue.active_subscriptions}</p>
           </div>
 
-          <div className="rounded-2xl bg-gradient-to-br from-card/80 to-background border border-secondary p-5">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
-                <CreditCard className="w-5 h-5 text-green-400" />
+          <div className="rounded-xl sm:rounded-2xl bg-gradient-to-br from-card/80 to-background border border-secondary p-3 sm:p-5">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+                <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
               </div>
-              <span className="text-sm text-muted-foreground">Receita Mensal</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">Receita/Mês</span>
             </div>
-            <p className="text-3xl font-bold text-green-400">{formatCurrency(revenue.monthly_revenue)}</p>
+            <p className="text-lg sm:text-3xl font-bold text-green-400">{formatCurrency(revenue.monthly_revenue)}</p>
           </div>
 
-          <div className="rounded-2xl bg-gradient-to-br from-card/80 to-background border border-secondary p-5">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-yellow-400" />
+          <div className="rounded-xl sm:rounded-2xl bg-gradient-to-br from-card/80 to-background border border-secondary p-3 sm:p-5">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
               </div>
-              <span className="text-sm text-muted-foreground">Receita Anual Est.</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">Receita/Ano</span>
             </div>
-            <p className="text-3xl font-bold text-yellow-400">{formatCurrency(revenue.total_revenue)}</p>
+            <p className="text-lg sm:text-3xl font-bold text-yellow-400">{formatCurrency(revenue.total_revenue)}</p>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-4 mb-6">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4 mb-4 sm:mb-6">
+          <div className="flex items-center gap-2 mb-3 sm:mb-4">
             <Search className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium">Filtros</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div className="relative">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
+            <div className="relative col-span-2 sm:col-span-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar usuário..."
+                placeholder="Buscar..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10"
