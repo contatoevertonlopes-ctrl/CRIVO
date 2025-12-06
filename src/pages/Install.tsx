@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Smartphone, Check, Share } from "lucide-react";
+import { Download, Smartphone, Check, Share, Monitor } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -13,12 +13,17 @@ const Install = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isMac, setIsMac] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     // Check if running on iOS
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
     setIsIOS(isIOSDevice);
+    
+    // Check if running on Mac
+    const isMacDevice = /Macintosh|MacIntel|MacPPC|Mac68K/.test(navigator.userAgent) && !isIOSDevice;
+    setIsMac(isMacDevice);
 
     // Check if already installed
     if (window.matchMedia("(display-mode: standalone)").matches) {
@@ -104,6 +109,32 @@ const Install = () => {
                   <span>Toque em "Adicionar" no canto superior direito</span>
                 </li>
               </ol>
+            </div>
+          ) : isMac ? (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground text-center">
+                Para instalar no Mac:
+              </p>
+              <ol className="text-sm space-y-3 text-muted-foreground">
+                <li className="flex items-start gap-3">
+                  <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-medium">1</span>
+                  <span>Use o navegador <strong>Chrome</strong> ou <strong>Edge</strong></span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-medium">2</span>
+                  <span>Clique no ícone <Monitor className="inline w-4 h-4" /> na barra de endereços</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="bg-primary/20 text-primary rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-medium">3</span>
+                  <span>Clique em "Instalar" na janela que aparecer</span>
+                </li>
+              </ol>
+              {deferredPrompt && (
+                <Button onClick={handleInstall} className="w-full" size="lg">
+                  <Download className="w-4 h-4 mr-2" />
+                  Instalar Agora
+                </Button>
+              )}
             </div>
           ) : deferredPrompt ? (
             <Button onClick={handleInstall} className="w-full" size="lg">
