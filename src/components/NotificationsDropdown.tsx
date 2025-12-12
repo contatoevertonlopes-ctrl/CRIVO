@@ -16,6 +16,7 @@ interface UpcomingBill {
   amount: number;
   date: string;
   daysUntilDue: number;
+  type: string;
 }
 
 const NotificationsDropdown = () => {
@@ -33,10 +34,9 @@ const NotificationsDropdown = () => {
 
       const { data, error } = await supabase
         .from("transactions")
-        .select("id, description, amount, date")
+        .select("id, description, amount, date, type, status")
         .eq("user_id", user.id)
-        .eq("type", "expense")
-        .eq("status", "pending")
+        .in("status", ["pending", "em_aberto", "a_vencer"])
         .gte("date", today.toISOString().split("T")[0])
         .lte("date", nextWeek.toISOString().split("T")[0])
         .order("date", { ascending: true });
@@ -54,6 +54,7 @@ const NotificationsDropdown = () => {
           amount: t.amount,
           date: t.date,
           daysUntilDue,
+          type: t.type,
         };
       });
 
@@ -128,9 +129,14 @@ const NotificationsDropdown = () => {
   };
 
   const getDueBadge = (days: number) => {
-    if (days === 0) return { text: "Hoje", class: "bg-destructive/20 text-destructive" };
-    if (days === 1) return { text: "Amanhã", class: "bg-yellow-500/20 text-yellow-500" };
+    if (days === 0) return { text: "🔴 Vence Hoje!", class: "bg-destructive text-destructive-foreground font-bold animate-pulse" };
+    if (days === 1) return { text: "⚠️ Amanhã", class: "bg-yellow-500/20 text-yellow-500 font-medium" };
+    if (days <= 3) return { text: `${days} dias`, class: "bg-orange-500/20 text-orange-500" };
     return { text: `${days} dias`, class: "bg-secondary text-muted-foreground" };
+  };
+
+  const getTypeLabel = (type: string) => {
+    return type === "income" ? { text: "Receber", class: "text-primary" } : { text: "Pagar", class: "text-destructive" };
   };
 
   return (
@@ -145,10 +151,10 @@ const NotificationsDropdown = () => {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 p-0 bg-background border-border">
+      <DropdownMenuContent align="end" className="w-80 p-0 bg-background border-border z-50">
         <div className="p-3 border-b border-border">
-          <h3 className="font-semibold text-sm">Contas a Vencer</h3>
-          <p className="text-xs text-muted-foreground">Próximos 7 dias</p>
+          <h3 className="font-semibold text-sm">Compromissos Pendentes</h3>
+          <p className="text-xs text-muted-foreground">Próximos 7 dias • Contas a pagar e receber</p>
         </div>
         
         <div className="max-h-[300px] overflow-y-auto">
@@ -167,17 +173,28 @@ const NotificationsDropdown = () => {
             <div className="divide-y divide-border/50">
               {upcomingBills.map((bill) => {
                 const badge = getDueBadge(bill.daysUntilDue);
+                const typeInfo = getTypeLabel(bill.type);
+                const isDueToday = bill.daysUntilDue === 0;
                 return (
-                  <div key={bill.id} className="p-3 hover:bg-secondary/20 transition-colors">
+                  <div 
+                    key={bill.id} 
+                    className={`p-3 hover:bg-secondary/20 transition-colors ${
+                      isDueToday ? "bg-destructive/10 border-l-2 border-l-destructive" : ""
+                    }`}
+                  >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <AlertCircle className={`w-4 h-4 flex-shrink-0 ${
-                            bill.daysUntilDue <= 1 ? "text-destructive" : "text-muted-foreground"
+                            isDueToday ? "text-destructive animate-pulse" : bill.daysUntilDue <= 1 ? "text-destructive" : "text-muted-foreground"
                           }`} />
-                          <span className="text-sm font-medium truncate">{bill.description}</span>
+                          <span className={`text-sm font-medium truncate ${isDueToday ? "text-destructive" : ""}`}>
+                            {bill.description}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground ml-6">
+                          <span className={`${typeInfo.class} font-medium`}>{typeInfo.text}</span>
+                          <span>•</span>
                           <span>{formatDate(bill.date)}</span>
                           <span className={`px-1.5 py-0.5 rounded text-[10px] ${badge.class}`}>
                             {badge.text}
@@ -185,14 +202,14 @@ const NotificationsDropdown = () => {
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <p className="text-sm font-semibold text-destructive">
+                        <p className={`text-sm font-semibold ${typeInfo.class}`}>
                           {formatCurrency(bill.amount)}
                         </p>
                         <button
                           onClick={() => markAsPaid(bill.id)}
                           className="text-[10px] text-primary hover:underline mt-1"
                         >
-                          Marcar pago
+                          Marcar {bill.type === "income" ? "recebido" : "pago"}
                         </button>
                       </div>
                     </div>
