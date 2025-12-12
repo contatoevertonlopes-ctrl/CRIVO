@@ -316,28 +316,18 @@ const Reports = () => {
                       </RechartsPie>
                     </ResponsiveContainer>
                     {/* Legenda detalhada */}
-                    <div className="mt-4 space-y-2 max-h-32 overflow-y-auto">
-                      {categoryData.map((item) => {
-                        const total = categoryData.reduce((acc, c) => acc + c.value, 0);
-                        const percentage = ((item.value / total) * 100).toFixed(1);
-                        return (
-                          <div key={item.name} className="flex items-center justify-between text-xs sm:text-sm">
-                            <div className="flex items-center gap-2">
-                              <span
-                                className="w-3 h-3 rounded-full flex-shrink-0"
-                                style={{ backgroundColor: item.color }}
-                              />
-                              <span className="text-muted-foreground truncate max-w-[100px] sm:max-w-[140px]">
-                                {item.name}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 sm:gap-3">
-                              <span className="font-medium">{formatCurrency(item.value)}</span>
-                              <span className="text-muted-foreground w-12 text-right">({percentage}%)</span>
-                            </div>
-                          </div>
-                        );
-                      })}
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      {categoryData.map((item) => (
+                        <div key={item.name} className="flex items-center gap-2 text-xs sm:text-sm">
+                          <span
+                            className="w-3 h-3 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: item.color }}
+                          />
+                          <span className="text-foreground">
+                            {item.name}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </>
                 )}
