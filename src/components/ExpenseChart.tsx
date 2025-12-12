@@ -68,7 +68,11 @@ const ExpenseChart = ({ data = [] }: ExpenseChartProps) => {
                     }).format(value)
                   }
                 />
-                <Legend wrapperStyle={{ fontSize: "11px", color: "#9ca3af" }} iconType="circle" />
+                <Legend 
+                  wrapperStyle={{ fontSize: "11px" }} 
+                  iconType="circle"
+                  formatter={(value) => <span style={{ color: "hsl(210 17% 98%)" }}>{value}</span>}
+                />
               </PieChart>
             </ResponsiveContainer>
           )}
