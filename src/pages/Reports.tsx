@@ -307,7 +307,10 @@ const Reports = () => {
                             border: "1px solid hsl(217 33% 17%)",
                             borderRadius: "8px",
                             fontSize: "12px",
+                            color: "white",
                           }}
+                          itemStyle={{ color: "white" }}
+                          labelStyle={{ color: "white" }}
                           formatter={(value: number) => formatCurrency(value)}
                         />
                       </RechartsPie>
