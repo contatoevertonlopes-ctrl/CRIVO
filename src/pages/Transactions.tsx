@@ -491,6 +491,9 @@ const Transactions = () => {
     pendingExpense: filteredTransactions
       .filter((t) => t.type === "expense" && pendingStatuses.includes(t.status))
       .reduce((acc, t) => acc + t.amount, 0),
+    pendingIncome: filteredTransactions
+      .filter((t) => t.type === "income" && pendingStatuses.includes(t.status))
+      .reduce((acc, t) => acc + t.amount, 0),
   };
 
   if (authLoading || subLoading) {
@@ -578,7 +581,7 @@ const Transactions = () => {
           </div>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Entradas</p>
               <p className="text-lg sm:text-2xl font-bold text-primary">{formatCurrency(totals.income)}</p>
@@ -592,6 +595,10 @@ const Transactions = () => {
               <p className={`text-lg sm:text-2xl font-bold ${totals.income - totals.expense >= 0 ? "text-primary" : "text-destructive"}`}>
                 {formatCurrency(totals.income - totals.expense)}
               </p>
+            </div>
+            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-blue-500/20 p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">A Receber</p>
+              <p className="text-lg sm:text-2xl font-bold text-blue-500">{formatCurrency(totals.pendingIncome)}</p>
             </div>
             <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-warning/20 p-3 sm:p-4">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">A Pagar</p>
