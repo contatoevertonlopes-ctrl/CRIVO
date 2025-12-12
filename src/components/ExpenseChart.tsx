@@ -7,12 +7,23 @@ interface CategoryData {
 
 interface ExpenseChartProps {
   data?: CategoryData[];
+  period?: number;
 }
 
 const COLORS = ["hsl(142 76% 45%)", "hsl(217 91% 60%)", "hsl(48 96% 53%)", "hsl(0 84% 60%)"];
 
-const ExpenseChart = ({ data = [] }: ExpenseChartProps) => {
+const ExpenseChart = ({ data = [], period = 30 }: ExpenseChartProps) => {
   const hasData = data.length > 0 && data[0].name !== "Sem dados";
+
+  const getPeriodLabel = () => {
+    switch (period) {
+      case 7: return "Últimos 7 dias";
+      case 30: return "Últimos 30 dias";
+      case 90: return "Últimos 90 dias";
+      case 365: return "Último ano";
+      default: return `Últimos ${period} dias`;
+    }
+  };
 
   return (
     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-5">
@@ -28,7 +39,7 @@ const ExpenseChart = ({ data = [] }: ExpenseChartProps) => {
             </p>
           </div>
           <span className="text-[11px] px-2 py-1 rounded-full bg-secondary/90 border border-border/50">
-            Este mês
+            {getPeriodLabel()}
           </span>
         </div>
 

@@ -110,7 +110,7 @@ const Index = () => {
           <CashflowChart data={cashflowData} />
           
           <div className="flex flex-col gap-5">
-            <ExpenseChart data={expensesByCategory} />
+            <ExpenseChart data={expensesByCategory} period={period} />
             <PlansCard />
           </div>
         </section>
