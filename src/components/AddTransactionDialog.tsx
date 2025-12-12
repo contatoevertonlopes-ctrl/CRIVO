@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, RefreshCw, Lock, ListOrdered } from "lucide-react";
-import { addMonths } from "date-fns";
+import { addMonths, addWeeks, addDays } from "date-fns";
 
 interface AddTransactionDialogProps {
   onSuccess: () => void;
@@ -48,6 +48,19 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   // Installment mode
   const [isInstallment, setIsInstallment] = useState(false);
   const [installmentCount, setInstallmentCount] = useState("2");
+  const [installmentInterval, setInstallmentInterval] = useState("monthly");
+
+  const getNextInstallmentDate = (baseDate: Date, index: number, interval: string) => {
+    switch (interval) {
+      case "weekly":
+        return addWeeks(baseDate, index);
+      case "biweekly":
+        return addDays(baseDate, index * 15);
+      case "monthly":
+      default:
+        return addMonths(baseDate, index);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +84,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
         
         const transactions = [];
         for (let i = 0; i < numInstallments; i++) {
-          const installmentDate = addMonths(baseDate, i);
+          const installmentDate = getNextInstallmentDate(baseDate, i, installmentInterval);
           transactions.push({
             user_id: user.id,
             description: `${description} ${i + 1}/${numInstallments}`,
@@ -131,6 +144,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
       setRecurringInterval("monthly");
       setIsInstallment(false);
       setInstallmentCount("2");
+      setInstallmentInterval("monthly");
       setOpen(false);
       onSuccess();
     } catch (error: any) {
@@ -301,16 +315,33 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
               </div>
             </div>
             {isInstallment && (
-              <div className="mt-3 space-y-2">
-                <Label className="text-xs text-muted-foreground">Número de parcelas</Label>
-                <Input
-                  type="number"
-                  min="2"
-                  max="48"
-                  value={installmentCount}
-                  onChange={(e) => setInstallmentCount(e.target.value)}
-                  className="bg-secondary/50 border-border/50"
-                />
+              <div className="mt-3 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Parcelas</Label>
+                    <Input
+                      type="number"
+                      min="2"
+                      max="48"
+                      value={installmentCount}
+                      onChange={(e) => setInstallmentCount(e.target.value)}
+                      className="bg-secondary/50 border-border/50"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Intervalo</Label>
+                    <Select value={installmentInterval} onValueChange={setInstallmentInterval}>
+                      <SelectTrigger className="bg-secondary/50 border-border/50">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="weekly">Semanal</SelectItem>
+                        <SelectItem value="biweekly">Quinzenal</SelectItem>
+                        <SelectItem value="monthly">Mensal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 {amount && parseInt(installmentCount) > 1 && (
                   <p className="text-xs text-muted-foreground">
                     Valor por parcela: R$ {(parseFloat(amount) / parseInt(installmentCount)).toFixed(2)}
