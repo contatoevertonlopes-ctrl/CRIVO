@@ -18,7 +18,7 @@ import TransactionCard from "@/components/TransactionCard";
 import StatusSelector from "@/components/StatusSelector";
 import TransactionPagination from "@/components/TransactionPagination";
 import { sortTransactionsByPriority } from "@/utils/transactionSort";
-import { startOfMonth, endOfMonth, subMonths, addMonths, format } from "date-fns";
+import { startOfMonth, endOfMonth, subMonths, addMonths, addWeeks, addDays, format } from "date-fns";
 
 interface Transaction {
   id: string;
@@ -73,6 +73,9 @@ const Transactions = () => {
     recurring_interval: "monthly",
     paid_date: "",
     tag: "",
+    is_installment: false,
+    installment_count: "2",
+    installment_interval: "monthly",
   });
 
   useEffect(() => {
@@ -216,6 +219,18 @@ const Transactions = () => {
 
   const categories = [...new Set(transactions.map((t) => t.category))];
 
+  const getNextInstallmentDate = (baseDate: Date, index: number, interval: string) => {
+    switch (interval) {
+      case "weekly":
+        return addWeeks(baseDate, index);
+      case "biweekly":
+        return addDays(baseDate, index * 15);
+      case "monthly":
+      default:
+        return addMonths(baseDate, index);
+    }
+  };
+
   const handleAdd = async () => {
     if (!user || !formData.description || !formData.amount || !formData.category) {
       toast.error("Preencha todos os campos obrigatórios");
@@ -229,22 +244,52 @@ const Transactions = () => {
     }
 
     try {
-      const { error } = await supabase.from("transactions").insert({
-        user_id: user.id,
-        description: formData.description,
-        amount: parseFloat(formData.amount),
-        category: formData.category,
-        type: formData.type,
-        status: formData.status,
-        date: formData.date,
-        is_recurring: subscribed ? formData.is_recurring : false,
-        recurring_interval: formData.is_recurring ? formData.recurring_interval : null,
-        tag: formData.tag || null,
-      });
+      if (formData.is_installment && parseInt(formData.installment_count) > 1) {
+        // Create multiple transactions for installments
+        const totalAmount = parseFloat(formData.amount);
+        const numInstallments = parseInt(formData.installment_count);
+        const installmentAmount = Math.round((totalAmount / numInstallments) * 100) / 100;
+        const baseDate = new Date(formData.date);
+        
+        const transactions = [];
+        for (let i = 0; i < numInstallments; i++) {
+          const installmentDate = getNextInstallmentDate(baseDate, i, formData.installment_interval);
+          transactions.push({
+            user_id: user.id,
+            description: `${formData.description} ${i + 1}/${numInstallments}`,
+            category: formData.category,
+            type: formData.type,
+            amount: installmentAmount,
+            status: formData.status,
+            date: installmentDate.toISOString().split("T")[0],
+            tag: formData.tag || null,
+            is_recurring: false,
+            recurring_interval: null,
+          });
+        }
 
-      if (error) throw error;
+        const { error } = await supabase.from("transactions").insert(transactions);
+        if (error) throw error;
 
-      toast.success("Transação adicionada com sucesso!");
+        toast.success(`${numInstallments} parcelas criadas com sucesso!`);
+      } else {
+        const { error } = await supabase.from("transactions").insert({
+          user_id: user.id,
+          description: formData.description,
+          amount: parseFloat(formData.amount),
+          category: formData.category,
+          type: formData.type,
+          status: formData.status,
+          date: formData.date,
+          is_recurring: subscribed ? formData.is_recurring : false,
+          recurring_interval: formData.is_recurring ? formData.recurring_interval : null,
+          tag: formData.tag || null,
+        });
+
+        if (error) throw error;
+        toast.success("Transação adicionada com sucesso!");
+      }
+
       setIsAddDialogOpen(false);
       resetForm();
       fetchTransactions();
@@ -344,6 +389,9 @@ const Transactions = () => {
       recurring_interval: transaction.recurring_interval || "monthly",
       paid_date: transaction.paid_date || "",
       tag: transaction.tag || "",
+      is_installment: false,
+      installment_count: "2",
+      installment_interval: "monthly",
     });
     setIsEditDialogOpen(true);
   };
@@ -360,6 +408,9 @@ const Transactions = () => {
       recurring_interval: "monthly",
       paid_date: "",
       tag: "",
+      is_installment: false,
+      installment_count: "2",
+      installment_interval: "monthly",
     });
   };
 
@@ -948,7 +999,8 @@ const Transactions = () => {
                 setFormData={setFormData} 
                 onSubmit={handleEdit} 
                 submitLabel="Salvar Alterações" 
-                subscribed={subscribed} 
+                subscribed={subscribed}
+                showInstallment={false}
               />
             </DialogContent>
           </Dialog>
