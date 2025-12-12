@@ -21,7 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, RefreshCw, Lock } from "lucide-react";
+import { Plus, RefreshCw, Lock, ListOrdered } from "lucide-react";
+import { addMonths } from "date-fns";
 
 interface AddTransactionDialogProps {
   onSuccess: () => void;
@@ -43,6 +44,10 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   const [tag, setTag] = useState("");
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringInterval, setRecurringInterval] = useState("monthly");
+  
+  // Installment mode
+  const [isInstallment, setIsInstallment] = useState(false);
+  const [installmentCount, setInstallmentCount] = useState("2");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,26 +62,61 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.from("transactions").insert({
-        user_id: user.id,
-        description,
-        category,
-        type,
-        amount: parseFloat(amount),
-        status,
-        date,
-        paid_date: paidDate || null,
-        tag: tag || null,
-        is_recurring: subscribed ? isRecurring : false,
-        recurring_interval: isRecurring ? recurringInterval : null,
-      });
+      if (isInstallment && parseInt(installmentCount) > 1) {
+        // Create multiple transactions for installments
+        const totalAmount = parseFloat(amount);
+        const numInstallments = parseInt(installmentCount);
+        const installmentAmount = Math.round((totalAmount / numInstallments) * 100) / 100;
+        const baseDate = new Date(date);
+        
+        const transactions = [];
+        for (let i = 0; i < numInstallments; i++) {
+          const installmentDate = addMonths(baseDate, i);
+          transactions.push({
+            user_id: user.id,
+            description: `${description} ${i + 1}/${numInstallments}`,
+            category,
+            type,
+            amount: installmentAmount,
+            status,
+            date: installmentDate.toISOString().split("T")[0],
+            paid_date: i === 0 && paidDate ? paidDate : null,
+            tag: tag || null,
+            is_recurring: false,
+            recurring_interval: null,
+          });
+        }
 
-      if (error) throw error;
+        const { error } = await supabase.from("transactions").insert(transactions);
+        if (error) throw error;
 
-      toast({
-        title: "Transação adicionada",
-        description: "A transação foi salva com sucesso.",
-      });
+        toast({
+          title: "Parcelas criadas",
+          description: `${numInstallments} parcelas de R$ ${installmentAmount.toFixed(2)} foram criadas.`,
+        });
+      } else {
+        // Single transaction
+        const { error } = await supabase.from("transactions").insert({
+          user_id: user.id,
+          description,
+          category,
+          type,
+          amount: parseFloat(amount),
+          status,
+          date,
+          paid_date: paidDate || null,
+          tag: tag || null,
+          is_recurring: subscribed ? isRecurring : false,
+          recurring_interval: isRecurring ? recurringInterval : null,
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Transação adicionada",
+          description: "A transação foi salva com sucesso.",
+        });
+      }
 
       // Reset form
       setDescription("");
@@ -89,6 +129,8 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
       setTag("");
       setIsRecurring(false);
       setRecurringInterval("monthly");
+      setIsInstallment(false);
+      setInstallmentCount("2");
       setOpen(false);
       onSuccess();
     } catch (error: any) {
@@ -120,7 +162,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
           Nova transação
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-background border-secondary">
+      <DialogContent className="bg-background border-secondary max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Adicionar transação</DialogTitle>
         </DialogHeader>
@@ -154,7 +196,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="amount">Valor (R$)</Label>
+              <Label htmlFor="amount">{isInstallment ? "Valor Total (R$)" : "Valor (R$)"}</Label>
               <Input
                 id="amount"
                 type="number"
@@ -203,7 +245,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="date">Data de Vencimento</Label>
+              <Label htmlFor="date">{isInstallment ? "Data 1ª Parcela" : "Data de Vencimento"}</Label>
               <Input
                 id="date"
                 type="date"
@@ -240,53 +282,93 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             </Select>
           </div>
 
-          {/* Recurring Transaction - Pro Feature */}
-          {subscribed ? (
-            <div className="p-3 rounded-xl border border-primary/40 bg-primary/5">
-              <div className="flex items-center gap-3">
-                <Checkbox
-                  id="recurring-dashboard"
-                  checked={isRecurring}
-                  onCheckedChange={(checked) => setIsRecurring(!!checked)}
+          {/* Installment Mode */}
+          <div className="p-3 rounded-xl border border-blue-500/40 bg-blue-500/5">
+            <div className="flex items-center gap-3">
+              <Checkbox
+                id="installment-dashboard"
+                checked={isInstallment}
+                onCheckedChange={(checked) => {
+                  setIsInstallment(!!checked);
+                  if (checked) setIsRecurring(false);
+                }}
+              />
+              <div className="flex items-center gap-2">
+                <ListOrdered className="w-4 h-4 text-blue-500" />
+                <Label htmlFor="installment-dashboard" className="text-sm cursor-pointer">
+                  Parcelamento
+                </Label>
+              </div>
+            </div>
+            {isInstallment && (
+              <div className="mt-3 space-y-2">
+                <Label className="text-xs text-muted-foreground">Número de parcelas</Label>
+                <Input
+                  type="number"
+                  min="2"
+                  max="48"
+                  value={installmentCount}
+                  onChange={(e) => setInstallmentCount(e.target.value)}
+                  className="bg-secondary/50 border-border/50"
                 />
-                <div className="flex items-center gap-2">
-                  <RefreshCw className="w-4 h-4 text-primary" />
-                  <Label htmlFor="recurring-dashboard" className="text-sm cursor-pointer">
-                    Transação recorrente
-                  </Label>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary">Pro</span>
+                {amount && parseInt(installmentCount) > 1 && (
+                  <p className="text-xs text-muted-foreground">
+                    Valor por parcela: R$ {(parseFloat(amount) / parseInt(installmentCount)).toFixed(2)}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Recurring Transaction - Pro Feature */}
+          {!isInstallment && (
+            subscribed ? (
+              <div className="p-3 rounded-xl border border-primary/40 bg-primary/5">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="recurring-dashboard"
+                    checked={isRecurring}
+                    onCheckedChange={(checked) => setIsRecurring(!!checked)}
+                  />
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className="w-4 h-4 text-primary" />
+                    <Label htmlFor="recurring-dashboard" className="text-sm cursor-pointer">
+                      Transação recorrente
+                    </Label>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary">Pro</span>
+                  </div>
+                </div>
+                {isRecurring && (
+                  <div className="mt-3 space-y-2">
+                    <Label className="text-xs text-muted-foreground">Intervalo</Label>
+                    <Select value={recurringInterval} onValueChange={setRecurringInterval}>
+                      <SelectTrigger className="bg-secondary/50 border-border/50">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="weekly">Semanal</SelectItem>
+                        <SelectItem value="monthly">Mensal</SelectItem>
+                        <SelectItem value="yearly">Anual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="relative p-3 rounded-xl border border-border bg-secondary/20">
+                <div className="absolute inset-0 bg-background/60 backdrop-blur-sm rounded-xl z-10 flex flex-col items-center justify-center gap-1">
+                  <Lock className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-[10px] text-muted-foreground">Plano Pro</span>
+                </div>
+                <div className="flex items-center gap-3 opacity-50">
+                  <Checkbox disabled checked={false} />
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Transação recorrente</span>
+                  </div>
                 </div>
               </div>
-              {isRecurring && (
-                <div className="mt-3 space-y-2">
-                  <Label className="text-xs text-muted-foreground">Intervalo</Label>
-                  <Select value={recurringInterval} onValueChange={setRecurringInterval}>
-                    <SelectTrigger className="bg-secondary/50 border-border/50">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="weekly">Semanal</SelectItem>
-                      <SelectItem value="monthly">Mensal</SelectItem>
-                      <SelectItem value="yearly">Anual</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="relative p-3 rounded-xl border border-border bg-secondary/20">
-              <div className="absolute inset-0 bg-background/60 backdrop-blur-sm rounded-xl z-10 flex flex-col items-center justify-center gap-1">
-                <Lock className="w-4 h-4 text-muted-foreground" />
-                <span className="text-[10px] text-muted-foreground">Plano Pro</span>
-              </div>
-              <div className="flex items-center gap-3 opacity-50">
-                <Checkbox disabled checked={false} />
-                <div className="flex items-center gap-2">
-                  <RefreshCw className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Transação recorrente</span>
-                </div>
-              </div>
-            </div>
+            )
           )}
 
           <div className="flex gap-3 pt-2">
@@ -303,7 +385,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
               disabled={loading}
               className="flex-1 bg-gradient-to-r from-primary to-green-600 text-primary-foreground"
             >
-              {loading ? "Salvando..." : "Adicionar"}
+              {loading ? "Salvando..." : isInstallment ? `Criar ${installmentCount} parcelas` : "Adicionar"}
             </Button>
           </div>
         </form>
