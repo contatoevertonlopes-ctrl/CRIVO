@@ -296,60 +296,78 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             </Select>
           </div>
 
-          {/* Installment Mode */}
-          <div className="p-3 rounded-xl border border-blue-500/40 bg-blue-500/5">
-            <div className="flex items-center gap-3">
-              <Checkbox
-                id="installment-dashboard"
-                checked={isInstallment}
-                onCheckedChange={(checked) => {
-                  setIsInstallment(!!checked);
-                  if (checked) setIsRecurring(false);
-                }}
-              />
-              <div className="flex items-center gap-2">
-                <ListOrdered className="w-4 h-4 text-blue-500" />
-                <Label htmlFor="installment-dashboard" className="text-sm cursor-pointer">
-                  Parcelamento
-                </Label>
+          {/* Installment Mode - Pro Feature */}
+          {subscribed ? (
+            <div className="p-3 rounded-xl border border-blue-500/40 bg-blue-500/5">
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  id="installment-dashboard"
+                  checked={isInstallment}
+                  onCheckedChange={(checked) => {
+                    setIsInstallment(!!checked);
+                    if (checked) setIsRecurring(false);
+                  }}
+                  className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                />
+                <div className="flex items-center gap-2">
+                  <ListOrdered className="w-4 h-4 text-blue-500" />
+                  <Label htmlFor="installment-dashboard" className="text-sm cursor-pointer">
+                    Parcelamento
+                  </Label>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400">Pro</span>
+                </div>
+              </div>
+              {isInstallment && (
+                <div className="mt-3 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Parcelas</Label>
+                      <Input
+                        type="number"
+                        min="2"
+                        max="48"
+                        value={installmentCount}
+                        onChange={(e) => setInstallmentCount(e.target.value)}
+                        className="bg-secondary/50 border-border/50"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Intervalo</Label>
+                      <Select value={installmentInterval} onValueChange={setInstallmentInterval}>
+                        <SelectTrigger className="bg-secondary/50 border-border/50">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="weekly">Semanal</SelectItem>
+                          <SelectItem value="biweekly">Quinzenal</SelectItem>
+                          <SelectItem value="monthly">Mensal</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  {amount && parseInt(installmentCount) > 1 && (
+                    <p className="text-xs text-muted-foreground">
+                      Valor por parcela: R$ {(parseFloat(amount) / parseInt(installmentCount)).toFixed(2)}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="relative p-3 rounded-xl border border-border bg-secondary/20">
+              <div className="absolute inset-0 bg-background/60 backdrop-blur-sm rounded-xl z-10 flex flex-col items-center justify-center gap-1">
+                <Lock className="w-4 h-4 text-muted-foreground" />
+                <span className="text-[10px] text-muted-foreground">Plano Pro</span>
+              </div>
+              <div className="flex items-center gap-3 opacity-50">
+                <Checkbox disabled checked={false} />
+                <div className="flex items-center gap-2">
+                  <ListOrdered className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Parcelamento</span>
+                </div>
               </div>
             </div>
-            {isInstallment && (
-              <div className="mt-3 space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Parcelas</Label>
-                    <Input
-                      type="number"
-                      min="2"
-                      max="48"
-                      value={installmentCount}
-                      onChange={(e) => setInstallmentCount(e.target.value)}
-                      className="bg-secondary/50 border-border/50"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Intervalo</Label>
-                    <Select value={installmentInterval} onValueChange={setInstallmentInterval}>
-                      <SelectTrigger className="bg-secondary/50 border-border/50">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="weekly">Semanal</SelectItem>
-                        <SelectItem value="biweekly">Quinzenal</SelectItem>
-                        <SelectItem value="monthly">Mensal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                {amount && parseInt(installmentCount) > 1 && (
-                  <p className="text-xs text-muted-foreground">
-                    Valor por parcela: R$ {(parseFloat(amount) / parseInt(installmentCount)).toFixed(2)}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
+          )}
 
           {/* Recurring Transaction - Pro Feature */}
           {!isInstallment && (
