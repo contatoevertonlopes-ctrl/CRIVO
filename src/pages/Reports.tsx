@@ -277,34 +277,60 @@ const Reports = () => {
                     Carregando...
                   </div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={window.innerWidth < 640 ? 200 : 280}>
-                    <RechartsPie>
-                      <Pie
-                        data={categoryData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={window.innerWidth < 640 ? 40 : 60}
-                        outerRadius={window.innerWidth < 640 ? 70 : 100}
-                        paddingAngle={2}
-                        dataKey="value"
-                        label={({ name, percent }) => `${name.substring(0, 8)}${name.length > 8 ? '...' : ''} ${(percent * 100).toFixed(0)}%`}
-                        labelLine={false}
-                      >
-                        {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(222 47% 5%)",
-                          border: "1px solid hsl(217 33% 17%)",
-                          borderRadius: "8px",
-                          fontSize: "12px",
-                        }}
-                        formatter={(value: number) => formatCurrency(value)}
-                      />
-                    </RechartsPie>
-                  </ResponsiveContainer>
+                  <>
+                    <ResponsiveContainer width="100%" height={window.innerWidth < 640 ? 160 : 200}>
+                      <RechartsPie>
+                        <Pie
+                          data={categoryData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={window.innerWidth < 640 ? 35 : 50}
+                          outerRadius={window.innerWidth < 640 ? 60 : 80}
+                          paddingAngle={2}
+                          dataKey="value"
+                          label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                          labelLine={false}
+                        >
+                          {categoryData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "hsl(222 47% 5%)",
+                            border: "1px solid hsl(217 33% 17%)",
+                            borderRadius: "8px",
+                            fontSize: "12px",
+                          }}
+                          formatter={(value: number) => formatCurrency(value)}
+                        />
+                      </RechartsPie>
+                    </ResponsiveContainer>
+                    {/* Legenda detalhada */}
+                    <div className="mt-4 space-y-2 max-h-32 overflow-y-auto">
+                      {categoryData.map((item) => {
+                        const total = categoryData.reduce((acc, c) => acc + c.value, 0);
+                        const percentage = ((item.value / total) * 100).toFixed(1);
+                        return (
+                          <div key={item.name} className="flex items-center justify-between text-xs sm:text-sm">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="w-3 h-3 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: item.color }}
+                              />
+                              <span className="text-muted-foreground truncate max-w-[100px] sm:max-w-[140px]">
+                                {item.name}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 sm:gap-3">
+                              <span className="font-medium">{formatCurrency(item.value)}</span>
+                              <span className="text-muted-foreground w-12 text-right">({percentage}%)</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
                 )}
               </div>
             </ProFeatureOverlay>
