@@ -6,6 +6,7 @@ import StatusSelector from "./StatusSelector";
 import TransactionCard from "./TransactionCard";
 import TransactionPagination from "./TransactionPagination";
 import { sortTransactionsByPriority } from "@/utils/transactionSort";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -91,6 +92,32 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
   const handleSuccess = () => {
     fetchTransactions();
     onRefresh?.();
+  };
+
+  const handleDuplicate = async (transaction: Transaction) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase.from("transactions").insert({
+        user_id: user.id,
+        description: transaction.description,
+        amount: transaction.amount,
+        category: transaction.category,
+        type: transaction.type,
+        status: transaction.status,
+        date: transaction.date,
+        tag: transaction.tag || null,
+        is_recurring: transaction.is_recurring || false,
+      });
+
+      if (error) throw error;
+
+      toast.success("Transação duplicada com sucesso!");
+      handleSuccess();
+    } catch (error) {
+      console.error("Error duplicating transaction:", error);
+      toast.error("Erro ao duplicar transação");
+    }
   };
 
   const formatDate = (dateStr: string | null | undefined) => {
@@ -204,7 +231,7 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
                     transaction={transaction}
                     onEdit={() => {}}
                     onDelete={() => {}}
-                    onDuplicate={() => {}}
+                    onDuplicate={handleDuplicate}
                     onStatusChange={fetchTransactions}
                   />
                 ))}

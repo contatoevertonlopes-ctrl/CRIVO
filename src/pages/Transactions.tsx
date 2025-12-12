@@ -314,8 +314,11 @@ const Transactions = () => {
         amount: transaction.amount,
         category: transaction.category,
         type: transaction.type,
-        status: "em_aberto",
-        date: new Date().toISOString().split("T")[0],
+        status: transaction.status,
+        date: transaction.date,
+        tag: transaction.tag || null,
+        is_recurring: transaction.is_recurring || false,
+        recurring_interval: transaction.recurring_interval || null,
       });
 
       if (error) throw error;
