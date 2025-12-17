@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.get-prices]
 verify_jwt = false
+
+[functions.whatsapp]
+verify_jwt = false
