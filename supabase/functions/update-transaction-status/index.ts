@@ -17,29 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Function started");
-
-    // Verify CRON_SECRET for authentication
-    const cronSecret = req.headers.get("x-cron-secret");
-    const expectedSecret = Deno.env.get("CRON_SECRET");
-
-    if (!expectedSecret) {
-      logStep("ERROR", { message: "CRON_SECRET not configured" });
-      return new Response(JSON.stringify({ error: "Server configuration error" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      });
-    }
-
-    if (cronSecret !== expectedSecret) {
-      logStep("Unauthorized access attempt", { providedSecret: cronSecret ? "provided" : "missing" });
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 401,
-      });
-    }
-
-    logStep("Authentication successful");
+    logStep("Function started - public endpoint for cron job");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
