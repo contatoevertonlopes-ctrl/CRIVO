@@ -139,8 +139,8 @@ const Settings = () => {
     <div className="flex min-h-screen">
       <Sidebar />
       
-      <main className="flex-1 p-4 sm:p-5 lg:p-6 flex flex-col gap-4 sm:gap-5">
-        <div className="pl-12 lg:pl-0">
+      <main className="flex-1 p-4 sm:p-5 lg:p-4 flex flex-col gap-4 sm:gap-5">
+        <div className="pl-12 lg:pl-0 lg:pt-0">
           <h1 className="text-lg sm:text-xl font-semibold mb-1">Configurações</h1>
           <p className="text-xs sm:text-sm text-muted-foreground">
             Gerencie sua conta e preferências
