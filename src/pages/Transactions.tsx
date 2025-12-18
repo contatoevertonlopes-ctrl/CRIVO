@@ -518,7 +518,7 @@ const Transactions = () => {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       
-      <main className="flex-1 p-4 lg:p-8">
+      <main className="flex-1 p-4 lg:p-4">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex flex-col gap-4 mb-4 sm:mb-8 pl-12 lg:pl-0">
