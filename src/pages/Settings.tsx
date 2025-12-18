@@ -13,7 +13,9 @@ const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
+  const [phoneLoading, setPhoneLoading] = useState(false);
   const [subscription, setSubscription] = useState<any>(null);
 
   useEffect(() => {
@@ -35,6 +37,7 @@ const Settings = () => {
     
     if (data) {
       setFullName(data.full_name || "");
+      setPhone(data.phone || "");
     }
   };
 
@@ -76,6 +79,37 @@ const Settings = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdatePhone = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    
+    setPhoneLoading(true);
+    try {
+      // Format phone number - remove non-digits and ensure country code
+      const formattedPhone = phone.replace(/\D/g, "");
+      
+      const { error } = await supabase
+        .from("profiles")
+        .update({ phone: formattedPhone })
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "WhatsApp vinculado",
+        description: "Seu número foi salvo com sucesso.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao vincular",
+        description: error.message,
+      });
+    } finally {
+      setPhoneLoading(false);
     }
   };
 
@@ -184,6 +218,47 @@ const Settings = () => {
             >
               {isPro ? "Gerenciar plano" : "Fazer upgrade"}
             </Button>
+          </div>
+
+          {/* WhatsApp Section */}
+          <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold mb-4">WhatsApp</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-4">
+              Vincule seu número para receber notificações e enviar comandos via WhatsApp.
+            </p>
+            
+            <form onSubmit={handleUpdatePhone} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Número do WhatsApp</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="5511999999999"
+                  className="bg-secondary/50 border-border/50"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Digite com código do país (ex: 5511999999999)
+                </p>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={phoneLoading}
+                className="bg-gradient-to-r from-green-600 to-green-500 text-primary-foreground"
+              >
+                {phoneLoading ? "Salvando..." : "Vincular WhatsApp"}
+              </Button>
+            </form>
+
+            {phone && (
+              <div className="mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+                <p className="text-xs text-green-400">
+                  ✓ WhatsApp vinculado: {phone}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Logout Section */}
