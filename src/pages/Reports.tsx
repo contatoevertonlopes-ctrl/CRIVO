@@ -66,11 +66,26 @@ const Reports = () => {
     }).format(value);
   };
 
-  // Process data for charts
+  const paidStatuses = ["pagamento_concluido", "paid", "confirmed"];
+
+  // Get number of months based on period
+  const getMonthsCount = () => {
+    switch (period) {
+      case "3months": return 3;
+      case "12months": return 12;
+      default: return 6;
+    }
+  };
+
+  // Process data for charts - only paid transactions
   const getMonthlyData = () => {
     const monthlyMap = new Map<string, { income: number; expense: number }>();
+    const monthsCount = getMonthsCount();
     
-    transactions.forEach((t) => {
+    // Filter only paid transactions
+    const paidTransactions = transactions.filter((t) => paidStatuses.includes(t.status));
+    
+    paidTransactions.forEach((t) => {
       const monthKey = t.date.substring(0, 7);
       const current = monthlyMap.get(monthKey) || { income: 0, expense: 0 };
       if (t.type === "income") {
@@ -83,7 +98,7 @@ const Reports = () => {
 
     return Array.from(monthlyMap.entries())
       .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-6)
+      .slice(-monthsCount)
       .map(([month, data]) => ({
         month: new Date(month + "-01").toLocaleDateString("pt-BR", { month: "short" }),
         entradas: data.income,
@@ -95,8 +110,9 @@ const Reports = () => {
   const getCategoryData = () => {
     const categoryMap = new Map<string, number>();
     
+    // Filter only paid expense transactions
     transactions
-      .filter((t) => t.type === "expense")
+      .filter((t) => t.type === "expense" && paidStatuses.includes(t.status))
       .forEach((t) => {
         const current = categoryMap.get(t.category) || 0;
         categoryMap.set(t.category, current + t.amount);
@@ -115,7 +131,6 @@ const Reports = () => {
   };
 
   const getStats = () => {
-    const paidStatuses = ["pagamento_concluido", "paid", "confirmed"];
     const paidIncomeTransactions = transactions.filter((t) => t.type === "income" && paidStatuses.includes(t.status));
     const paidExpenseTransactions = transactions.filter((t) => t.type === "expense" && paidStatuses.includes(t.status));
     
