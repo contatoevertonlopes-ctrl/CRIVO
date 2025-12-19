@@ -115,11 +115,15 @@ const Reports = () => {
   };
 
   const getStats = () => {
-    const totalIncome = transactions.filter((t) => t.type === "income").reduce((acc, t) => acc + t.amount, 0);
-    const totalExpense = transactions.filter((t) => t.type === "expense").reduce((acc, t) => acc + t.amount, 0);
+    const paidStatuses = ["pagamento_concluido", "paid", "confirmed"];
+    const paidIncomeTransactions = transactions.filter((t) => t.type === "income" && paidStatuses.includes(t.status));
+    const paidExpenseTransactions = transactions.filter((t) => t.type === "expense" && paidStatuses.includes(t.status));
+    
+    const totalIncome = paidIncomeTransactions.reduce((acc, t) => acc + t.amount, 0);
+    const totalExpense = paidExpenseTransactions.reduce((acc, t) => acc + t.amount, 0);
     const balance = totalIncome - totalExpense;
-    const avgIncome = totalIncome / Math.max(1, transactions.filter((t) => t.type === "income").length);
-    const avgExpense = totalExpense / Math.max(1, transactions.filter((t) => t.type === "expense").length);
+    const avgIncome = totalIncome / Math.max(1, paidIncomeTransactions.length);
+    const avgExpense = totalExpense / Math.max(1, paidExpenseTransactions.length);
 
     return { totalIncome, totalExpense, balance, avgIncome, avgExpense };
   };
