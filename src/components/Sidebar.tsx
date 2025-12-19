@@ -39,17 +39,15 @@ const Sidebar = () => {
     path: "/settings"
   }];
   return <>
-      {/* Mobile menu button - always visible on mobile */}
-      {collapsed && <button onClick={toggle} className="lg:hidden fixed top-4 left-4 z-50 w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center hover:bg-primary/20 transition-colors">
-          <ChevronRight className="w-5 h-5 text-foreground" />
-        </button>}
-
       {/* Mobile overlay */}
       {!collapsed && <div className="lg:hidden fixed inset-0 bg-black/50 z-40" onClick={toggle} />}
 
       <aside className={cn("fixed lg:relative z-50 flex flex-col gap-6 bg-sidebar border-r border-sidebar-border px-5 py-6 min-h-screen transition-all duration-300 ease-in-out", collapsed ? "w-[72px] px-3" : "w-64", "lg:translate-x-0", collapsed ? "-translate-x-full lg:translate-x-0" : "translate-x-0")}>
-        {/* Toggle Button */}
-        <button onClick={toggle} className="absolute -right-3 top-8 w-6 h-6 rounded-full bg-secondary border border-border flex items-center justify-center hover:bg-primary/20 transition-colors z-50">
+        {/* Toggle Button - always visible */}
+        <button onClick={toggle} className={cn(
+          "w-8 h-8 rounded-full bg-secondary border border-border flex items-center justify-center hover:bg-primary/20 transition-colors z-50",
+          collapsed ? "absolute -right-10 top-4 lg:-right-3 lg:top-8" : "absolute -right-3 top-8"
+        )}>
           {collapsed ? <ChevronRight className="w-4 h-4 text-muted-foreground" /> : <ChevronLeft className="w-4 h-4 text-muted-foreground" />}
         </button>
 

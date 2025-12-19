@@ -164,8 +164,8 @@ const Reports = () => {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       
-      <main className="flex-1 p-4 lg:p-4">
-        <div className="max-w-7xl mx-auto">
+      <main className="flex-1 p-4 sm:p-5 lg:p-4 flex flex-col gap-4 sm:gap-5 min-w-0">
+        <div className="max-w-7xl mx-auto w-full">
           {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 sm:mb-8 pl-12 lg:pl-0">
             <div>
