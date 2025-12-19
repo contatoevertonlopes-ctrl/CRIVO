@@ -496,8 +496,12 @@ const Transactions = () => {
   const paidStatuses = ["pagamento_concluido", "paid", "confirmed"];
 
   const totals = {
-    income: filteredTransactions.filter((t) => t.type === "income").reduce((acc, t) => acc + t.amount, 0),
-    expense: filteredTransactions.filter((t) => t.type === "expense").reduce((acc, t) => acc + t.amount, 0),
+    income: filteredTransactions
+      .filter((t) => t.type === "income" && paidStatuses.includes(t.status))
+      .reduce((acc, t) => acc + t.amount, 0),
+    expense: filteredTransactions
+      .filter((t) => t.type === "expense" && paidStatuses.includes(t.status))
+      .reduce((acc, t) => acc + t.amount, 0),
     pendingExpense: filteredTransactions
       .filter((t) => t.type === "expense" && pendingStatuses.includes(t.status))
       .reduce((acc, t) => acc + t.amount, 0),
