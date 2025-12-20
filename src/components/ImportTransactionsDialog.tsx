@@ -48,6 +48,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     category: "",
     paidDate: "",
     type: "",
+    status: "",
   });
   const [transactions, setTransactions] = useState<ParsedTransaction[]>([]);
   const [existingTransactions, setExistingTransactions] = useState<Set<string>>(new Set());
@@ -210,6 +211,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
       category: "",
       paidDate: "",
       type: "",
+      status: "",
     });
   }, []);
 
@@ -241,7 +243,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
         amount: t.amount,
         type: t.type,
         category: t.category,
-        status: "em_aberto" as const,
+        status: t.status || "em_aberto",
         paid_date: t.paidDate || null,
       }));
       
