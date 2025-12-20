@@ -14,21 +14,34 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { DateRangePicker } from "./DateRangePicker";
 
 interface DashboardHeaderProps {
   period?: number;
   onPeriodChange?: (days: number) => void;
+  customDateFrom?: Date;
+  customDateTo?: Date;
+  onCustomDateChange?: (from: Date | undefined, to: Date | undefined) => void;
 }
 
-const DashboardHeader = ({ period = 30, onPeriodChange }: DashboardHeaderProps) => {
+const DashboardHeader = ({ 
+  period = 30, 
+  onPeriodChange,
+  customDateFrom,
+  customDateTo,
+  onCustomDateChange,
+}: DashboardHeaderProps) => {
   const { profile } = useUserProfile();
   const { isShared, memberCount, loading: householdLoading } = useSharedHousehold();
+  
+  const isCustomPeriod = customDateFrom !== undefined && customDateTo !== undefined;
 
   const periodOptions = [
     { value: "7", label: "7 dias" },
     { value: "30", label: "30 dias" },
     { value: "60", label: "60 dias" },
     { value: "90", label: "90 dias" },
+    { value: "custom", label: "Personalizado" },
   ];
 
   return (
@@ -78,10 +91,16 @@ const DashboardHeader = ({ period = 30, onPeriodChange }: DashboardHeaderProps) 
         <NotificationsDropdown />
         
         <Select
-          value={period.toString()}
-          onValueChange={(value) => onPeriodChange?.(parseInt(value))}
+          value={isCustomPeriod ? "custom" : period.toString()}
+          onValueChange={(value) => {
+            if (value === "custom") {
+              // Just keep selection, date picker will handle dates
+            } else {
+              onPeriodChange?.(parseInt(value));
+            }
+          }}
         >
-          <SelectTrigger className="h-8 w-[100px] rounded-lg border-border/50 bg-secondary/60 text-xs text-muted-foreground hover:border-border hover:text-foreground">
+          <SelectTrigger className="h-8 w-[110px] rounded-lg border-border/50 bg-secondary/60 text-xs text-muted-foreground hover:border-border hover:text-foreground">
             <span className="w-1.5 h-1.5 rounded-full bg-primary mr-1.5"></span>
             <SelectValue />
           </SelectTrigger>
@@ -93,6 +112,15 @@ const DashboardHeader = ({ period = 30, onPeriodChange }: DashboardHeaderProps) 
             ))}
           </SelectContent>
         </Select>
+        
+        {(isCustomPeriod || period.toString() === "custom") && onCustomDateChange && (
+          <DateRangePicker
+            dateFrom={customDateFrom}
+            dateTo={customDateTo}
+            onDateChange={onCustomDateChange}
+            className="h-8 text-xs"
+          />
+        )}
 
         {/* User Avatar - Hidden on mobile */}
         <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg border border-border/30 bg-secondary/50">

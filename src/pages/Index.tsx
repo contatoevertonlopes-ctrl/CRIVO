@@ -14,6 +14,7 @@ import ProsperityWidget from "@/components/ProsperityWidget";
 import { QuickAddInput } from "@/components/QuickAddInput";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdaptiveModeData } from "@/hooks/useAdaptiveModeData";
+import { differenceInDays } from "date-fns";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,9 +22,17 @@ const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [period, setPeriod] = useState(30);
+  const [customDateFrom, setCustomDateFrom] = useState<Date | undefined>();
+  const [customDateTo, setCustomDateTo] = useState<Date | undefined>();
   const { mode, setMode } = useAppMode();
-  const { metrics, cashflowData, expensesByCategory, refetch } = useDashboardData(period);
-  const adaptiveData = useAdaptiveModeData(period);
+  
+  // Calculate actual period for custom dates
+  const effectivePeriod = customDateFrom && customDateTo 
+    ? Math.max(1, differenceInDays(customDateTo, customDateFrom) + 1)
+    : period;
+    
+  const { metrics, cashflowData, expensesByCategory, refetch } = useDashboardData(effectivePeriod, customDateFrom, customDateTo);
+  const adaptiveData = useAdaptiveModeData(effectivePeriod);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -66,6 +75,9 @@ const Index = () => {
   };
 
   const getPeriodLabel = () => {
+    if (customDateFrom && customDateTo) {
+      return `${effectivePeriod}d`;
+    }
     switch (period) {
       case 7: return "7 dias";
       case 30: return "30 dias";
@@ -76,6 +88,9 @@ const Index = () => {
   };
 
   const getPreviousPeriodLabel = () => {
+    if (customDateFrom && customDateTo) {
+      return "vs. período ant.";
+    }
     switch (period) {
       case 7: return "vs. semana ant.";
       case 30: return "vs. mês ant.";
@@ -83,6 +98,17 @@ const Index = () => {
       case 365: return "vs. ano ant.";
       default: return "vs. período ant.";
     }
+  };
+  
+  const handlePeriodChange = (newPeriod: number) => {
+    setPeriod(newPeriod);
+    setCustomDateFrom(undefined);
+    setCustomDateTo(undefined);
+  };
+  
+  const handleCustomDateChange = (from: Date | undefined, to: Date | undefined) => {
+    setCustomDateFrom(from);
+    setCustomDateTo(to);
   };
 
   if (loading) {
@@ -105,7 +131,13 @@ const Index = () => {
       <main className="flex-1 min-w-0 pt-16 pb-24 lg:pt-0 lg:pb-0">
         <div className="max-w-6xl mx-auto px-4 py-4 lg:px-6 lg:py-6 flex flex-col gap-4 lg:gap-5">
           {/* Header */}
-          <DashboardHeader period={period} onPeriodChange={setPeriod} />
+          <DashboardHeader 
+            period={period} 
+            onPeriodChange={handlePeriodChange}
+            customDateFrom={customDateFrom}
+            customDateTo={customDateTo}
+            onCustomDateChange={handleCustomDateChange}
+          />
           
           {/* Quick Add Input */}
           <div className="max-w-2xl">
