@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Search, Plus, Edit2, Trash2, ArrowLeft, Filter, Download, Lock, Crown, RefreshCw, Calendar, Copy, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
+import { Search, Plus, Edit2, Trash2, ArrowLeft, Filter, Download, Lock, Crown, RefreshCw, Calendar, Copy, ArrowUpDown, ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
 import TransactionForm from "@/components/TransactionForm";
 import Sidebar from "@/components/Sidebar";
 import ImportTransactionsDialog from "@/components/ImportTransactionsDialog";
@@ -36,6 +36,101 @@ interface Transaction {
   tag?: string;
   payment_method?: string;
 }
+
+interface TransactionRowProps {
+  transaction: Transaction;
+  onEdit: (t: Transaction) => void;
+  onDelete: (id: string) => void;
+  onDuplicate: (t: Transaction) => void;
+  onStatusChange: () => void;
+  formatDate: (date: string) => string;
+  formatCurrency: (value: number) => string;
+}
+
+const TransactionRow = ({ 
+  transaction, 
+  onEdit, 
+  onDelete, 
+  onDuplicate, 
+  onStatusChange,
+  formatDate,
+  formatCurrency 
+}: TransactionRowProps) => (
+  <tr className="border-b border-secondary/50 hover:bg-secondary/30 transition-colors">
+    <td className="py-4 px-4 whitespace-nowrap">{formatDate(transaction.date)}</td>
+    <td className="py-4 px-4 font-medium">
+      <div className="flex items-center gap-2">
+        <span className="truncate max-w-[200px]">{transaction.description}</span>
+        {transaction.is_recurring && (
+          <span title="Recorrente">
+            <RefreshCw className="w-3 h-3 text-primary shrink-0" />
+          </span>
+        )}
+      </div>
+    </td>
+    <td className="py-4 px-4">{transaction.category}</td>
+    <td className="py-4 px-4">
+      <span
+        className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full ${
+          transaction.type === "income"
+            ? "bg-primary/14 text-green-200"
+            : "bg-destructive/10 text-red-200"
+        }`}
+      >
+        {transaction.type === "income" ? "Entrada" : "Saída"}
+      </span>
+    </td>
+    <td className="py-4 px-4 whitespace-nowrap">{formatCurrency(transaction.amount)}</td>
+    <td className="py-4 px-4">
+      <StatusSelector
+        transactionId={transaction.id}
+        currentStatus={transaction.status}
+        onStatusChange={onStatusChange}
+      />
+    </td>
+    <td className="py-4 px-4">
+      {transaction.tag && (
+        <span className={`inline-flex items-center text-[10px] px-2 py-0.5 rounded-full ${
+          transaction.tag === "fixa" 
+            ? "bg-blue-500/20 text-blue-300"
+            : transaction.tag === "variavel"
+            ? "bg-orange-500/20 text-orange-300"
+            : "bg-purple-500/20 text-purple-300"
+        }`}>
+          {transaction.tag === "fixa" ? "Fixa" : transaction.tag === "variavel" ? "Variável" : "Esporádica"}
+        </span>
+      )}
+    </td>
+    <td className="py-4 px-4 whitespace-nowrap text-muted-foreground">
+      {transaction.paid_date ? formatDate(transaction.paid_date) : "-"}
+    </td>
+    <td className="py-4 px-4">
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onDuplicate(transaction)}
+          className="p-1.5 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
+          title="Duplicar"
+        >
+          <Copy className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => onEdit(transaction)}
+          className="p-1.5 rounded-lg hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors"
+          title="Editar"
+        >
+          <Edit2 className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => onDelete(transaction.id)}
+          className="p-1.5 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+          title="Excluir"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    </td>
+  </tr>
+);
 
 const Transactions = () => {
   const { user, loading: authLoading } = useAuth();
@@ -64,6 +159,8 @@ const Transactions = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [showProFilters, setShowProFilters] = useState(false);
   const [sortOrder, setSortOrder] = useState<"date_desc" | "date_asc" | "amount_desc" | "amount_asc" | "priority">("priority");
+  const [groupBy, setGroupBy] = useState<"none" | "month" | "category">("month");
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -233,6 +330,80 @@ const Transactions = () => {
   }, [transactions, search, typeFilter, statusFilter, categoryFilter, tagFilter, periodFilter, customDateFrom, customDateTo, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed, sortOrder]);
 
   const categories = [...new Set(transactions.map((t) => t.category))];
+
+  // Group transactions by month or category
+  const groupedTransactions = useMemo(() => {
+    if (groupBy === "none") {
+      return { "all": filteredTransactions };
+    }
+
+    const groups: Record<string, Transaction[]> = {};
+    
+    filteredTransactions.forEach((t) => {
+      let key: string;
+      if (groupBy === "month") {
+        const date = new Date(t.date + "T00:00:00");
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      } else {
+        key = t.category;
+      }
+      
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(t);
+    });
+
+    // Sort keys
+    const sortedKeys = Object.keys(groups).sort((a, b) => {
+      if (groupBy === "month") {
+        return b.localeCompare(a); // Most recent first
+      }
+      return a.localeCompare(b); // Alphabetical
+    });
+
+    const sortedGroups: Record<string, Transaction[]> = {};
+    sortedKeys.forEach(key => {
+      sortedGroups[key] = groups[key];
+    });
+
+    return sortedGroups;
+  }, [filteredTransactions, groupBy]);
+
+  const formatGroupHeader = (key: string) => {
+    if (groupBy === "month") {
+      const [year, month] = key.split("-");
+      const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
+                          "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+      return `${monthNames[parseInt(month) - 1]} ${year}`;
+    }
+    return key;
+  };
+
+  const getGroupStats = (transactions: Transaction[]) => {
+    const income = transactions
+      .filter(t => t.type === "income" && paidStatuses.includes(t.status))
+      .reduce((sum, t) => sum + t.amount, 0);
+    const expense = transactions
+      .filter(t => t.type === "expense" && paidStatuses.includes(t.status))
+      .reduce((sum, t) => sum + t.amount, 0);
+    return { income, expense, balance: income - expense };
+  };
+
+  const toggleGroupCollapse = (key: string) => {
+    const newCollapsed = new Set(collapsedGroups);
+    if (newCollapsed.has(key)) {
+      newCollapsed.delete(key);
+    } else {
+      newCollapsed.add(key);
+    }
+    setCollapsedGroups(newCollapsed);
+  };
+
+  // Flatten for pagination when not grouping
+  const paginatedTransactions = groupBy === "none" 
+    ? filteredTransactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    : filteredTransactions;
 
   const getNextInstallmentDate = (baseDate: Date, index: number, interval: string) => {
     switch (interval) {
@@ -677,8 +848,21 @@ const Transactions = () => {
                     onChange={(e) => setSearch(e.target.value)}
                     className="pl-10 h-9 sm:h-10 text-sm"
                   />
-                </div>
               </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Agrupar</Label>
+                <Select value={groupBy} onValueChange={(v) => setGroupBy(v as "none" | "month" | "category")}>
+                  <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                    <SelectValue placeholder="Agrupar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem agrupamento</SelectItem>
+                    <SelectItem value="month">Por mês</SelectItem>
+                    <SelectItem value="category">Por categoria</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Período</Label>
                 <Select value={periodFilter} onValueChange={setPeriodFilter}>
@@ -884,28 +1068,63 @@ const Transactions = () => {
               </div>
             ) : (
               <>
-                {/* Mobile: Card view with pagination */}
+                {/* Mobile: Card view with grouping */}
                 <div className="md:hidden">
-                  {filteredTransactions
-                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                    .map((transaction) => (
-                      <TransactionCard
-                        key={transaction.id}
-                        transaction={transaction}
-                        onEdit={openEditDialog}
-                        onDelete={handleDelete}
-                        onDuplicate={handleDuplicate}
-                        onStatusChange={fetchTransactions}
+                  {groupBy === "none" ? (
+                    <>
+                      {paginatedTransactions.map((transaction) => (
+                        <TransactionCard
+                          key={transaction.id}
+                          transaction={transaction}
+                          onEdit={openEditDialog}
+                          onDelete={handleDelete}
+                          onDuplicate={handleDuplicate}
+                          onStatusChange={fetchTransactions}
+                        />
+                      ))}
+                      <TransactionPagination
+                        currentPage={currentPage}
+                        totalPages={Math.ceil(filteredTransactions.length / itemsPerPage)}
+                        onPageChange={setCurrentPage}
                       />
-                    ))}
-                  <TransactionPagination
-                    currentPage={currentPage}
-                    totalPages={Math.ceil(filteredTransactions.length / itemsPerPage)}
-                    onPageChange={setCurrentPage}
-                  />
+                    </>
+                  ) : (
+                    Object.entries(groupedTransactions).map(([key, groupTransactions]) => {
+                      const stats = getGroupStats(groupTransactions);
+                      const isCollapsed = collapsedGroups.has(key);
+                      return (
+                        <div key={key} className="border-b border-secondary last:border-0">
+                          <button
+                            onClick={() => toggleGroupCollapse(key)}
+                            className="w-full flex items-center justify-between p-3 sm:p-4 bg-secondary/30 hover:bg-secondary/50 transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
+                              <ChevronRight className={`w-4 h-4 transition-transform ${isCollapsed ? "" : "rotate-90"}`} />
+                              <span className="font-medium text-sm">{formatGroupHeader(key)}</span>
+                              <span className="text-xs text-muted-foreground">({groupTransactions.length})</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs">
+                              <span className="text-primary">+{formatCurrency(stats.income)}</span>
+                              <span className="text-destructive">-{formatCurrency(stats.expense)}</span>
+                            </div>
+                          </button>
+                          {!isCollapsed && groupTransactions.map((transaction) => (
+                            <TransactionCard
+                              key={transaction.id}
+                              transaction={transaction}
+                              onEdit={openEditDialog}
+                              onDelete={handleDelete}
+                              onDuplicate={handleDuplicate}
+                              onStatusChange={fetchTransactions}
+                            />
+                          ))}
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
                 
-                {/* Desktop: Table view */}
+                {/* Desktop: Table view with grouping */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -950,94 +1169,73 @@ const Transactions = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredTransactions
-                        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                        .map((transaction) => (
-                        <tr
-                          key={transaction.id}
-                          className="border-b border-secondary/50 hover:bg-secondary/30 transition-colors"
-                        >
-                          <td className="py-4 px-4 whitespace-nowrap">{formatDate(transaction.date)}</td>
-                          <td className="py-4 px-4 font-medium">
-                            <div className="flex items-center gap-2">
-                              <span className="truncate max-w-[200px]">{transaction.description}</span>
-                              {transaction.is_recurring && (
-                                <span title="Recorrente">
-                                  <RefreshCw className="w-3 h-3 text-primary shrink-0" />
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-4 px-4">{transaction.category}</td>
-                          <td className="py-4 px-4">
-                            <span
-                              className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full ${
-                                transaction.type === "income"
-                                  ? "bg-primary/14 text-green-200"
-                                  : "bg-destructive/10 text-red-200"
-                              }`}
-                            >
-                              {transaction.type === "income" ? "Entrada" : "Saída"}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 whitespace-nowrap">{formatCurrency(transaction.amount)}</td>
-                          <td className="py-4 px-4">
-                            <StatusSelector
-                              transactionId={transaction.id}
-                              currentStatus={transaction.status}
-                              onStatusChange={fetchTransactions}
-                            />
-                          </td>
-                          <td className="py-4 px-4">
-                            {transaction.tag && (
-                              <span className={`inline-flex items-center text-[10px] px-2 py-0.5 rounded-full ${
-                                transaction.tag === "fixa" 
-                                  ? "bg-blue-500/20 text-blue-300"
-                                  : transaction.tag === "variavel"
-                                  ? "bg-orange-500/20 text-orange-300"
-                                  : "bg-purple-500/20 text-purple-300"
-                              }`}>
-                                {transaction.tag === "fixa" ? "Fixa" : transaction.tag === "variavel" ? "Variável" : "Esporádica"}
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-4 px-4 whitespace-nowrap text-muted-foreground">
-                            {transaction.paid_date ? formatDate(transaction.paid_date) : "-"}
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => handleDuplicate(transaction)}
-                                className="p-1.5 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
-                                title="Duplicar"
+                      {groupBy === "none" ? (
+                        paginatedTransactions.map((transaction) => (
+                          <TransactionRow
+                            key={transaction.id}
+                            transaction={transaction}
+                            onEdit={openEditDialog}
+                            onDelete={handleDelete}
+                            onDuplicate={handleDuplicate}
+                            onStatusChange={fetchTransactions}
+                            formatDate={formatDate}
+                            formatCurrency={formatCurrency}
+                          />
+                        ))
+                      ) : (
+                        Object.entries(groupedTransactions).map(([key, groupTransactions]) => {
+                          const stats = getGroupStats(groupTransactions);
+                          const isCollapsed = collapsedGroups.has(key);
+                          return (
+                            <React.Fragment key={key}>
+                              <tr 
+                                className="bg-secondary/40 border-b border-secondary cursor-pointer hover:bg-secondary/60 transition-colors"
+                                onClick={() => toggleGroupCollapse(key)}
                               >
-                                <Copy className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => openEditDialog(transaction)}
-                                className="p-1.5 rounded-lg hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors"
-                                title="Editar"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(transaction.id)}
-                                className="p-1.5 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
-                                title="Excluir"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                                <td colSpan={9} className="py-3 px-4">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <ChevronRight className={`w-4 h-4 transition-transform ${isCollapsed ? "" : "rotate-90"}`} />
+                                      <span className="font-semibold">{formatGroupHeader(key)}</span>
+                                      <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+                                        {groupTransactions.length} transações
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-4 text-sm">
+                                      <span className="text-primary font-medium">+{formatCurrency(stats.income)}</span>
+                                      <span className="text-destructive font-medium">-{formatCurrency(stats.expense)}</span>
+                                      <span className={`font-bold ${stats.balance >= 0 ? "text-primary" : "text-destructive"}`}>
+                                        = {formatCurrency(stats.balance)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                              {!isCollapsed && groupTransactions.map((transaction) => (
+                                <TransactionRow
+                                  key={transaction.id}
+                                  transaction={transaction}
+                                  onEdit={openEditDialog}
+                                  onDelete={handleDelete}
+                                  onDuplicate={handleDuplicate}
+                                  onStatusChange={fetchTransactions}
+                                  formatDate={formatDate}
+                                  formatCurrency={formatCurrency}
+                                />
+                              ))}
+                            </React.Fragment>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
-                  <TransactionPagination
-                    currentPage={currentPage}
-                    totalPages={Math.ceil(filteredTransactions.length / itemsPerPage)}
-                    onPageChange={setCurrentPage}
-                  />
+                  {groupBy === "none" && (
+                    <TransactionPagination
+                      currentPage={currentPage}
+                      totalPages={Math.ceil(filteredTransactions.length / itemsPerPage)}
+                      onPageChange={setCurrentPage}
+                    />
+                  )}
                 </div>
               </>
             )}

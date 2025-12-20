@@ -44,6 +44,17 @@ const DashboardHeader = ({
     { value: "custom", label: "Personalizado" },
   ];
 
+  const handlePeriodSelect = (value: string) => {
+    if (value === "custom") {
+      // Set default custom dates: last 30 days
+      const today = new Date();
+      const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+      onCustomDateChange?.(thirtyDaysAgo, today);
+    } else {
+      onPeriodChange?.(parseInt(value));
+    }
+  };
+
   return (
     <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       {/* Title Section */}
@@ -92,13 +103,7 @@ const DashboardHeader = ({
         
         <Select
           value={isCustomPeriod ? "custom" : period.toString()}
-          onValueChange={(value) => {
-            if (value === "custom") {
-              // Just keep selection, date picker will handle dates
-            } else {
-              onPeriodChange?.(parseInt(value));
-            }
-          }}
+          onValueChange={handlePeriodSelect}
         >
           <SelectTrigger className="h-8 w-[110px] rounded-lg border-border/50 bg-secondary/60 text-xs text-muted-foreground hover:border-border hover:text-foreground">
             <span className="w-1.5 h-1.5 rounded-full bg-primary mr-1.5"></span>
