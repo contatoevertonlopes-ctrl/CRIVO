@@ -109,8 +109,16 @@ const Reports = () => {
   const getMonthlyData = () => {
     const monthsCount = getMonthsCount();
     
+    // First, get all paid transactions
+    const paidTransactions = transactions.filter((t) => paidStatuses.includes(t.status));
+    
+    if (paidTransactions.length === 0) {
+      return [];
+    }
+    
     // Generate month keys based on period type
     const monthKeys: string[] = [];
+    
     if (isCustomPeriod && customDateFrom && customDateTo) {
       // Use custom date range
       const startMonth = startOfMonth(customDateFrom);
@@ -122,10 +130,14 @@ const Reports = () => {
         current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
       }
     } else {
-      // Use predefined period
-      const now = new Date();
+      // Find the date range of paid transactions
+      const dates = paidTransactions.map(t => t.date).sort();
+      const latestDate = dates[dates.length - 1];
+      const latestMonth = new Date(latestDate + "-01");
+      
+      // Generate months backwards from the latest transaction date
       for (let i = monthsCount - 1; i >= 0; i--) {
-        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const date = new Date(latestMonth.getFullYear(), latestMonth.getMonth() - i, 1);
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         monthKeys.push(key);
       }
@@ -137,17 +149,15 @@ const Reports = () => {
       monthlyMap.set(key, { income: 0, expense: 0 });
     });
     
-    // Filter only paid transactions within the period
+    // Filter transactions within the period
     const filterStartDate = monthKeys.length > 0 ? `${monthKeys[0]}-01` : "";
     const filterEndDate = monthKeys.length > 0 ? `${monthKeys[monthKeys.length - 1]}-31` : "";
     
-    const paidTransactions = transactions.filter((t) => 
-      paidStatuses.includes(t.status) && 
-      t.date >= filterStartDate && 
-      t.date <= filterEndDate
+    const filteredTransactions = paidTransactions.filter((t) => 
+      t.date >= filterStartDate && t.date <= filterEndDate
     );
     
-    paidTransactions.forEach((t) => {
+    filteredTransactions.forEach((t) => {
       const monthKey = t.date.substring(0, 7);
       if (monthlyMap.has(monthKey)) {
         const current = monthlyMap.get(monthKey)!;
