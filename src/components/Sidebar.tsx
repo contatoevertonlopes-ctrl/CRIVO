@@ -5,6 +5,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useSidebarContext } from "@/contexts/SidebarContext";
 import { LayoutDashboard, ArrowRightLeft, BarChart3, Settings, Crown, Shield, Sparkles, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import AppLogo from "./AppLogo";
 
 const Sidebar = () => {
   const location = useLocation();
@@ -26,9 +27,7 @@ const Sidebar = () => {
       {/* Mobile Header with Hamburger */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur-sm border-b border-sidebar-border px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary via-primary to-green-900 flex items-center justify-center font-bold text-sm shadow-lg">
-            CF
-          </div>
+          <AppLogo size={28} className="text-primary" />
           <span className="font-semibold text-sm">ClubFinanceTrack</span>
         </div>
         <button
@@ -74,9 +73,7 @@ const Sidebar = () => {
           <aside className="lg:hidden fixed top-[60px] left-0 bottom-[72px] w-72 bg-sidebar border-r border-sidebar-border z-50 flex flex-col p-4 animate-in slide-in-from-left-full duration-300">
             {/* Logo */}
             <div className="flex items-center gap-2 mb-6 pb-4 border-b border-sidebar-border/50">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-primary to-green-900 flex items-center justify-center font-bold text-sm shadow-lg">
-                CF
-              </div>
+              <AppLogo size={32} className="text-primary" />
               <div className="flex flex-col">
                 <span className="text-sm font-semibold">ClubFinanceTrack</span>
                 <span className="text-[10px] text-muted-foreground">Dashboard Financeiro</span>
@@ -210,9 +207,7 @@ const Sidebar = () => {
           )}
           onClick={() => navigate("/")}
         >
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary via-primary to-green-900 flex items-center justify-center font-bold text-sm shadow-lg shrink-0">
-            CF
-          </div>
+          <AppLogo size={28} className="text-primary shrink-0" />
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-semibold leading-tight">ClubFinanceTrack</span>
