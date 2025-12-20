@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { RefreshCw, Lock, Tag, ListOrdered } from "lucide-react";
+import { RefreshCw, Lock, Tag, ListOrdered, CreditCard } from "lucide-react";
 
 interface TransactionFormData {
   description: string;
@@ -19,6 +19,7 @@ interface TransactionFormData {
   is_installment: boolean;
   installment_count: string;
   installment_interval: string;
+  payment_method: string;
 }
 
 interface TransactionFormProps {
@@ -119,6 +120,28 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
         </div>
       </div>
       
+      {/* Payment Method field */}
+      <div className="space-y-2">
+        <Label className="flex items-center gap-2">
+          <CreditCard className="w-4 h-4" />
+          Forma de Pagamento
+        </Label>
+        <Select value={formData.payment_method || "none"} onValueChange={(v) => setFormData({ ...formData, payment_method: v === "none" ? "" : v })}>
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione a forma de pagamento" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Nenhuma</SelectItem>
+            <SelectItem value="pix">PIX</SelectItem>
+            <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
+            <SelectItem value="debit_card">Cartão de Débito</SelectItem>
+            <SelectItem value="cash">Dinheiro</SelectItem>
+            <SelectItem value="bank_transfer">Transferência Bancária</SelectItem>
+            <SelectItem value="boleto">Boleto</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Tag field */}
       <div className="space-y-2">
         <Label className="flex items-center gap-2">
