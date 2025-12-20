@@ -78,31 +78,43 @@ export type Database = {
       }
       profiles: {
         Row: {
+          app_mode: string | null
           avatar_url: string | null
           created_at: string
+          current_balance: number | null
           full_name: string | null
           household_id: string | null
           id: string
+          monthly_income: number | null
+          onboarding_completed: boolean | null
           phone: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          app_mode?: string | null
           avatar_url?: string | null
           created_at?: string
+          current_balance?: number | null
           full_name?: string | null
           household_id?: string | null
           id?: string
+          monthly_income?: number | null
+          onboarding_completed?: boolean | null
           phone?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          app_mode?: string | null
           avatar_url?: string | null
           created_at?: string
+          current_balance?: number | null
           full_name?: string | null
           household_id?: string | null
           id?: string
+          monthly_income?: number | null
+          onboarding_completed?: boolean | null
           phone?: string | null
           updated_at?: string
           user_id?: string

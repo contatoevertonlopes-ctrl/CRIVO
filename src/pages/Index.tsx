@@ -15,19 +15,45 @@ import { QuickAddInput } from "@/components/QuickAddInput";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdaptiveModeData } from "@/hooks/useAdaptiveModeData";
 
+import { supabase } from "@/integrations/supabase/client";
+
 const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [period, setPeriod] = useState(30);
-  const { mode } = useAppMode();
+  const { mode, setMode } = useAppMode();
   const { metrics, cashflowData, expensesByCategory, refetch } = useDashboardData(period);
   const adaptiveData = useAdaptiveModeData(period);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/auth");
+      return;
     }
-  }, [user, loading, navigate]);
+
+    // Check onboarding and load user's saved mode
+    const checkUserProfile = async () => {
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("onboarding_completed, app_mode")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!profile?.onboarding_completed) {
+        navigate("/onboarding");
+        return;
+      }
+
+      // Load user's preferred mode
+      if (profile?.app_mode) {
+        setMode(profile.app_mode as "survival" | "prosperity");
+      }
+    };
+
+    checkUserProfile();
+  }, [user, loading, navigate, setMode]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
