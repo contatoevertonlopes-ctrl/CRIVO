@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useHouseholdId } from "@/hooks/useHouseholdId";
 import { useHousehold } from "@/hooks/useHousehold";
+import { useSharedHousehold } from "@/hooks/useSharedHousehold";
 import { supabase } from "@/integrations/supabase/client";
 import AddTransactionDialog from "./AddTransactionDialog";
 import StatusSelector from "./StatusSelector";
@@ -47,6 +48,7 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
   const { user } = useAuth();
   const { householdId } = useHouseholdId();
   const { members } = useHousehold();
+  const { isShared, loading: householdLoading } = useSharedHousehold();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -56,7 +58,7 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
   const itemsPerPage = 10;
 
   const fetchTransactions = async () => {
-    if (!user) {
+    if (!user || householdLoading) {
       setTransactions([]);
       setLoading(false);
       return;
@@ -64,10 +66,14 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
 
     setLoading(true);
     try {
-      // Fetch transactions - RLS will handle household filtering
-      let query = supabase
-        .from("transactions")
-        .select("*");
+      let query = supabase.from("transactions").select("*");
+
+      // Filter based on shared status
+      if (!isShared) {
+        query = query.eq("user_id", user.id);
+      } else if (householdId) {
+        query = query.eq("household_id", householdId);
+      }
 
       if (statusFilter !== "all") {
         query = query.eq("status", statusFilter);
@@ -84,8 +90,7 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      
-      // Apply priority sorting
+
       const sortedData = sortTransactionsByPriority((data as Transaction[]) || []);
       setTransactions(sortedData);
     } catch (error) {
@@ -99,14 +104,13 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
   useEffect(() => {
     fetchTransactions();
     setCurrentPage(1);
-  }, [user, statusFilter, typeFilter, tagFilter]);
+  }, [user, statusFilter, typeFilter, tagFilter, isShared, householdId, householdLoading]);
 
   const handleSuccess = () => {
     fetchTransactions();
     onRefresh?.();
   };
 
-  // Normalize legacy status values to valid constraint values
   const normalizeStatus = (status: string) => {
     const legacyMap: Record<string, string> = {
       pending: "em_aberto",
@@ -135,18 +139,18 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
 
       if (error) throw error;
 
-      toast.success("Transação duplicada com sucesso!");
+      toast.success("Transação duplicada!");
       handleSuccess();
     } catch (error) {
       console.error("Error duplicating transaction:", error);
-      toast.error("Erro ao duplicar transação");
+      toast.error("Erro ao duplicar");
     }
   };
 
   const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return "-";
     const date = new Date(dateStr + "T00:00:00");
-    return date.toLocaleDateString("pt-BR");
+    return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
   };
 
   const formatCurrency = (value: number) => {
@@ -169,20 +173,20 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
   const getTagStyle = (tag: string | null | undefined) => {
     switch (tag) {
       case "fixa":
-        return "bg-blue-500/20 text-blue-300";
+        return "bg-blue-500/15 text-blue-400 border-blue-500/30";
       case "variavel":
-        return "bg-purple-500/20 text-purple-300";
+        return "bg-purple-500/15 text-purple-400 border-purple-500/30";
       case "esporadica":
-        return "bg-orange-500/20 text-orange-300";
+        return "bg-orange-500/15 text-orange-400 border-orange-500/30";
       default:
-        return "bg-secondary/50 text-muted-foreground";
+        return "bg-secondary text-muted-foreground border-border/30";
     }
   };
 
   const getMemberInfo = (userId: string) => {
-    const member = members.find(m => m.user_id === userId);
+    const member = members.find((m) => m.user_id === userId);
     if (!member) return { name: "Usuário", initials: "U", avatar: null };
-    
+
     const name = member.full_name || "Usuário";
     const initials = name
       .split(" ")
@@ -190,33 +194,32 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
       .join("")
       .toUpperCase()
       .slice(0, 2);
-    
+
     return { name, initials, avatar: member.avatar_url };
   };
 
   return (
-    <div className="rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-5">
-      <div className="flex justify-between items-center mb-3 flex-wrap gap-3">
+    <div className="rounded-xl bg-card border border-border/50 shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="flex justify-between items-center p-4 border-b border-border/50">
         <div>
-          <h3 className="text-sm font-medium mb-0.5">Últimas transações</h3>
-          <p className="text-[11px] text-muted-foreground">
-            Resumo das entradas, saídas e recorrências mais recentes.
+          <h3 className="text-sm font-medium">Últimas transações</h3>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Entradas, saídas e recorrências recentes
           </p>
         </div>
-        <div className="flex gap-2">
-          <AddTransactionDialog onSuccess={handleSuccess} />
-        </div>
+        <AddTransactionDialog onSuccess={handleSuccess} />
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-4 items-center">
+      <div className="flex flex-wrap gap-2 p-3 border-b border-border/30 bg-secondary/30">
         <Filter className="w-4 h-4 text-muted-foreground" />
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[140px] h-8 text-xs">
+          <SelectTrigger className="w-[120px] h-7 text-xs bg-background border-border/50">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos Status</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="em_aberto">Em aberto</SelectItem>
             <SelectItem value="a_vencer">A vencer</SelectItem>
             <SelectItem value="vencido">Vencido</SelectItem>
@@ -225,22 +228,22 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
         </Select>
 
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-[120px] h-8 text-xs">
+          <SelectTrigger className="w-[100px] h-7 text-xs bg-background border-border/50">
             <SelectValue placeholder="Tipo" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos Tipos</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="income">Entrada</SelectItem>
             <SelectItem value="expense">Saída</SelectItem>
           </SelectContent>
         </Select>
 
         <Select value={tagFilter} onValueChange={setTagFilter}>
-          <SelectTrigger className="w-[130px] h-8 text-xs">
+          <SelectTrigger className="w-[110px] h-7 text-xs bg-background border-border/50">
             <SelectValue placeholder="Tag" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas Tags</SelectItem>
+            <SelectItem value="all">Todas</SelectItem>
             <SelectItem value="fixa">Fixa</SelectItem>
             <SelectItem value="variavel">Variável</SelectItem>
             <SelectItem value="esporadica">Esporádica</SelectItem>
@@ -248,19 +251,21 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
         </Select>
       </div>
 
-      {loading ? (
-          <div className="text-center py-8 text-muted-foreground">
+      {/* Content */}
+      <div className="p-3">
+        {loading ? (
+          <div className="text-center py-8 text-muted-foreground text-sm">
             Carregando...
           </div>
         ) : transactions.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            <p className="mb-2">Nenhuma transação encontrada</p>
-            <p className="text-xs">Adicione sua primeira transação para começar</p>
+            <p className="text-sm mb-1">Nenhuma transação</p>
+            <p className="text-xs">Adicione sua primeira transação</p>
           </div>
         ) : (
           <>
             {/* Mobile: Card view */}
-            <div className="md:hidden">
+            <div className="md:hidden space-y-2">
               {transactions
                 .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                 .map((transaction) => {
@@ -274,32 +279,27 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
                       onDuplicate={handleDuplicate}
                       onStatusChange={fetchTransactions}
                       memberInfo={memberInfo}
-                      showMember={members.length > 1}
+                      showMember={isShared && members.length > 1}
                     />
                   );
                 })}
-              <TransactionPagination
-                currentPage={currentPage}
-                totalPages={Math.ceil(transactions.length / itemsPerPage)}
-                onPageChange={setCurrentPage}
-              />
             </div>
 
             {/* Desktop: Table view */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-xs border-collapse">
+            <div className="hidden md:block">
+              <table className="w-full text-xs">
                 <thead>
-                  <tr className="text-muted-foreground border-b border-secondary">
-                    {members.length > 1 && (
-                      <th className="text-left py-2 px-2 font-normal w-10"></th>
+                  <tr className="text-muted-foreground border-b border-border/30">
+                    {isShared && members.length > 1 && (
+                      <th className="text-left py-2 px-2 font-normal w-8"></th>
                     )}
-                    <th className="text-left py-2 px-2 font-normal">Vencimento</th>
-                    <th className="text-left py-2 px-2 font-normal">Pagamento</th>
+                    <th className="text-left py-2 px-2 font-normal">Venc.</th>
+                    <th className="text-left py-2 px-2 font-normal">Pago</th>
                     <th className="text-left py-2 px-2 font-normal">Descrição</th>
                     <th className="text-left py-2 px-2 font-normal">Categoria</th>
                     <th className="text-left py-2 px-2 font-normal">Tag</th>
                     <th className="text-left py-2 px-2 font-normal">Tipo</th>
-                    <th className="text-left py-2 px-2 font-normal">Valor</th>
+                    <th className="text-right py-2 px-2 font-normal">Valor</th>
                     <th className="text-left py-2 px-2 font-normal">Status</th>
                   </tr>
                 </thead>
@@ -309,72 +309,81 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
                     .map((transaction) => {
                       const memberInfo = getMemberInfo(transaction.user_id);
                       return (
-                    <tr
-                      key={transaction.id}
-                      className="border-b border-secondary/90 hover:bg-secondary/80 transition-colors"
-                    >
-                      {members.length > 1 && (
-                        <td className="py-2 px-2">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <Avatar className="w-6 h-6">
-                                  <AvatarImage src={memberInfo.avatar || undefined} />
-                                  <AvatarFallback className="text-[10px] bg-primary/20 text-primary">
-                                    {memberInfo.initials}
-                                  </AvatarFallback>
-                                </Avatar>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{memberInfo.name}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </td>
-                      )}
-                      <td className="py-2 px-2">{formatDate(transaction.date)}</td>
-                      <td className="py-2 px-2 text-muted-foreground">
-                        {formatDate(transaction.paid_date)}
-                      </td>
-                      <td className="py-2 px-2">{transaction.description}</td>
-                      <td className="py-2 px-2">{transaction.category}</td>
-                      <td className="py-2 px-2">
-                        {transaction.tag && (
-                          <span
-                            className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full ${getTagStyle(
-                              transaction.tag
-                            )}`}
-                          >
-                            <Tag className="w-3 h-3" />
-                            {getTagLabel(transaction.tag)}
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-2 px-2">
-                        <span
-                          className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full ${
-                            transaction.type === "income"
-                              ? "bg-primary/14 text-green-200"
-                              : "bg-destructive/10 text-red-200"
-                          }`}
+                        <tr
+                          key={transaction.id}
+                          className="border-b border-border/20 hover:bg-secondary/50 transition-colors"
                         >
-                          {transaction.type === "income" ? "Entrada" : "Saída"}
-                        </span>
-                      </td>
-                      <td className="py-2 px-2">{formatCurrency(transaction.amount)}</td>
-                      <td className="py-2 px-2">
-                        <StatusSelector
-                          transactionId={transaction.id}
-                          currentStatus={transaction.status}
-                          onStatusChange={fetchTransactions}
-                          size="sm"
-                        />
-                      </td>
-                    </tr>
+                          {isShared && members.length > 1 && (
+                            <td className="py-2 px-2">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <Avatar className="w-5 h-5">
+                                      <AvatarImage src={memberInfo.avatar || undefined} />
+                                      <AvatarFallback className="text-[9px] bg-primary/15 text-primary">
+                                        {memberInfo.initials}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{memberInfo.name}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </td>
+                          )}
+                          <td className="py-2 px-2 text-muted-foreground">
+                            {formatDate(transaction.date)}
+                          </td>
+                          <td className="py-2 px-2 text-muted-foreground">
+                            {formatDate(transaction.paid_date)}
+                          </td>
+                          <td className="py-2 px-2 font-medium">{transaction.description}</td>
+                          <td className="py-2 px-2 text-muted-foreground">
+                            {transaction.category}
+                          </td>
+                          <td className="py-2 px-2">
+                            {transaction.tag && (
+                              <span
+                                className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border ${getTagStyle(
+                                  transaction.tag
+                                )}`}
+                              >
+                                <Tag className="w-2.5 h-2.5" />
+                                {getTagLabel(transaction.tag)}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2 px-2">
+                            <span
+                              className={`inline-flex items-center text-[10px] px-1.5 py-0.5 rounded ${
+                                transaction.type === "income"
+                                  ? "bg-primary/10 text-primary"
+                                  : "bg-destructive/10 text-destructive"
+                              }`}
+                            >
+                              {transaction.type === "income" ? "Entrada" : "Saída"}
+                            </span>
+                          </td>
+                          <td className="py-2 px-2 text-right font-medium">
+                            {formatCurrency(transaction.amount)}
+                          </td>
+                          <td className="py-2 px-2">
+                            <StatusSelector
+                              transactionId={transaction.id}
+                              currentStatus={transaction.status}
+                              onStatusChange={fetchTransactions}
+                              size="sm"
+                            />
+                          </td>
+                        </tr>
                       );
                     })}
                 </tbody>
               </table>
+            </div>
+
+            <div className="mt-3">
               <TransactionPagination
                 currentPage={currentPage}
                 totalPages={Math.ceil(transactions.length / itemsPerPage)}
@@ -383,6 +392,7 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
             </div>
           </>
         )}
+      </div>
     </div>
   );
 };

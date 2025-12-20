@@ -14,40 +14,51 @@ const CashflowChart = ({ data = [] }: CashflowChartProps) => {
   const hasData = data.some((d) => d.receitas > 0 || d.despesas > 0);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-5">
-      {/* Gradient ghost effect */}
-      <div className="absolute inset-[-40%] bg-[radial-gradient(circle_at_0%_0%,rgba(34,197,94,0.16),transparent_55%),radial-gradient(circle_at_100%_0,rgba(59,130,246,0.16),transparent_52%)] opacity-30 pointer-events-none"></div>
+    <div className="relative overflow-hidden rounded-xl bg-card border border-border/50 shadow-sm p-4">
+      {/* Subtle gradient accent */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
 
       <div className="relative z-10">
-        <div className="flex justify-between items-center mb-3">
+        <div className="flex justify-between items-start gap-2 mb-4">
           <div>
-            <h3 className="text-sm font-medium mb-0.5">Fluxo de caixa – últimos 6 meses</h3>
-            <p className="text-[11px] text-muted-foreground">
-              Comparação entre receitas e despesas ao longo do tempo.
+            <h3 className="text-sm font-medium">Fluxo de caixa</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Receitas vs despesas (6 meses)
             </p>
           </div>
-          <span className="text-[11px] px-2 py-1 rounded-full bg-secondary/90 border border-border/50">
-            Visão consolidada
+          <span className="text-[10px] px-2 py-0.5 rounded-md bg-secondary/80 text-muted-foreground border border-border/30">
+            Consolidado
           </span>
         </div>
 
-        <div className="h-[220px] mt-2">
+        <div className="h-[200px]">
           {!hasData ? (
-            <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-              Adicione transações para visualizar o gráfico
+            <div className="h-full flex items-center justify-center text-muted-foreground text-xs">
+              Adicione transações para visualizar
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(31,41,55,0.6)" />
-                <XAxis dataKey="month" tick={{ fill: "#6b7280", fontSize: 11 }} />
-                <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.3)" />
+                <XAxis 
+                  dataKey="month" 
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} 
+                  axisLine={{ stroke: "hsl(var(--border) / 0.5)" }}
+                  tickLine={false}
+                />
+                <YAxis 
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} 
+                  axisLine={{ stroke: "hsl(var(--border) / 0.5)" }}
+                  tickLine={false}
+                  width={50}
+                />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "hsl(222 47% 5%)",
-                    border: "1px solid hsl(217 33% 17%)",
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
-                    fontSize: "12px",
+                    fontSize: "11px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                   }}
                   formatter={(value: number) =>
                     new Intl.NumberFormat("pt-BR", {
@@ -56,21 +67,27 @@ const CashflowChart = ({ data = [] }: CashflowChartProps) => {
                     }).format(value)
                   }
                 />
-                <Legend wrapperStyle={{ fontSize: "11px", color: "#9ca3af" }} />
+                <Legend 
+                  wrapperStyle={{ fontSize: "10px", paddingTop: "8px" }} 
+                  iconType="circle"
+                  iconSize={6}
+                />
                 <Line
                   type="monotone"
                   dataKey="receitas"
-                  stroke="hsl(142 76% 45%)"
+                  stroke="hsl(var(--primary))"
                   strokeWidth={2}
-                  dot={{ fill: "hsl(142 76% 45%)" }}
+                  dot={{ fill: "hsl(var(--primary))", r: 3 }}
+                  activeDot={{ r: 5 }}
                   name="Receitas"
                 />
                 <Line
                   type="monotone"
                   dataKey="despesas"
-                  stroke="hsl(0 84% 60%)"
+                  stroke="hsl(var(--destructive))"
                   strokeWidth={2}
-                  dot={{ fill: "hsl(0 84% 60%)" }}
+                  dot={{ fill: "hsl(var(--destructive))", r: 3 }}
+                  activeDot={{ r: 5 }}
                   name="Despesas"
                 />
               </LineChart>

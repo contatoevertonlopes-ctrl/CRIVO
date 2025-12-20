@@ -31,7 +31,6 @@ const Index = () => {
       return;
     }
 
-    // Check onboarding and load user's saved mode
     const checkUserProfile = async () => {
       if (!user) return;
 
@@ -46,7 +45,6 @@ const Index = () => {
         return;
       }
 
-      // Load user's preferred mode
       if (profile?.app_mode) {
         setMode(profile.app_mode as "survival" | "prosperity");
       }
@@ -69,21 +67,21 @@ const Index = () => {
 
   const getPeriodLabel = () => {
     switch (period) {
-      case 7: return "últimos 7 dias";
-      case 30: return "últimos 30 dias";
-      case 90: return "últimos 90 dias";
-      case 365: return "último ano";
-      default: return `últimos ${period} dias`;
+      case 7: return "7 dias";
+      case 30: return "30 dias";
+      case 90: return "90 dias";
+      case 365: return "1 ano";
+      default: return `${period}d`;
     }
   };
 
   const getPreviousPeriodLabel = () => {
     switch (period) {
-      case 7: return "vs. semana anterior";
-      case 30: return "vs. mês anterior";
-      case 90: return "vs. trimestre anterior";
-      case 365: return "vs. ano anterior";
-      default: return `vs. período anterior`;
+      case 7: return "vs. semana ant.";
+      case 30: return "vs. mês ant.";
+      case 90: return "vs. trim. ant.";
+      case 365: return "vs. ano ant.";
+      default: return "vs. período ant.";
     }
   };
 
@@ -100,85 +98,85 @@ const Index = () => {
   }
 
   return (
-    <div className={`flex min-h-screen transition-colors duration-500 ${
-      mode === "survival" ? "bg-[var(--gradient-survival)]" : ""
-    }`}>
+    <div className="flex min-h-screen bg-background">
       <Sidebar />
       
-      <main className="flex-1 p-4 sm:p-5 lg:p-4 flex flex-col gap-4 sm:gap-5 min-w-0">
-        <div className="pl-12 lg:pl-0">
+      {/* Main Content */}
+      <main className="flex-1 min-w-0 pt-16 pb-24 lg:pt-0 lg:pb-0">
+        <div className="max-w-6xl mx-auto px-4 py-4 lg:px-6 lg:py-6 flex flex-col gap-4 lg:gap-5">
+          {/* Header */}
           <DashboardHeader period={period} onPeriodChange={setPeriod} />
-        </div>
-        
-        {/* Quick Add Input - Magic Bar */}
-        <div className="max-w-2xl">
-          <QuickAddInput onTransactionAdded={refetch} />
-        </div>
-        
-        {/* Adaptive Mode Widget */}
-        <section className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-4">
-          {mode === "survival" ? (
-            <SurvivalWidget
-              currentBalance={adaptiveData.currentBalance}
-              dailyExpenseAverage={adaptiveData.dailyExpenseAverage}
-              essentialExpenseAverage={adaptiveData.essentialExpenseAverage}
-              loading={adaptiveData.loading}
-            />
-          ) : (
-            <ProsperityWidget
-              monthlyIncome={adaptiveData.monthlyIncome}
-              monthlyExpenses={adaptiveData.monthlyExpenses}
-              loading={adaptiveData.loading}
-            />
-          )}
           
-          {/* Summary Metrics - Condensed for widget layout */}
-          <div className="grid grid-cols-2 gap-3">
-            <MetricCard
-              title="Saldo atual"
-              value={formatCurrency(metrics.currentBalance)}
-              pill="Consolidado"
-              trend={`${formatPercent(metrics.balanceChange)} ${getPreviousPeriodLabel()}`}
-              trendUp={metrics.balanceChange >= 0}
-            />
-            <MetricCard
-              title={`Entradas`}
-              value={formatCurrency(metrics.monthlyIncome)}
-              pill={getPeriodLabel()}
-              trend={`${formatPercent(metrics.incomeChange)} ${getPreviousPeriodLabel()}`}
-              trendUp={metrics.incomeChange >= 0}
-            />
-            <MetricCard
-              title={`Saídas`}
-              value={formatCurrency(metrics.monthlyExpenses)}
-              pill={getPeriodLabel()}
-              trend={`${formatPercent(metrics.expenseChange)} ${getPreviousPeriodLabel()}`}
-              trendUp={metrics.expenseChange <= 0}
-            />
-            <MetricCard
-              title="Compromissos"
-              value={formatCurrency(metrics.futureCommitments)}
-              pill={`Próximos ${period}d`}
-              trend={`${metrics.pendingCount} pendentes`}
-              trendUp={false}
-            />
+          {/* Quick Add Input */}
+          <div className="max-w-2xl">
+            <QuickAddInput onTransactionAdded={refetch} />
           </div>
-        </section>
-
-        {/* Charts & Plans */}
-        <section className="grid grid-cols-1 lg:grid-cols-[1.7fr_1.3fr] gap-5">
-          <CashflowChart data={cashflowData} />
           
-          <div className="flex flex-col gap-5">
-            <ExpenseChart data={expensesByCategory} period={period} />
-            <PlansCard />
-          </div>
-        </section>
+          {/* Adaptive Widget + Metrics Grid */}
+          <section className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4">
+            {mode === "survival" ? (
+              <SurvivalWidget
+                currentBalance={adaptiveData.currentBalance}
+                dailyExpenseAverage={adaptiveData.dailyExpenseAverage}
+                essentialExpenseAverage={adaptiveData.essentialExpenseAverage}
+                loading={adaptiveData.loading}
+              />
+            ) : (
+              <ProsperityWidget
+                monthlyIncome={adaptiveData.monthlyIncome}
+                monthlyExpenses={adaptiveData.monthlyExpenses}
+                loading={adaptiveData.loading}
+              />
+            )}
+            
+            {/* Metrics Grid - 2x2 */}
+            <div className="grid grid-cols-2 gap-3">
+              <MetricCard
+                title="Saldo atual"
+                value={formatCurrency(metrics.currentBalance)}
+                pill="Consolidado"
+                trend={`${formatPercent(metrics.balanceChange)} ${getPreviousPeriodLabel()}`}
+                trendUp={metrics.balanceChange >= 0}
+              />
+              <MetricCard
+                title="Entradas"
+                value={formatCurrency(metrics.monthlyIncome)}
+                pill={getPeriodLabel()}
+                trend={`${formatPercent(metrics.incomeChange)} ${getPreviousPeriodLabel()}`}
+                trendUp={metrics.incomeChange >= 0}
+              />
+              <MetricCard
+                title="Saídas"
+                value={formatCurrency(metrics.monthlyExpenses)}
+                pill={getPeriodLabel()}
+                trend={`${formatPercent(metrics.expenseChange)} ${getPreviousPeriodLabel()}`}
+                trendUp={metrics.expenseChange <= 0}
+              />
+              <MetricCard
+                title="Compromissos"
+                value={formatCurrency(metrics.futureCommitments)}
+                pill={`Próx. ${period}d`}
+                trend={`${metrics.pendingCount} pendentes`}
+                trendUp={false}
+              />
+            </div>
+          </section>
 
-        {/* Transactions Table */}
-        <section>
-          <TransactionsTable onRefresh={refetch} />
-        </section>
+          {/* Charts Row */}
+          <section className="grid grid-cols-1 xl:grid-cols-[1.6fr_1fr] gap-4">
+            <CashflowChart data={cashflowData} />
+            
+            <div className="flex flex-col gap-4">
+              <ExpenseChart data={expensesByCategory} period={period} />
+              <PlansCard />
+            </div>
+          </section>
+
+          {/* Transactions */}
+          <section>
+            <TransactionsTable onRefresh={refetch} />
+          </section>
+        </div>
       </main>
     </div>
   );
