@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useHouseholdId } from "@/hooks/useHouseholdId";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,7 @@ interface Transaction {
 const Transactions = () => {
   const { user, loading: authLoading } = useAuth();
   const { subscribed, loading: subLoading } = useSubscription();
+  const { householdId } = useHouseholdId();
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
@@ -258,6 +260,7 @@ const Transactions = () => {
           const installmentDate = getNextInstallmentDate(baseDate, i, formData.installment_interval);
           transactions.push({
             user_id: user.id,
+            household_id: householdId,
             description: `${formData.description} ${i + 1}/${numInstallments}`,
             category: formData.category,
             type: formData.type,
@@ -279,6 +282,7 @@ const Transactions = () => {
       } else {
         const { error } = await supabase.from("transactions").insert({
           user_id: user.id,
+          household_id: householdId,
           description: formData.description,
           amount: parseFloat(formData.amount),
           category: formData.category,

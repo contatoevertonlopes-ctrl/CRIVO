@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useHouseholdId } from "@/hooks/useHouseholdId";
 import { supabase } from "@/integrations/supabase/client";
 import AddTransactionDialog from "./AddTransactionDialog";
 import StatusSelector from "./StatusSelector";
@@ -35,6 +36,7 @@ interface TransactionsTableProps {
 
 const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
   const { user } = useAuth();
+  const { householdId } = useHouseholdId();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -110,6 +112,7 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
     try {
       const { error } = await supabase.from("transactions").insert({
         user_id: user.id,
+        household_id: householdId,
         description: transaction.description,
         amount: transaction.amount,
         category: transaction.category,
