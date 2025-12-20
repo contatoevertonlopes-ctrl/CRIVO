@@ -46,23 +46,30 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     credit: "",
     debit: "",
     category: "",
+    paidDate: "",
+    type: "",
   });
   const [transactions, setTransactions] = useState<ParsedTransaction[]>([]);
   const [existingTransactions, setExistingTransactions] = useState<Set<string>>(new Set());
+  const [userCategories, setUserCategories] = useState<string[]>([]);
 
-  // Fetch existing transactions for duplicate detection
+  // Fetch existing transactions and categories for duplicate detection
   useEffect(() => {
     const fetchExisting = async () => {
       if (!user || !open) return;
       
       const { data } = await supabase
         .from("transactions")
-        .select("date, amount, description")
+        .select("date, amount, description, category")
         .eq("user_id", user.id);
       
       if (data) {
         const keys = new Set(data.map(t => `${t.date}_${t.amount}_${t.description?.toLowerCase().substring(0, 30)}`));
         setExistingTransactions(keys);
+        
+        // Extract unique categories from user's transactions
+        const existingCategories = [...new Set(data.map(t => t.category).filter(Boolean))];
+        setUserCategories(existingCategories);
       }
     };
     
@@ -201,6 +208,8 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
       credit: "",
       debit: "",
       category: "",
+      paidDate: "",
+      type: "",
     });
   }, []);
 
@@ -233,6 +242,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
         type: t.type,
         category: t.category,
         status: "em_aberto" as const,
+        paid_date: t.paidDate || null,
       }));
       
       const { error } = await supabase
@@ -308,7 +318,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
                 transactions={transactions}
                 onTransactionChange={handleTransactionChange}
                 onSelectAll={handleSelectAll}
-                categories={allCategories}
+                categories={[...new Set([...allCategories, ...userCategories])]}
               />
               
               {/* Import Button */}
