@@ -64,12 +64,121 @@ const Sidebar = () => {
         </div>
       </nav>
 
-      {/* Mobile overlay */}
+      {/* Mobile Slide-Out Menu */}
       {!collapsed && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-          onClick={toggle}
-        />
+        <>
+          <div
+            className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            onClick={toggle}
+          />
+          <aside className="lg:hidden fixed top-[60px] left-0 bottom-[72px] w-72 bg-sidebar border-r border-sidebar-border z-50 flex flex-col p-4 animate-in slide-in-from-left-full duration-300">
+            {/* Logo */}
+            <div className="flex items-center gap-2 mb-6 pb-4 border-b border-sidebar-border/50">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-primary to-green-900 flex items-center justify-center font-bold text-sm shadow-lg">
+                CF
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold">ClubFinanceTrack</span>
+                <span className="text-[10px] text-muted-foreground">Dashboard Financeiro</span>
+              </div>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 px-2">
+                Menu
+              </span>
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.path;
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => {
+                      navigate(item.path);
+                      toggle();
+                    }}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer transition-all text-left",
+                      isActive
+                        ? "bg-primary/15 text-primary border border-primary/30"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground border border-transparent"
+                    )}
+                  >
+                    <Icon className="w-5 h-5 shrink-0" />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </button>
+                );
+              })}
+
+              {/* Admin link */}
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    navigate("/admin");
+                    toggle();
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer transition-all text-left",
+                    location.pathname === "/admin"
+                      ? "bg-yellow-500/15 text-yellow-400 border border-yellow-500/30"
+                      : "text-yellow-400/80 hover:bg-yellow-500/10 hover:text-yellow-400 border border-transparent"
+                  )}
+                >
+                  <Shield className="w-5 h-5 shrink-0" />
+                  <span className="text-sm font-medium">Administração</span>
+                </button>
+              )}
+            </nav>
+
+            {/* Bottom section */}
+            <div className="mt-auto pt-4 border-t border-sidebar-border/50">
+              {user ? (
+                subscribed ? (
+                  <button
+                    onClick={() => {
+                      navigate("/plans");
+                      toggle();
+                    }}
+                    className="flex items-center gap-2 w-full px-3 py-3 rounded-lg border border-primary/30 bg-primary/10 text-primary text-sm hover:bg-primary/20 transition-colors"
+                  >
+                    <Crown className="w-5 h-5 shrink-0" />
+                    <span>Plano Pro Ativo</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      navigate("/plans");
+                      toggle();
+                    }}
+                    className="flex flex-col w-full rounded-lg overflow-hidden p-3 bg-gradient-to-b from-primary/15 to-primary/5 border border-primary/30 hover:scale-[1.02] transition-all"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">Assine o Pro</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground mb-2 text-left">
+                      Recursos ilimitados
+                    </span>
+                    <span className="text-xs text-center py-1.5 rounded-md bg-primary/20 text-primary">
+                      Ver planos →
+                    </span>
+                  </button>
+                )
+              ) : (
+                <button
+                  onClick={() => {
+                    navigate("/auth");
+                    toggle();
+                  }}
+                  className="text-sm text-primary hover:text-primary/80 transition-colors"
+                >
+                  Login →
+                </button>
+              )}
+            </div>
+          </aside>
+        </>
       )}
 
       {/* Desktop Sidebar */}
