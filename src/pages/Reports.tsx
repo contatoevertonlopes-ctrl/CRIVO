@@ -67,10 +67,6 @@ const Reports = () => {
     
     // Generate month keys based on period type
     const monthKeys: string[] = [];
-    const now = new Date();
-    // Ensure we use current year and month correctly
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth(); // 0-indexed (0 = January, 11 = December)
     
     if (isCustomPeriod && customDateFrom && customDateTo) {
       const startMonth = startOfMonth(customDateFrom);
@@ -82,9 +78,17 @@ const Reports = () => {
         current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
       }
     } else {
-      // Generate months backwards from current month (inclusive)
+      // Find the most recent transaction date and generate months backwards from there
+      const sortedDates = paidTransactions
+        .map(t => t.date)
+        .sort((a, b) => b.localeCompare(a)); // Descending order
+      
+      const mostRecentDate = sortedDates[0];
+      const [year, month] = mostRecentDate.split('-').map(Number);
+      
+      // Generate months backwards from the most recent transaction month
       for (let i = monthsCount - 1; i >= 0; i--) {
-        const date = new Date(currentYear, currentMonth - i, 1);
+        const date = new Date(year, month - 1 - i, 1);
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         monthKeys.push(key);
       }
