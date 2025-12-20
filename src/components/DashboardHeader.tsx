@@ -2,6 +2,8 @@ import { useState } from "react";
 import NotificationsDropdown from "./NotificationsDropdown";
 import ModeToggle from "./ModeToggle";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useSharedHousehold } from "@/hooks/useSharedHousehold";
+import { User, Users } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -9,6 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface DashboardHeaderProps {
   period?: number;
@@ -17,6 +24,7 @@ interface DashboardHeaderProps {
 
 const DashboardHeader = ({ period = 30, onPeriodChange }: DashboardHeaderProps) => {
   const { profile } = useUserProfile();
+  const { isShared, memberCount, loading: householdLoading } = useSharedHousehold();
 
   const periodOptions = [
     { value: "7", label: "Últimos 7 dias" },
@@ -28,7 +36,38 @@ const DashboardHeader = ({ period = 30, onPeriodChange }: DashboardHeaderProps) 
   return (
     <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pl-12 lg:pl-0">
       <div className="flex flex-col gap-1">
-        <h1 className="text-lg sm:text-xl font-semibold">Dashboard financeiro</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg sm:text-xl font-semibold">Dashboard financeiro</h1>
+          {!householdLoading && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                  isShared 
+                    ? "bg-primary/15 text-primary border border-primary/30" 
+                    : "bg-secondary/80 text-muted-foreground border border-border/50"
+                }`}>
+                  {isShared ? (
+                    <>
+                      <Users className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Compartilhado</span>
+                      <span className="sm:hidden">Casal</span>
+                    </>
+                  ) : (
+                    <>
+                      <User className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Individual</span>
+                    </>
+                  )}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {isShared 
+                  ? `Conta compartilhada com ${memberCount} membros` 
+                  : "Suas transações são privadas"}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
         <p className="text-xs sm:text-[13px] text-muted-foreground">
           Visão geral do seu fluxo de caixa e desempenho.
         </p>
