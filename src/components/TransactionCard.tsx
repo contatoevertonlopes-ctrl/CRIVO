@@ -1,5 +1,12 @@
 import { Copy, Edit2, RefreshCw, Trash2 } from "lucide-react";
 import StatusSelector from "./StatusSelector";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Transaction {
   id: string;
@@ -12,6 +19,13 @@ interface Transaction {
   is_recurring?: boolean;
   paid_date?: string;
   tag?: string;
+  user_id?: string;
+}
+
+interface MemberInfo {
+  name: string;
+  initials: string;
+  avatar: string | null;
 }
 
 interface TransactionCardProps {
@@ -20,9 +34,11 @@ interface TransactionCardProps {
   onDelete: (id: string) => void;
   onDuplicate: (transaction: Transaction) => void;
   onStatusChange?: () => void;
+  memberInfo?: MemberInfo;
+  showMember?: boolean;
 }
 
-const TransactionCard = ({ transaction, onEdit, onDelete, onDuplicate, onStatusChange }: TransactionCardProps) => {
+const TransactionCard = ({ transaction, onEdit, onDelete, onDuplicate, onStatusChange, memberInfo, showMember }: TransactionCardProps) => {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr + "T00:00:00");
     return date.toLocaleDateString("pt-BR");
@@ -60,6 +76,23 @@ const TransactionCard = ({ transaction, onEdit, onDelete, onDuplicate, onStatusC
   return (
     <div className="p-4 border-b border-secondary/50 last:border-b-0">
       <div className="flex items-start justify-between gap-3">
+        {showMember && memberInfo && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger className="shrink-0">
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={memberInfo.avatar || undefined} />
+                  <AvatarFallback className="text-xs bg-primary/20 text-primary">
+                    {memberInfo.initials}
+                  </AvatarFallback>
+                </Avatar>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{memberInfo.name}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="font-medium truncate">{transaction.description}</span>
