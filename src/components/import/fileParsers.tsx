@@ -151,6 +151,7 @@ export const applyMapping = (rawData: RawData, mapping: ColumnMapping): ParsedTr
   const categoryIndex = mapping.category ? headers.indexOf(mapping.category) : -1;
   const paidDateIndex = mapping.paidDate ? headers.indexOf(mapping.paidDate) : -1;
   const typeIndex = mapping.type ? headers.indexOf(mapping.type) : -1;
+  const statusIndex = mapping.status ? headers.indexOf(mapping.status) : -1;
 
   const hasAmountColumn = amountIndex !== -1;
   const hasCreditDebitColumns = creditIndex !== -1 || debitIndex !== -1;
@@ -165,6 +166,7 @@ export const applyMapping = (rawData: RawData, mapping: ColumnMapping): ParsedTr
     const existingCategory = categoryIndex >= 0 ? row[categoryIndex]?.trim() : "";
     const paidDateStr = paidDateIndex >= 0 ? row[paidDateIndex]?.trim() : "";
     const typeStr = typeIndex >= 0 ? row[typeIndex]?.trim().toLowerCase() : "";
+    const statusStr = statusIndex >= 0 ? row[statusIndex]?.trim().toLowerCase() : "";
     
     let amount = 0;
     let type: "income" | "expense" = "expense";
@@ -211,6 +213,18 @@ export const applyMapping = (rawData: RawData, mapping: ColumnMapping): ParsedTr
     if (amount > 0 && description) {
       const { category, suggested } = autoCategorize(description, existingCategory);
       
+      // Parse status from import
+      let status = "em_aberto";
+      if (statusStr) {
+        if (/pago|paid|confirm|conclu[ií]d|quitad|efetivad/i.test(statusStr)) {
+          status = "pagamento_concluido";
+        } else if (/pend|aguard|aberto|open/i.test(statusStr)) {
+          status = "em_aberto";
+        } else if (/cancel/i.test(statusStr)) {
+          status = "cancelado";
+        }
+      }
+      
       transactions.push({
         id: generateTransactionId(),
         date: parseDate(dateStr),
@@ -221,6 +235,7 @@ export const applyMapping = (rawData: RawData, mapping: ColumnMapping): ParsedTr
         suggestedCategory: suggested ? category : undefined,
         selected: true,
         paidDate: paidDateStr ? parseDate(paidDateStr) : undefined,
+        status,
       });
     }
   }
@@ -241,5 +256,6 @@ export const autoDetectMapping = (headers: string[]): ColumnMapping => {
     category: headers.find(h => /categ|classifica/i.test(h)) || "",
     paidDate: headers.find(h => /data.?pag|paid|pagamento|data.?efetiva|dt.?pag/i.test(h)) || "",
     type: headers.find(h => /^tipo$|type|natureza|renda|despesa|income|expense/i.test(h)) || "",
+    status: headers.find(h => /status|situa[çc][aã]o|estado|state/i.test(h)) || "",
   };
 };

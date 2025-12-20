@@ -18,6 +18,7 @@ export interface ColumnMapping {
   category: string;
   paidDate: string;
   type: string;
+  status: string;
 }
 
 interface ColumnMapperProps {
@@ -166,6 +167,22 @@ const ColumnMapper = ({ headers, mapping, onMappingChange, onApply }: ColumnMapp
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="__none__" className="text-xs text-muted-foreground">Não importar</SelectItem>
+              {headers.filter(h => h && h.trim()).map((h) => (
+                <SelectItem key={h} value={h} className="text-xs">{h}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Status Column */}
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">Status</Label>
+          <Select value={mapping.status || "__none__"} onValueChange={(v) => updateMapping("status", v === "__none__" ? "" : v)}>
+            <SelectTrigger className="h-9 text-xs">
+              <SelectValue placeholder="Padrão: Em aberto" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__" className="text-xs text-muted-foreground">Padrão: Em aberto</SelectItem>
               {headers.filter(h => h && h.trim()).map((h) => (
                 <SelectItem key={h} value={h} className="text-xs">{h}</SelectItem>
               ))}
