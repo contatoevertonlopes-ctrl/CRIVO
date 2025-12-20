@@ -114,12 +114,16 @@ export const useHousehold = () => {
     if (!user) return { success: false, error: "Usuário não autenticado" };
 
     try {
-      // Normaliza o código para lowercase pois é assim que é armazenado no banco
-      const normalizedCode = inviteCode.toLowerCase();
+      // Normaliza o código: remove espaços e converte para lowercase
+      const normalizedCode = inviteCode.trim().toLowerCase();
+      
+      console.log("Accepting invite with code:", normalizedCode, "for user:", user.id);
       
       const { data, error } = await supabase.rpc("accept_household_invite", {
         p_invite_code: normalizedCode,
       });
+
+      console.log("Accept invite response:", { data, error });
 
       if (error) throw error;
 
