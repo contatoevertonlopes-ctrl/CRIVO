@@ -56,38 +56,47 @@ All colors MUST be HSL.
     --accent-glow: 142 76% 45%;
     --text-muted: 220 9% 46%;
     
-    /* Survival Mode Colors - Blues & Oranges */
-    --survival-card: 222 47% 6%;
-    --survival-border: 217 33% 20%;
+    /* Survival Mode Colors - Blues & Oranges (Wealthfront-inspired alert style) */
+    --survival-background: 217 50% 4%;
+    --survival-card: 217 45% 7%;
+    --survival-border: 217 35% 18%;
+    --survival-primary: 210 100% 52%;
+    --survival-secondary: 217 40% 12%;
     --survival-emergency: 0 84% 60%;
     --survival-critical: 25 95% 53%;
-    --survival-warning: 38 92% 50%;
-    --survival-good: 142 76% 45%;
+    --survival-warning: 28 92% 50%;
+    --survival-good: 160 84% 45%;
     --survival-excellent: 160 84% 40%;
-    --survival-muted: 217 33% 25%;
+    --survival-muted: 217 30% 25%;
+    --survival-accent: 28 95% 55%;
     
-    /* Prosperity Mode Colors - Greens & Golds */
-    --prosperity-card: 150 30% 5%;
-    --prosperity-border: 150 20% 18%;
-    --prosperity-primary: 142 76% 45%;
+    /* Prosperity Mode Colors - Dark Grays & Emerald/Gold (Wealthfront style) */
+    --prosperity-background: 220 15% 5%;
+    --prosperity-card: 220 15% 8%;
+    --prosperity-border: 220 12% 18%;
+    --prosperity-primary: 155 75% 45%;
+    --prosperity-secondary: 220 12% 12%;
     --prosperity-accent: 45 93% 47%;
-    --prosperity-muted: 150 15% 20%;
+    --prosperity-muted: 220 10% 22%;
+    --prosperity-gold: 43 96% 56%;
+    --prosperity-emerald: 155 75% 45%;
     
     /* Gradients */
     --gradient-primary: radial-gradient(circle at top left, hsl(217 33% 12%), hsl(222 84% 1%));
     --gradient-elevated: radial-gradient(circle at top, hsl(222 84% 1%), hsl(0 0% 0%));
     --gradient-accent: linear-gradient(135deg, hsl(142 76% 45%), hsl(142 69% 38%));
-    --gradient-survival: linear-gradient(135deg, hsl(222 47% 8%), hsl(217 33% 5%));
-    --gradient-prosperity: linear-gradient(135deg, hsl(150 30% 6%), hsl(142 40% 3%));
+    --gradient-survival: linear-gradient(135deg, hsl(217 50% 6%), hsl(217 40% 4%));
+    --gradient-prosperity: linear-gradient(135deg, hsl(220 15% 7%), hsl(220 15% 4%));
     
     /* Shadows */
-    --shadow-soft: 0 18px 45px rgba(3, 7, 18, 0.65);
-    --shadow-glow-green: 0 0 40px rgba(34, 197, 94, 0.4);
-    --shadow-glow-accent: 0 8px 25px rgba(34, 197, 94, 0.5);
-    --shadow-glow-gold: 0 8px 25px rgba(234, 179, 8, 0.3);
+    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.25);
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.15);
+    --shadow-glow-blue: 0 0 30px rgba(59, 130, 246, 0.2);
+    --shadow-glow-green: 0 0 30px rgba(34, 197, 94, 0.2);
+    --shadow-glow-gold: 0 0 30px rgba(234, 179, 8, 0.15);
     
     /* Transitions */
-    --transition-smooth: all 0.18s ease-out;
+    --transition-smooth: all 0.2s ease-out;
   }
 }
 
@@ -99,7 +108,7 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground font-sans;
     font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    background: radial-gradient(circle at top, hsl(217 33% 17%) 0%, hsl(222 84% 1%) 50%, hsl(0 0% 0%) 100%);
+    background: hsl(var(--background));
   }
 
   /* Date input calendar icon styling */
@@ -111,5 +120,24 @@ All colors MUST be HSL.
 
   input[type="date"]::-webkit-calendar-picker-indicator:hover {
     opacity: 1;
+  }
+}
+
+/* Custom utility classes */
+@layer utilities {
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .card-shadow-soft {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .glow-survival {
+    box-shadow: var(--shadow-glow-blue);
+  }
+  
+  .glow-prosperity {
+    box-shadow: var(--shadow-glow-green);
   }
 }

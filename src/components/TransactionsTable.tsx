@@ -3,13 +3,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { useHouseholdId } from "@/hooks/useHouseholdId";
 import { useHousehold } from "@/hooks/useHousehold";
 import { useSharedHousehold } from "@/hooks/useSharedHousehold";
+import { useAppMode } from "@/contexts/AppModeContext";
 import { supabase } from "@/integrations/supabase/client";
 import AddTransactionDialog from "./AddTransactionDialog";
 import StatusSelector from "./StatusSelector";
 import TransactionCard from "./TransactionCard";
+import TransactionTimeline from "./TransactionTimeline";
 import TransactionPagination from "./TransactionPagination";
 import { sortTransactionsByPriority } from "@/utils/transactionSort";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -17,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Filter, Tag } from "lucide-react";
+import { Filter, Tag, LayoutList, Clock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Tooltip,
@@ -49,13 +52,17 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
   const { householdId } = useHouseholdId();
   const { members } = useHousehold();
   const { isShared, loading: householdLoading } = useSharedHousehold();
+  const { mode } = useAppMode();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<"timeline" | "table">("timeline");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  
+  const isSurvival = mode === "survival";
 
   const fetchTransactions = async () => {
     if (!user || householdLoading) {
@@ -199,16 +206,48 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
   };
 
   return (
-    <div className="rounded-xl bg-card border border-border/50 shadow-sm overflow-hidden">
+    <div className={cn(
+      "rounded-2xl border overflow-hidden card-shadow-soft",
+      isSurvival 
+        ? "bg-survival-card border-survival-border/50" 
+        : "bg-prosperity-card border-prosperity-border/50"
+    )}>
       {/* Header */}
-      <div className="flex justify-between items-center p-4 border-b border-border/50">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 p-4 border-b border-border/30">
         <div>
-          <h3 className="text-sm font-medium">Últimas transações</h3>
+          <h3 className="text-sm font-semibold">Últimas transações</h3>
           <p className="text-[11px] text-muted-foreground mt-0.5">
-            Entradas, saídas e recorrências recentes
+            Entradas, saídas e recorrências
           </p>
         </div>
-        <AddTransactionDialog onSuccess={handleSuccess} />
+        <div className="flex items-center gap-2">
+          {/* View Toggle */}
+          <div className="flex items-center rounded-lg border border-border/50 p-0.5">
+            <button
+              onClick={() => setViewMode("timeline")}
+              className={cn(
+                "p-1.5 rounded-md transition-colors",
+                viewMode === "timeline" 
+                  ? isSurvival ? "bg-survival-primary/15 text-survival-primary" : "bg-prosperity-emerald/15 text-prosperity-emerald"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Clock className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode("table")}
+              className={cn(
+                "p-1.5 rounded-md transition-colors",
+                viewMode === "table" 
+                  ? isSurvival ? "bg-survival-primary/15 text-survival-primary" : "bg-prosperity-emerald/15 text-prosperity-emerald"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <LayoutList className="w-4 h-4" />
+            </button>
+          </div>
+          <AddTransactionDialog onSuccess={handleSuccess} />
+        </div>
       </div>
 
       {/* Filters */}
@@ -252,7 +291,7 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
       </div>
 
       {/* Content */}
-      <div className="p-3">
+      <div className="p-3 md:p-4">
         {loading ? (
           <div className="text-center py-8 text-muted-foreground text-sm">
             Carregando...
@@ -264,28 +303,44 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
           </div>
         ) : (
           <>
-            {/* Mobile: Card view */}
-            <div className="md:hidden space-y-2">
-              {transactions
-                .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                .map((transaction) => {
-                  const memberInfo = getMemberInfo(transaction.user_id);
-                  return (
-                    <TransactionCard
-                      key={transaction.id}
-                      transaction={transaction}
-                      onEdit={() => {}}
-                      onDelete={() => {}}
-                      onDuplicate={handleDuplicate}
-                      onStatusChange={fetchTransactions}
-                      memberInfo={memberInfo}
-                      showMember={isShared && members.length > 1}
-                    />
-                  );
-                })}
-            </div>
+            {/* Timeline View */}
+            {viewMode === "timeline" && (
+              <TransactionTimeline
+                transactions={transactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
+                onEdit={() => {}}
+                onDelete={() => {}}
+                onDuplicate={handleDuplicate}
+                onStatusChange={fetchTransactions}
+                getMemberInfo={getMemberInfo}
+                showMember={isShared && members.length > 1}
+              />
+            )}
+
+            {/* Mobile Card View */}
+            {viewMode === "table" && (
+              <div className="md:hidden space-y-2">
+                {transactions
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map((transaction) => {
+                    const memberInfo = getMemberInfo(transaction.user_id);
+                    return (
+                      <TransactionCard
+                        key={transaction.id}
+                        transaction={transaction}
+                        onEdit={() => {}}
+                        onDelete={() => {}}
+                        onDuplicate={handleDuplicate}
+                        onStatusChange={fetchTransactions}
+                        memberInfo={memberInfo}
+                        showMember={isShared && members.length > 1}
+                      />
+                    );
+                  })}
+              </div>
+            )
 
             {/* Desktop: Table view */}
+            {viewMode === "table" && (
             <div className="hidden md:block">
               <table className="w-full text-xs">
                 <thead>
@@ -389,7 +444,7 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
                 totalPages={Math.ceil(transactions.length / itemsPerPage)}
                 onPageChange={setCurrentPage}
               />
-            </div>
+            )}
           </>
         )}
       </div>
