@@ -14,11 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      household_invites: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          household_id: string
+          id: string
+          invite_code: string
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at?: string
+          household_id: string
+          id?: string
+          invite_code?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          household_id?: string
+          id?: string
+          invite_code?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "household_invites_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      households: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string
           full_name: string | null
+          household_id: string | null
           id: string
           phone: string | null
           updated_at: string
@@ -28,6 +91,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
+          household_id?: string | null
           id?: string
           phone?: string | null
           updated_at?: string
@@ -37,12 +101,21 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
+          household_id?: string | null
           id?: string
           phone?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {
@@ -84,6 +157,7 @@ export type Database = {
           created_at: string
           date: string
           description: string
+          household_id: string | null
           id: string
           is_recurring: boolean | null
           paid_date: string | null
@@ -102,6 +176,7 @@ export type Database = {
           created_at?: string
           date?: string
           description: string
+          household_id?: string | null
           id?: string
           is_recurring?: boolean | null
           paid_date?: string | null
@@ -120,6 +195,7 @@ export type Database = {
           created_at?: string
           date?: string
           description?: string
+          household_id?: string | null
           id?: string
           is_recurring?: boolean | null
           paid_date?: string | null
@@ -133,6 +209,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "transactions_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "transactions_parent_transaction_id_fkey"
             columns: ["parent_transaction_id"]
@@ -168,6 +251,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_household_invite: {
+        Args: { p_invite_code: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -175,6 +262,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      user_household_id: { Args: { _user_id: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "user"

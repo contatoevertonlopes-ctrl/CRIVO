@@ -52,10 +52,10 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
 
     setLoading(true);
     try {
+      // Fetch transactions - RLS will handle household filtering
       let query = supabase
         .from("transactions")
-        .select("*")
-        .eq("user_id", user.id);
+        .select("*");
 
       if (statusFilter !== "all") {
         query = query.eq("status", statusFilter);

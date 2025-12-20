@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-
+import HouseholdSection from "@/components/HouseholdSection";
 const Settings = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -219,6 +219,9 @@ const Settings = () => {
               {isPro ? "Gerenciar plano" : "Fazer upgrade"}
             </Button>
           </div>
+
+          {/* Household Section */}
+          <HouseholdSection />
 
           {/* WhatsApp Section */}
           <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-4 sm:p-6">

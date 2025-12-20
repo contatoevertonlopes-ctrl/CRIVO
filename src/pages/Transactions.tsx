@@ -91,10 +91,10 @@ const Transactions = () => {
 
     setLoading(true);
     try {
+      // RLS handles household filtering
       const { data, error } = await supabase
         .from("transactions")
         .select("*")
-        .eq("user_id", user.id)
         .order("date", { ascending: false });
 
       if (error) throw error;
