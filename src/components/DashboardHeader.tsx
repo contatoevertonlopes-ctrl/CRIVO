@@ -1,5 +1,6 @@
 import { useState } from "react";
 import NotificationsDropdown from "./NotificationsDropdown";
+import ModeToggle from "./ModeToggle";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import {
   Select,
@@ -33,6 +34,7 @@ const DashboardHeader = ({ period = 30, onPeriodChange }: DashboardHeaderProps) 
         </p>
       </div>
       <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <ModeToggle />
         <NotificationsDropdown />
         <Select
           value={period.toString()}
