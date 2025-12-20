@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useHouseholdId } from "@/hooks/useHouseholdId";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ interface AddTransactionDialogProps {
 const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   const { user } = useAuth();
   const { subscribed } = useSubscription();
+  const { householdId } = useHouseholdId();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -88,6 +90,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
           const installmentDate = getNextInstallmentDate(baseDate, i, installmentInterval);
           transactions.push({
             user_id: user.id,
+            household_id: householdId,
             description: `${description} ${i + 1}/${numInstallments}`,
             category,
             type,
@@ -113,6 +116,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
         // Single transaction
         const { error } = await supabase.from("transactions").insert({
           user_id: user.id,
+          household_id: householdId,
           description,
           category,
           type,

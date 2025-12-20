@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useHouseholdId } from "@/hooks/useHouseholdId";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -45,6 +46,7 @@ interface ColumnMapping {
 
 const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) => {
   const { user } = useAuth();
+  const { householdId } = useHouseholdId();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<ParsedTransaction[]>([]);
@@ -575,6 +577,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
 
       const toInsert = uniqueTransactions.map(t => ({
         user_id: user.id,
+        household_id: householdId,
         date: t.date,
         description: t.description,
         amount: t.amount,
