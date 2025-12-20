@@ -292,7 +292,7 @@ const Reports = () => {
                 </SelectContent>
               </Select>
               
-              {isCustomPeriod && (
+              {period === "custom" && (
                 <DateRangePicker
                   dateFrom={customDateFrom}
                   dateTo={customDateTo}
