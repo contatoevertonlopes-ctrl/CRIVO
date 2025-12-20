@@ -22,6 +22,7 @@ export interface ParsedTransaction {
   suggestedCategory?: string;
   isDuplicate?: boolean;
   selected: boolean;
+  paidDate?: string;
 }
 
 interface TransactionPreviewTableProps {

@@ -149,6 +149,8 @@ export const applyMapping = (rawData: RawData, mapping: ColumnMapping): ParsedTr
   const creditIndex = mapping.credit ? headers.indexOf(mapping.credit) : -1;
   const debitIndex = mapping.debit ? headers.indexOf(mapping.debit) : -1;
   const categoryIndex = mapping.category ? headers.indexOf(mapping.category) : -1;
+  const paidDateIndex = mapping.paidDate ? headers.indexOf(mapping.paidDate) : -1;
+  const typeIndex = mapping.type ? headers.indexOf(mapping.type) : -1;
 
   const hasAmountColumn = amountIndex !== -1;
   const hasCreditDebitColumns = creditIndex !== -1 || debitIndex !== -1;
@@ -161,9 +163,20 @@ export const applyMapping = (rawData: RawData, mapping: ColumnMapping): ParsedTr
     const dateStr = row[dateIndex]?.trim();
     const description = row[descriptionIndex]?.trim();
     const existingCategory = categoryIndex >= 0 ? row[categoryIndex]?.trim() : "";
+    const paidDateStr = paidDateIndex >= 0 ? row[paidDateIndex]?.trim() : "";
+    const typeStr = typeIndex >= 0 ? row[typeIndex]?.trim().toLowerCase() : "";
     
     let amount = 0;
     let type: "income" | "expense" = "expense";
+    
+    // Determine type from type column if available
+    if (typeStr) {
+      if (/renda|entrada|receita|income|credit|crédito|credito/i.test(typeStr)) {
+        type = "income";
+      } else if (/despesa|saída|saida|expense|debit|débito|debito|gasto/i.test(typeStr)) {
+        type = "expense";
+      }
+    }
     
     if (hasCreditDebitColumns) {
       const creditStr = creditIndex >= 0 ? row[creditIndex]?.trim() : "";
@@ -188,7 +201,10 @@ export const applyMapping = (rawData: RawData, mapping: ColumnMapping): ParsedTr
     } else {
       const amountStr = row[amountIndex]?.trim();
       amount = parseMonetaryValue(amountStr);
-      type = amount < 0 ? "expense" : "income";
+      // Only override type if not set from type column
+      if (!typeStr) {
+        type = amount < 0 ? "expense" : "income";
+      }
       amount = Math.abs(amount);
     }
     
@@ -204,6 +220,7 @@ export const applyMapping = (rawData: RawData, mapping: ColumnMapping): ParsedTr
         category,
         suggestedCategory: suggested ? category : undefined,
         selected: true,
+        paidDate: paidDateStr ? parseDate(paidDateStr) : undefined,
       });
     }
   }
@@ -212,15 +229,17 @@ export const applyMapping = (rawData: RawData, mapping: ColumnMapping): ParsedTr
 };
 
 export const autoDetectMapping = (headers: string[]): ColumnMapping => {
-  const creditCol = headers.find(h => /cr[eé]dito|credit|entrada|deposito/i.test(h)) || "";
-  const debitCol = headers.find(h => /d[eé]bito|debit|sa[ií]da|retirada/i.test(h)) || "";
+  const creditCol = headers.find(h => /cr[eé]dito|credit|entrada|deposito|receita/i.test(h)) || "";
+  const debitCol = headers.find(h => /d[eé]bito|debit|sa[ií]da|retirada|despesa/i.test(h)) || "";
   
   return {
-    date: headers.find(h => /data|date|dt|vencimento/i.test(h)) || "",
-    description: headers.find(h => /descri|memo|hist|name|titulo|lan[cç]amento/i.test(h)) || "",
-    amount: creditCol || debitCol ? "" : (headers.find(h => /valor|amount|value|quantia/i.test(h)) || ""),
+    date: headers.find(h => /^data$|date|dt_|vencimento|data.?lan|data.?pag|data.?trans/i.test(h)) || "",
+    description: headers.find(h => /descri|memo|hist|name|titulo|lan[cç]amento|observ|detalhe/i.test(h)) || "",
+    amount: creditCol || debitCol ? "" : (headers.find(h => /valor|amount|value|quantia|total/i.test(h)) || ""),
     credit: creditCol,
     debit: debitCol,
-    category: headers.find(h => /categ|tipo|type/i.test(h)) || "",
+    category: headers.find(h => /categ|classifica/i.test(h)) || "",
+    paidDate: headers.find(h => /data.?pag|paid|pagamento|data.?efetiva|dt.?pag/i.test(h)) || "",
+    type: headers.find(h => /^tipo$|type|natureza|renda|despesa|income|expense/i.test(h)) || "",
   };
 };

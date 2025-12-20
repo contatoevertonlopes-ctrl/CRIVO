@@ -16,6 +16,8 @@ export interface ColumnMapping {
   credit: string;
   debit: string;
   category: string;
+  paidDate: string;
+  type: string;
 }
 
 interface ColumnMapperProps {
@@ -132,6 +134,38 @@ const ColumnMapper = ({ headers, mapping, onMappingChange, onApply }: ColumnMapp
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="__none__" className="text-xs text-muted-foreground">Auto-categorizar</SelectItem>
+              {headers.filter(h => h && h.trim()).map((h) => (
+                <SelectItem key={h} value={h} className="text-xs">{h}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Type Column */}
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">Tipo (Renda/Despesa)</Label>
+          <Select value={mapping.type || "__none__"} onValueChange={(v) => updateMapping("type", v === "__none__" ? "" : v)}>
+            <SelectTrigger className="h-9 text-xs">
+              <SelectValue placeholder="Detectar pelo valor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__" className="text-xs text-muted-foreground">Detectar pelo valor</SelectItem>
+              {headers.filter(h => h && h.trim()).map((h) => (
+                <SelectItem key={h} value={h} className="text-xs">{h}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Paid Date Column */}
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">Data Pagamento</Label>
+          <Select value={mapping.paidDate || "__none__"} onValueChange={(v) => updateMapping("paidDate", v === "__none__" ? "" : v)}>
+            <SelectTrigger className="h-9 text-xs">
+              <SelectValue placeholder="Não importar" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__" className="text-xs text-muted-foreground">Não importar</SelectItem>
               {headers.filter(h => h && h.trim()).map((h) => (
                 <SelectItem key={h} value={h} className="text-xs">{h}</SelectItem>
               ))}

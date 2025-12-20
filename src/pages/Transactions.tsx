@@ -12,13 +12,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Search, Plus, Edit2, Trash2, ArrowLeft, Filter, Download, Lock, Crown, RefreshCw, Calendar, Copy, ArrowUpDown, ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, Plus, Edit2, Trash2, ArrowLeft, Filter, Download, Lock, Crown, RefreshCw, Calendar, Copy, ArrowUpDown, ChevronUp, ChevronDown, ChevronRight, CheckSquare } from "lucide-react";
 import TransactionForm from "@/components/TransactionForm";
 import Sidebar from "@/components/Sidebar";
 import ImportTransactionsDialog from "@/components/ImportTransactionsDialog";
 import TransactionCard from "@/components/TransactionCard";
 import StatusSelector from "@/components/StatusSelector";
 import TransactionPagination from "@/components/TransactionPagination";
+import BulkEditDialog from "@/components/BulkEditDialog";
 import { sortTransactionsByPriority } from "@/utils/transactionSort";
 import { startOfMonth, endOfMonth, subMonths, addMonths, addWeeks, addDays, format } from "date-fns";
 
@@ -45,6 +46,9 @@ interface TransactionRowProps {
   onStatusChange: () => void;
   formatDate: (date: string) => string;
   formatCurrency: (value: number) => string;
+  isSelected?: boolean;
+  onToggleSelect?: (id: string) => void;
+  selectionMode?: boolean;
 }
 
 const TransactionRow = ({ 
@@ -54,9 +58,21 @@ const TransactionRow = ({
   onDuplicate, 
   onStatusChange,
   formatDate,
-  formatCurrency 
+  formatCurrency,
+  isSelected,
+  onToggleSelect,
+  selectionMode
 }: TransactionRowProps) => (
-  <tr className="border-b border-secondary/50 hover:bg-secondary/30 transition-colors">
+  <tr className={`border-b border-secondary/50 hover:bg-secondary/30 transition-colors ${isSelected ? "bg-primary/10" : ""}`}>
+    {selectionMode && (
+      <td className="py-4 px-2">
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={() => onToggleSelect?.(transaction.id)}
+          className="data-[state=checked]:bg-primary"
+        />
+      </td>
+    )}
     <td className="py-4 px-4 whitespace-nowrap">{formatDate(transaction.date)}</td>
     <td className="py-4 px-4 font-medium">
       <div className="flex items-center gap-2">
@@ -162,6 +178,9 @@ const Transactions = () => {
   const [groupBy, setGroupBy] = useState<"none" | "month" | "category">("month");
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
   const itemsPerPage = 10;
 
   const [formData, setFormData] = useState({
@@ -688,6 +707,32 @@ const Transactions = () => {
     setRecurringOnly(false);
   };
 
+  const toggleTransactionSelect = (id: string) => {
+    setSelectedTransactions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedTransactions.size === filteredTransactions.length) {
+      setSelectedTransactions(new Set());
+    } else {
+      setSelectedTransactions(new Set(filteredTransactions.map(t => t.id)));
+    }
+  };
+
+  const handleBulkEditSuccess = () => {
+    setSelectedTransactions(new Set());
+    setSelectionMode(false);
+    fetchTransactions();
+  };
+
   const pendingStatuses = ["em_aberto", "a_vencer", "vencido", "pending"];
   const paidStatuses = ["pagamento_concluido", "paid", "confirmed"];
 
@@ -761,6 +806,24 @@ const Transactions = () => {
             </div>
             {/* Desktop actions */}
             <div className="hidden sm:flex gap-2 flex-wrap">
+              <Button 
+                variant={selectionMode ? "default" : "outline"} 
+                size="sm" 
+                className="gap-2"
+                onClick={() => {
+                  setSelectionMode(!selectionMode);
+                  if (selectionMode) setSelectedTransactions(new Set());
+                }}
+              >
+                <CheckSquare className="w-4 h-4" />
+                {selectionMode ? `${selectedTransactions.size} selecionadas` : "Selecionar"}
+              </Button>
+              {selectionMode && selectedTransactions.size > 0 && (
+                <Button size="sm" className="gap-2" onClick={() => setIsBulkEditOpen(true)}>
+                  <Edit2 className="w-4 h-4" />
+                  Editar em Massa
+                </Button>
+              )}
               <ImportTransactionsDialog onSuccess={fetchTransactions} />
               <Button variant="outline" onClick={exportToCSV} className="gap-2">
                 <Download className="w-4 h-4" />
