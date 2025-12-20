@@ -54,7 +54,7 @@ const Onboarding = () => {
         .maybeSingle();
 
       if (profile?.onboarding_completed) {
-        navigate("/");
+        navigate("/dashboard");
       }
     };
 
@@ -129,7 +129,7 @@ const Onboarding = () => {
         description: "Seu dashboard foi personalizado com sucesso.",
       });
 
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       console.error("Error saving onboarding:", error);
       toast({
