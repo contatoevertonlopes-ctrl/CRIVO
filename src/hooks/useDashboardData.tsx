@@ -36,7 +36,7 @@ interface CategoryData {
   value: number;
 }
 
-export const useDashboardData = (period: number = 30) => {
+export const useDashboardData = (period: number = 30, customDateFrom?: Date, customDateTo?: Date) => {
   const { user } = useAuth();
   const { isShared, householdId, loading: householdLoading } = useSharedHousehold();
   const [loading, setLoading] = useState(true);
@@ -63,10 +63,23 @@ export const useDashboardData = (period: number = 30) => {
     try {
       // Get current date info
       const now = new Date();
-      const periodStartDate = new Date(now.getTime() - period * 24 * 60 * 60 * 1000);
-      const previousPeriodStart = new Date(now.getTime() - period * 2 * 24 * 60 * 60 * 1000);
-      const previousPeriodEnd = new Date(now.getTime() - period * 24 * 60 * 60 * 1000);
-      const futureDate = new Date(now.getTime() + period * 24 * 60 * 60 * 1000);
+      
+      // Use custom dates if provided, otherwise use period
+      const periodStartDate = customDateFrom 
+        ? new Date(customDateFrom.getTime())
+        : new Date(now.getTime() - period * 24 * 60 * 60 * 1000);
+      
+      const periodEndDate = customDateTo
+        ? new Date(customDateTo.getTime() + 24 * 60 * 60 * 1000) // Include end date
+        : now;
+        
+      const periodDays = customDateFrom && customDateTo
+        ? Math.ceil((periodEndDate.getTime() - periodStartDate.getTime()) / (24 * 60 * 60 * 1000))
+        : period;
+        
+      const previousPeriodStart = new Date(periodStartDate.getTime() - periodDays * 24 * 60 * 60 * 1000);
+      const previousPeriodEnd = new Date(periodStartDate.getTime());
+      const futureDate = new Date(now.getTime() + periodDays * 24 * 60 * 60 * 1000);
 
       let query = supabase
         .from("transactions")
@@ -87,9 +100,12 @@ export const useDashboardData = (period: number = 30) => {
 
       const allTransactions = (transactions as Transaction[]) || [];
 
-      // Filter transactions for current period (last X days)
+      // Filter transactions for current period
       const currentPeriodTransactions = allTransactions.filter(
-        (t) => new Date(t.date + "T00:00:00") >= periodStartDate
+        (t) => {
+          const tDate = new Date(t.date + "T00:00:00");
+          return tDate >= periodStartDate && tDate <= periodEndDate;
+        }
       );
       
       // Filter transactions for previous period (for comparison)
@@ -230,7 +246,7 @@ export const useDashboardData = (period: number = 30) => {
     } finally {
       setLoading(false);
     }
-  }, [user, period, isShared, householdId, householdLoading]);
+  }, [user, period, isShared, householdId, householdLoading, customDateFrom, customDateTo]);
 
   useEffect(() => {
     fetchDashboardData();

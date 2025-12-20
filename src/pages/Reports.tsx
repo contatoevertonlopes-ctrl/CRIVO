@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, TrendingUp, TrendingDown, PieChart, BarChart3, Lock, Crown } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, BarChart, Bar, Legend } from "recharts";
 import Sidebar from "@/components/Sidebar";
+import { DateRangePicker } from "@/components/DateRangePicker";
+import { format, differenceInMonths, startOfMonth, endOfMonth } from "date-fns";
 
 interface Transaction {
   id: string;
@@ -26,6 +28,9 @@ const Reports = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("6months");
+  const [customDateFrom, setCustomDateFrom] = useState<Date | undefined>();
+  const [customDateTo, setCustomDateTo] = useState<Date | undefined>();
+  const isCustomPeriod = period === "custom";
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -70,6 +75,10 @@ const Reports = () => {
 
   // Get number of months based on period
   const getMonthsCount = () => {
+    if (isCustomPeriod && customDateFrom && customDateTo) {
+      const months = differenceInMonths(customDateTo, customDateFrom) + 1;
+      return Math.max(1, Math.min(months, 24)); // Max 24 months
+    }
     switch (period) {
       case "3months": return 3;
       case "12months": return 12;
@@ -77,17 +86,49 @@ const Reports = () => {
     }
   };
 
+  // Get the start date for filtering
+  const getStartDate = () => {
+    if (isCustomPeriod && customDateFrom) {
+      return format(startOfMonth(customDateFrom), "yyyy-MM-dd");
+    }
+    const now = new Date();
+    const monthsCount = getMonthsCount();
+    const startDate = new Date(now.getFullYear(), now.getMonth() - monthsCount + 1, 1);
+    return format(startDate, "yyyy-MM-dd");
+  };
+
+  // Get the end date for filtering
+  const getEndDate = () => {
+    if (isCustomPeriod && customDateTo) {
+      return format(endOfMonth(customDateTo), "yyyy-MM-dd");
+    }
+    return format(new Date(), "yyyy-MM-dd");
+  };
+
   // Process data for charts - only paid transactions
   const getMonthlyData = () => {
     const monthsCount = getMonthsCount();
-    const now = new Date();
     
-    // Generate the last N months as keys
+    // Generate month keys based on period type
     const monthKeys: string[] = [];
-    for (let i = monthsCount - 1; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      monthKeys.push(key);
+    if (isCustomPeriod && customDateFrom && customDateTo) {
+      // Use custom date range
+      const startMonth = startOfMonth(customDateFrom);
+      const endMonth = startOfMonth(customDateTo);
+      let current = new Date(startMonth);
+      while (current <= endMonth) {
+        const key = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+        monthKeys.push(key);
+        current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+      }
+    } else {
+      // Use predefined period
+      const now = new Date();
+      for (let i = monthsCount - 1; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        monthKeys.push(key);
+      }
     }
     
     // Initialize map with all months
@@ -97,9 +138,13 @@ const Reports = () => {
     });
     
     // Filter only paid transactions within the period
-    const startDate = `${monthKeys[0]}-01`;
+    const filterStartDate = monthKeys.length > 0 ? `${monthKeys[0]}-01` : "";
+    const filterEndDate = monthKeys.length > 0 ? `${monthKeys[monthKeys.length - 1]}-31` : "";
+    
     const paidTransactions = transactions.filter((t) => 
-      paidStatuses.includes(t.status) && t.date >= startDate
+      paidStatuses.includes(t.status) && 
+      t.date >= filterStartDate && 
+      t.date <= filterEndDate
     );
     
     paidTransactions.forEach((t) => {
@@ -117,7 +162,7 @@ const Reports = () => {
     return monthKeys.map((month) => {
       const data = monthlyMap.get(month) || { income: 0, expense: 0 };
       return {
-        month: new Date(month + "-01").toLocaleDateString("pt-BR", { month: "short" }),
+        month: new Date(month + "-01").toLocaleDateString("pt-BR", { month: "short", year: monthKeys.length > 6 ? "2-digit" : undefined }),
         entradas: data.income,
         saidas: data.expense,
         saldo: data.income - data.expense,
@@ -218,16 +263,37 @@ const Reports = () => {
                 Análise detalhada das suas finanças
               </p>
             </div>
-            <Select value={period} onValueChange={setPeriod}>
-              <SelectTrigger className="w-40 sm:w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="3months">Últimos 3 meses</SelectItem>
-                <SelectItem value="6months">Últimos 6 meses</SelectItem>
-                <SelectItem value="12months">Último ano</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Select value={period} onValueChange={(value) => {
+                setPeriod(value);
+                if (value !== "custom") {
+                  setCustomDateFrom(undefined);
+                  setCustomDateTo(undefined);
+                }
+              }}>
+                <SelectTrigger className="w-40 sm:w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="3months">Últimos 3 meses</SelectItem>
+                  <SelectItem value="6months">Últimos 6 meses</SelectItem>
+                  <SelectItem value="12months">Último ano</SelectItem>
+                  <SelectItem value="custom">Personalizado</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {isCustomPeriod && (
+                <DateRangePicker
+                  dateFrom={customDateFrom}
+                  dateTo={customDateTo}
+                  onDateChange={(from, to) => {
+                    setCustomDateFrom(from);
+                    setCustomDateTo(to);
+                  }}
+                  className="w-auto"
+                />
+              )}
+            </div>
           </div>
 
           {/* Stats Cards */}
