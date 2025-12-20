@@ -24,6 +24,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Plus, RefreshCw, Lock, ListOrdered, CreditCard } from "lucide-react";
 import { addMonths, addWeeks, addDays } from "date-fns";
+import GoalItemLinkDialog from "./GoalItemLinkDialog";
 
 interface AddTransactionDialogProps {
   onSuccess: () => void;
@@ -52,6 +53,13 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   const [isInstallment, setIsInstallment] = useState(false);
   const [installmentCount, setInstallmentCount] = useState("2");
   const [installmentInterval, setInstallmentInterval] = useState("monthly");
+  
+  // Goal item link
+  const [showGoalItemLink, setShowGoalItemLink] = useState(false);
+  const [pendingTransactionData, setPendingTransactionData] = useState<{
+    amount: number;
+    description: string;
+  } | null>(null);
 
   const getNextInstallmentDate = (baseDate: Date, index: number, interval: string) => {
     switch (interval) {
@@ -132,6 +140,15 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
 
         if (error) throw error;
 
+        // If it's an expense, show goal item link dialog
+        if (type === "expense") {
+          setPendingTransactionData({
+            amount: parseFloat(amount),
+            description,
+          });
+          setShowGoalItemLink(true);
+        }
+
         toast({
           title: "Transação adicionada",
           description: "A transação foi salva com sucesso.",
@@ -166,6 +183,26 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
     }
   };
 
+  const handleLinkGoalItem = async (goalItemId: string) => {
+    try {
+      // Mark the goal item as paid
+      await supabase
+        .from("goal_items")
+        .update({ is_paid: true })
+        .eq("id", goalItemId);
+
+      toast({
+        title: "Item vinculado",
+        description: "O item do objetivo foi marcado como pago.",
+      });
+    } catch (error) {
+      console.error("Error linking goal item:", error);
+    } finally {
+      setShowGoalItemLink(false);
+      setPendingTransactionData(null);
+    }
+  };
+
   const statusOptions = [
     { value: "em_aberto", label: "Em aberto" },
     { value: "a_vencer", label: "A vencer" },
@@ -174,6 +211,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   ];
 
   return (
+    <>
     <Dialog open={open} onOpenChange={setOpen} modal={true}>
       <DialogTrigger asChild>
         <Button
@@ -468,6 +506,19 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
         </form>
       </DialogContent>
     </Dialog>
+
+    {/* Goal Item Link Dialog */}
+    <GoalItemLinkDialog
+      open={showGoalItemLink}
+      onOpenChange={(open) => {
+        setShowGoalItemLink(open);
+        if (!open) setPendingTransactionData(null);
+      }}
+      transactionAmount={pendingTransactionData?.amount || 0}
+      transactionDescription={pendingTransactionData?.description || ""}
+      onLink={handleLinkGoalItem}
+    />
+    </>
   );
 };
 
