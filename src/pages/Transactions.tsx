@@ -1192,6 +1192,25 @@ const Transactions = () => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-muted-foreground border-b border-secondary bg-secondary/30">
+                        {selectionMode && (
+                          <th className="py-4 px-2 w-10">
+                            <Checkbox
+                              checked={paginatedTransactions.length > 0 && paginatedTransactions.every(t => selectedTransactions.has(t.id))}
+                              onCheckedChange={(checked) => {
+                                const newSelected = new Set(selectedTransactions);
+                                paginatedTransactions.forEach(t => {
+                                  if (checked) {
+                                    newSelected.add(t.id);
+                                  } else {
+                                    newSelected.delete(t.id);
+                                  }
+                                });
+                                setSelectedTransactions(newSelected);
+                              }}
+                              className="data-[state=checked]:bg-primary"
+                            />
+                          </th>
+                        )}
                         <th 
                           className="text-left py-4 px-4 font-medium cursor-pointer hover:text-foreground transition-colors select-none"
                           onClick={() => setSortOrder(sortOrder === "date_desc" ? "date_asc" : "date_desc")}
@@ -1243,6 +1262,17 @@ const Transactions = () => {
                             onStatusChange={fetchTransactions}
                             formatDate={formatDate}
                             formatCurrency={formatCurrency}
+                            isSelected={selectedTransactions.has(transaction.id)}
+                            onToggleSelect={(id) => {
+                              const newSelected = new Set(selectedTransactions);
+                              if (newSelected.has(id)) {
+                                newSelected.delete(id);
+                              } else {
+                                newSelected.add(id);
+                              }
+                              setSelectedTransactions(newSelected);
+                            }}
+                            selectionMode={selectionMode}
                           />
                         ))
                       ) : (
@@ -1284,6 +1314,17 @@ const Transactions = () => {
                                   onStatusChange={fetchTransactions}
                                   formatDate={formatDate}
                                   formatCurrency={formatCurrency}
+                                  isSelected={selectedTransactions.has(transaction.id)}
+                                  onToggleSelect={(id) => {
+                                    const newSelected = new Set(selectedTransactions);
+                                    if (newSelected.has(id)) {
+                                      newSelected.delete(id);
+                                    } else {
+                                      newSelected.add(id);
+                                    }
+                                    setSelectedTransactions(newSelected);
+                                  }}
+                                  selectionMode={selectionMode}
                                 />
                               ))}
                             </React.Fragment>
@@ -1321,6 +1362,19 @@ const Transactions = () => {
               />
             </DialogContent>
           </Dialog>
+
+          {/* Bulk Edit Dialog */}
+          <BulkEditDialog
+            open={isBulkEditOpen}
+            onOpenChange={setIsBulkEditOpen}
+            selectedIds={Array.from(selectedTransactions)}
+            categories={categories}
+            onSuccess={() => {
+              fetchTransactions();
+              setSelectedTransactions(new Set());
+              setSelectionMode(false);
+            }}
+          />
         </div>
       </main>
     </div>
