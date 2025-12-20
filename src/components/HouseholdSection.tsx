@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Copy, UserPlus, Check, Loader2 } from "lucide-react";
+import { Users, Copy, UserPlus, Check, Loader2, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
@@ -15,14 +15,27 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 const HouseholdSection = () => {
-  const { household, members, invites, loading, createInvite, acceptInvite, updateHouseholdName } = useHousehold();
+  const { household, members, invites, loading, createInvite, acceptInvite, updateHouseholdName, leaveHousehold } = useHousehold();
   const { toast } = useToast();
   const [householdName, setHouseholdName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showJoinDialog, setShowJoinDialog] = useState(false);
 
@@ -102,6 +115,25 @@ const HouseholdSection = () => {
         variant: "destructive",
         title: "Erro",
         description: "Não foi possível atualizar o nome.",
+      });
+    }
+  };
+
+  const handleLeaveHousehold = async () => {
+    setIsLeaving(true);
+    const result = await leaveHousehold();
+    setIsLeaving(false);
+
+    if (result.success) {
+      toast({
+        title: "Você saiu do espaço",
+        description: "Um novo espaço individual foi criado para você.",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: result.error || "Não foi possível sair do espaço.",
       });
     }
   };
@@ -271,6 +303,50 @@ const HouseholdSection = () => {
                 </Button>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Leave Household - Only show if more than 1 member */}
+      {members.length > 1 && (
+        <div className="mt-6 p-4 rounded-lg bg-destructive/10 border border-destructive/30">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-destructive">Sair do espaço compartilhado</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Suas transações serão movidas para um novo espaço individual.
+              </p>
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" disabled={isLeaving}>
+                  {isLeaving ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <LogOut className="w-4 h-4" />
+                  )}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Sair do espaço compartilhado?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Você será removido deste espaço e um novo espaço individual será criado. 
+                    Suas transações serão movidas para o novo espaço, mas você não terá mais 
+                    acesso às transações do seu parceiro(a).
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleLeaveHousehold}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Sair do espaço
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       )}

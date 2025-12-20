@@ -152,6 +152,27 @@ export const useHousehold = () => {
     }
   };
 
+  const leaveHousehold = async (): Promise<{ success: boolean; error?: string }> => {
+    if (!user) return { success: false, error: "Usuário não autenticado" };
+
+    try {
+      const { data, error } = await supabase.rpc("leave_household");
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; error?: string };
+
+      if (result.success) {
+        await fetchHousehold();
+      }
+
+      return result;
+    } catch (error: any) {
+      console.error("Error leaving household:", error);
+      return { success: false, error: error.message };
+    }
+  };
+
   useEffect(() => {
     fetchHousehold();
   }, [user]);
@@ -164,6 +185,7 @@ export const useHousehold = () => {
     createInvite,
     acceptInvite,
     updateHouseholdName,
+    leaveHousehold,
     refetch: fetchHousehold,
   };
 };
