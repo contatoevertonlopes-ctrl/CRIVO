@@ -260,11 +260,12 @@ const Transactions = () => {
             category: formData.category,
             type: formData.type,
             amount: installmentAmount,
-            status: formData.status,
+            status: i === 0 ? formData.status : "em_aberto",
             date: installmentDate.toISOString().split("T")[0],
             tag: formData.tag || null,
             is_recurring: false,
             recurring_interval: null,
+            paid_date: i === 0 ? (formData.paid_date || null) : null,
           });
         }
 
@@ -284,6 +285,7 @@ const Transactions = () => {
           is_recurring: subscribed ? formData.is_recurring : false,
           recurring_interval: formData.is_recurring ? formData.recurring_interval : null,
           tag: formData.tag || null,
+          paid_date: formData.paid_date || null,
         });
 
         if (error) throw error;
