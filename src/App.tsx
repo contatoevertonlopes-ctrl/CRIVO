@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Settings from "./pages/Settings";
 import Plans from "./pages/Plans";
+import Success from "./pages/Success";
 import Transactions from "./pages/Transactions";
 import Reports from "./pages/Reports";
 import Admin from "./pages/Admin";
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/plans" element={<Plans />} />
+              <Route path="/success" element={<Success />} />
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/admin" element={<Admin />} />
