@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useHouseholdId } from "@/hooks/useHouseholdId";
+import { useHousehold } from "@/hooks/useHousehold";
 import { supabase } from "@/integrations/supabase/client";
 import AddTransactionDialog from "./AddTransactionDialog";
 import StatusSelector from "./StatusSelector";
@@ -16,6 +17,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Filter, Tag } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Transaction {
   id: string;
@@ -28,6 +36,7 @@ interface Transaction {
   paid_date?: string | null;
   tag?: string | null;
   is_recurring?: boolean;
+  user_id: string;
 }
 
 interface TransactionsTableProps {
@@ -37,6 +46,7 @@ interface TransactionsTableProps {
 const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
   const { user } = useAuth();
   const { householdId } = useHouseholdId();
+  const { members } = useHousehold();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -169,6 +179,21 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
     }
   };
 
+  const getMemberInfo = (userId: string) => {
+    const member = members.find(m => m.user_id === userId);
+    if (!member) return { name: "Usuário", initials: "U", avatar: null };
+    
+    const name = member.full_name || "Usuário";
+    const initials = name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+    
+    return { name, initials, avatar: member.avatar_url };
+  };
+
   return (
     <div className="rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-5">
       <div className="flex justify-between items-center mb-3 flex-wrap gap-3">
@@ -238,16 +263,21 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
             <div className="md:hidden">
               {transactions
                 .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                .map((transaction) => (
-                  <TransactionCard
-                    key={transaction.id}
-                    transaction={transaction}
-                    onEdit={() => {}}
-                    onDelete={() => {}}
-                    onDuplicate={handleDuplicate}
-                    onStatusChange={fetchTransactions}
-                  />
-                ))}
+                .map((transaction) => {
+                  const memberInfo = getMemberInfo(transaction.user_id);
+                  return (
+                    <TransactionCard
+                      key={transaction.id}
+                      transaction={transaction}
+                      onEdit={() => {}}
+                      onDelete={() => {}}
+                      onDuplicate={handleDuplicate}
+                      onStatusChange={fetchTransactions}
+                      memberInfo={memberInfo}
+                      showMember={members.length > 1}
+                    />
+                  );
+                })}
               <TransactionPagination
                 currentPage={currentPage}
                 totalPages={Math.ceil(transactions.length / itemsPerPage)}
@@ -260,6 +290,9 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
               <table className="w-full text-xs border-collapse">
                 <thead>
                   <tr className="text-muted-foreground border-b border-secondary">
+                    {members.length > 1 && (
+                      <th className="text-left py-2 px-2 font-normal w-10"></th>
+                    )}
                     <th className="text-left py-2 px-2 font-normal">Vencimento</th>
                     <th className="text-left py-2 px-2 font-normal">Pagamento</th>
                     <th className="text-left py-2 px-2 font-normal">Descrição</th>
@@ -273,11 +306,32 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
                 <tbody>
                   {transactions
                     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                    .map((transaction) => (
+                    .map((transaction) => {
+                      const memberInfo = getMemberInfo(transaction.user_id);
+                      return (
                     <tr
                       key={transaction.id}
                       className="border-b border-secondary/90 hover:bg-secondary/80 transition-colors"
                     >
+                      {members.length > 1 && (
+                        <td className="py-2 px-2">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Avatar className="w-6 h-6">
+                                  <AvatarImage src={memberInfo.avatar || undefined} />
+                                  <AvatarFallback className="text-[10px] bg-primary/20 text-primary">
+                                    {memberInfo.initials}
+                                  </AvatarFallback>
+                                </Avatar>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{memberInfo.name}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </td>
+                      )}
                       <td className="py-2 px-2">{formatDate(transaction.date)}</td>
                       <td className="py-2 px-2 text-muted-foreground">
                         {formatDate(transaction.paid_date)}
@@ -317,7 +371,8 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
                         />
                       </td>
                     </tr>
-                  ))}
+                      );
+                    })}
                 </tbody>
               </table>
               <TransactionPagination
