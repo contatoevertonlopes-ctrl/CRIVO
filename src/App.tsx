@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { SidebarProvider } from "@/contexts/SidebarContext";
+import { AppModeProvider } from "@/contexts/AppModeContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
@@ -20,7 +21,8 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <SidebarProvider>
+      <AppModeProvider>
+        <SidebarProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -40,6 +42,7 @@ const App = () => (
           </BrowserRouter>
         </TooltipProvider>
       </SidebarProvider>
+      </AppModeProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

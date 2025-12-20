@@ -61,6 +61,23 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        survival: {
+          card: "hsl(var(--survival-card))",
+          border: "hsl(var(--survival-border))",
+          emergency: "hsl(var(--survival-emergency))",
+          critical: "hsl(var(--survival-critical))",
+          warning: "hsl(var(--survival-warning))",
+          good: "hsl(var(--survival-good))",
+          excellent: "hsl(var(--survival-excellent))",
+          muted: "hsl(var(--survival-muted))",
+        },
+        prosperity: {
+          card: "hsl(var(--prosperity-card))",
+          border: "hsl(var(--prosperity-border))",
+          primary: "hsl(var(--prosperity-primary))",
+          accent: "hsl(var(--prosperity-accent))",
+          muted: "hsl(var(--prosperity-muted))",
+        },
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
