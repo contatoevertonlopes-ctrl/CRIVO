@@ -75,7 +75,6 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
     try {
       let query = supabase.from("transactions").select("*");
 
-      // Filter based on shared status
       if (!isShared) {
         query = query.eq("user_id", user.id);
       } else if (householdId) {
@@ -205,6 +204,11 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
     return { name, initials, avatar: member.avatar_url };
   };
 
+  const paginatedTransactions = transactions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className={cn(
       "rounded-2xl border overflow-hidden card-shadow-soft",
@@ -306,7 +310,7 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
             {/* Timeline View */}
             {viewMode === "timeline" && (
               <TransactionTimeline
-                transactions={transactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
+                transactions={paginatedTransactions}
                 onEdit={() => {}}
                 onDelete={() => {}}
                 onDuplicate={handleDuplicate}
@@ -316,52 +320,48 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
               />
             )}
 
-            {/* Mobile Card View */}
+            {/* Table View - Mobile Cards */}
             {viewMode === "table" && (
               <div className="md:hidden space-y-2">
-                {transactions
-                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                  .map((transaction) => {
-                    const memberInfo = getMemberInfo(transaction.user_id);
-                    return (
-                      <TransactionCard
-                        key={transaction.id}
-                        transaction={transaction}
-                        onEdit={() => {}}
-                        onDelete={() => {}}
-                        onDuplicate={handleDuplicate}
-                        onStatusChange={fetchTransactions}
-                        memberInfo={memberInfo}
-                        showMember={isShared && members.length > 1}
-                      />
-                    );
-                  })}
+                {paginatedTransactions.map((transaction) => {
+                  const memberInfo = getMemberInfo(transaction.user_id);
+                  return (
+                    <TransactionCard
+                      key={transaction.id}
+                      transaction={transaction}
+                      onEdit={() => {}}
+                      onDelete={() => {}}
+                      onDuplicate={handleDuplicate}
+                      onStatusChange={fetchTransactions}
+                      memberInfo={memberInfo}
+                      showMember={isShared && members.length > 1}
+                    />
+                  );
+                })}
               </div>
-            )
+            )}
 
-            {/* Desktop: Table view */}
+            {/* Table View - Desktop */}
             {viewMode === "table" && (
-            <div className="hidden md:block">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-muted-foreground border-b border-border/30">
-                    {isShared && members.length > 1 && (
-                      <th className="text-left py-2 px-2 font-normal w-8"></th>
-                    )}
-                    <th className="text-left py-2 px-2 font-normal">Venc.</th>
-                    <th className="text-left py-2 px-2 font-normal">Pago</th>
-                    <th className="text-left py-2 px-2 font-normal">Descrição</th>
-                    <th className="text-left py-2 px-2 font-normal">Categoria</th>
-                    <th className="text-left py-2 px-2 font-normal">Tag</th>
-                    <th className="text-left py-2 px-2 font-normal">Tipo</th>
-                    <th className="text-right py-2 px-2 font-normal">Valor</th>
-                    <th className="text-left py-2 px-2 font-normal">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions
-                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                    .map((transaction) => {
+              <div className="hidden md:block">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-muted-foreground border-b border-border/30">
+                      {isShared && members.length > 1 && (
+                        <th className="text-left py-2 px-2 font-normal w-8"></th>
+                      )}
+                      <th className="text-left py-2 px-2 font-normal">Venc.</th>
+                      <th className="text-left py-2 px-2 font-normal">Pago</th>
+                      <th className="text-left py-2 px-2 font-normal">Descrição</th>
+                      <th className="text-left py-2 px-2 font-normal">Categoria</th>
+                      <th className="text-left py-2 px-2 font-normal">Tag</th>
+                      <th className="text-left py-2 px-2 font-normal">Tipo</th>
+                      <th className="text-right py-2 px-2 font-normal">Valor</th>
+                      <th className="text-left py-2 px-2 font-normal">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedTransactions.map((transaction) => {
                       const memberInfo = getMemberInfo(transaction.user_id);
                       return (
                         <tr
@@ -434,9 +434,10 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
                         </tr>
                       );
                     })}
-                </tbody>
-              </table>
-            </div>
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             <div className="mt-3">
               <TransactionPagination
@@ -444,7 +445,7 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
                 totalPages={Math.ceil(transactions.length / itemsPerPage)}
                 onPageChange={setCurrentPage}
               />
-            )}
+            </div>
           </>
         )}
       </div>
