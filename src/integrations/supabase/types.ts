@@ -262,6 +262,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      leave_household: { Args: never; Returns: Json }
       user_household_id: { Args: { _user_id: string }; Returns: string }
     }
     Enums: {
