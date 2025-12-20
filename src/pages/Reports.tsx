@@ -9,7 +9,7 @@ import { ArrowLeft, TrendingUp, TrendingDown, PieChart, BarChart3, Lock, Crown }
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, BarChart, Bar, Legend } from "recharts";
 import Sidebar from "@/components/Sidebar";
 import { DateRangePicker } from "@/components/DateRangePicker";
-import { differenceInMonths, startOfMonth, endOfMonth } from "date-fns";
+import { differenceInMonths, startOfMonth, format } from "date-fns";
 import { useState, useEffect } from "react";
 
 const COMPLETED_STATUSES = ["pagamento_concluido", "paid", "confirmed"];
@@ -53,10 +53,27 @@ const Reports = () => {
   // Process data for charts using useMemo for performance
   const { monthlyData, categoryData, stats } = useMemo(() => {
     const monthsCount = getMonthsCount();
-    
-    // Filter only paid transactions
-    const paidTransactions = transactions.filter((t) => COMPLETED_STATUSES.includes(t.status));
-    
+
+    const normalizeStatus = (status: string) => {
+      const legacyMap: Record<string, string> = {
+        pending: "em_aberto",
+        confirmed: "pagamento_concluido",
+        paid: "pagamento_concluido",
+      };
+      return legacyMap[status] || status;
+    };
+
+    const getEffectiveDate = (t: (typeof transactions)[number]) => {
+      const normalized = normalizeStatus(t.status);
+      // Para transações pagas, preferimos a data de pagamento (cashflow real).
+      return normalized === "pagamento_concluido" && t.paid_date ? t.paid_date : t.date;
+    };
+
+    // Mantém o comportamento original: relatórios consideram apenas transações concluídas/pagas.
+    const paidTransactions = transactions.filter((t) =>
+      COMPLETED_STATUSES.includes(normalizeStatus(t.status))
+    );
+
     if (paidTransactions.length === 0) {
       return {
         monthlyData: [],
@@ -64,16 +81,16 @@ const Reports = () => {
         stats: { totalIncome: 0, totalExpense: 0, balance: 0, avgMonthlyIncome: 0, avgMonthlyExpense: 0 },
       };
     }
-    
+
     // Generate month keys based on period type
     const monthKeys: string[] = [];
-    
+
     if (isCustomPeriod && customDateFrom && customDateTo) {
       const startMonth = startOfMonth(customDateFrom);
       const endMonth = startOfMonth(customDateTo);
       let current = new Date(startMonth);
       while (current <= endMonth) {
-        const key = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+        const key = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, "0")}`;
         monthKeys.push(key);
         current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
       }
@@ -82,31 +99,41 @@ const Reports = () => {
       const now = new Date();
       const currentYear = now.getFullYear();
       const currentMonth = now.getMonth(); // 0-indexed
-      
+
       // Generate months backwards from the current month
       for (let i = monthsCount - 1; i >= 0; i--) {
         const date = new Date(currentYear, currentMonth - i, 1);
-        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
         monthKeys.push(key);
       }
     }
-    
+
     // Initialize map with all months
     const monthlyMap = new Map<string, { income: number; expense: number }>();
-    monthKeys.forEach(key => {
+    monthKeys.forEach((key) => {
       monthlyMap.set(key, { income: 0, expense: 0 });
     });
-    
-    // Filter transactions within the period
-    const filterStartDate = monthKeys.length > 0 ? `${monthKeys[0]}-01` : "";
-    const filterEndDate = monthKeys.length > 0 ? `${monthKeys[monthKeys.length - 1]}-31` : "";
-    
-    const filteredTransactions = paidTransactions.filter((t) => 
-      t.date >= filterStartDate && t.date <= filterEndDate
-    );
-    
+
+    // Filtra sempre até HOJE (não inclui datas futuras no mês atual)
+    const todayStr = format(new Date(), "yyyy-MM-dd");
+    const filterStartDate = isCustomPeriod && customDateFrom
+      ? format(customDateFrom, "yyyy-MM-dd")
+      : monthKeys.length > 0
+        ? `${monthKeys[0]}-01`
+        : "";
+
+    const filterEndDate = isCustomPeriod && customDateTo
+      ? format(customDateTo, "yyyy-MM-dd")
+      : todayStr;
+
+    const filteredTransactions = paidTransactions.filter((t) => {
+      const effectiveDate = getEffectiveDate(t);
+      return effectiveDate >= filterStartDate && effectiveDate <= filterEndDate;
+    });
+
     filteredTransactions.forEach((t) => {
-      const monthKey = t.date.substring(0, 7);
+      const effectiveDate = getEffectiveDate(t);
+      const monthKey = effectiveDate.substring(0, 7);
       if (monthlyMap.has(monthKey)) {
         const current = monthlyMap.get(monthKey)!;
         if (t.type === "income") {
@@ -123,10 +150,14 @@ const Reports = () => {
       const data = monthlyMap.get(month) || { income: 0, expense: 0 };
       const monthBalance = data.income - data.expense;
       runningBalance += monthBalance;
+
+      const [year, monthNumber] = month.split("-").map(Number);
+      const monthDate = new Date(year, monthNumber - 1, 1);
+
       return {
-        month: new Date(month + "-01").toLocaleDateString("pt-BR", { 
-          month: "short", 
-          year: monthKeys.length > 6 ? "2-digit" : undefined 
+        month: monthDate.toLocaleDateString("pt-BR", {
+          month: "short",
+          year: monthKeys.length > 6 ? "2-digit" : undefined,
         }),
         entradas: data.income,
         saidas: data.expense,
