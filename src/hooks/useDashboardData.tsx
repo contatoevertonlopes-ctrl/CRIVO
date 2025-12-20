@@ -65,11 +65,10 @@ export const useDashboardData = (period: number = 30) => {
       const previousPeriodEnd = new Date(now.getTime() - period * 24 * 60 * 60 * 1000);
       const futureDate = new Date(now.getTime() + period * 24 * 60 * 60 * 1000);
 
-      // Fetch all transactions
+      // Fetch all transactions - RLS handles household filtering
       const { data: transactions, error } = await supabase
         .from("transactions")
         .select("*")
-        .eq("user_id", user.id)
         .order("date", { ascending: false });
 
       if (error) throw error;
