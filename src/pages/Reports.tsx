@@ -79,32 +79,50 @@ const Reports = () => {
 
   // Process data for charts - only paid transactions
   const getMonthlyData = () => {
-    const monthlyMap = new Map<string, { income: number; expense: number }>();
     const monthsCount = getMonthsCount();
+    const now = new Date();
     
-    // Filter only paid transactions
-    const paidTransactions = transactions.filter((t) => paidStatuses.includes(t.status));
+    // Generate the last N months as keys
+    const monthKeys: string[] = [];
+    for (let i = monthsCount - 1; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      monthKeys.push(key);
+    }
+    
+    // Initialize map with all months
+    const monthlyMap = new Map<string, { income: number; expense: number }>();
+    monthKeys.forEach(key => {
+      monthlyMap.set(key, { income: 0, expense: 0 });
+    });
+    
+    // Filter only paid transactions within the period
+    const startDate = `${monthKeys[0]}-01`;
+    const paidTransactions = transactions.filter((t) => 
+      paidStatuses.includes(t.status) && t.date >= startDate
+    );
     
     paidTransactions.forEach((t) => {
       const monthKey = t.date.substring(0, 7);
-      const current = monthlyMap.get(monthKey) || { income: 0, expense: 0 };
-      if (t.type === "income") {
-        current.income += t.amount;
-      } else {
-        current.expense += t.amount;
+      if (monthlyMap.has(monthKey)) {
+        const current = monthlyMap.get(monthKey)!;
+        if (t.type === "income") {
+          current.income += t.amount;
+        } else {
+          current.expense += t.amount;
+        }
       }
-      monthlyMap.set(monthKey, current);
     });
 
-    return Array.from(monthlyMap.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-monthsCount)
-      .map(([month, data]) => ({
+    return monthKeys.map((month) => {
+      const data = monthlyMap.get(month) || { income: 0, expense: 0 };
+      return {
         month: new Date(month + "-01").toLocaleDateString("pt-BR", { month: "short" }),
         entradas: data.income,
         saidas: data.expense,
         saldo: data.income - data.expense,
-      }));
+      };
+    });
   };
 
   const getCategoryData = () => {
@@ -183,10 +201,10 @@ const Reports = () => {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       
-      <main className="flex-1 p-4 sm:p-5 lg:p-4 flex flex-col gap-4 sm:gap-5 min-w-0">
+      <main className="flex-1 p-4 sm:p-5 lg:p-4 flex flex-col gap-4 sm:gap-5 min-w-0 pt-20 lg:pt-4 pb-24 lg:pb-4">
         <div className="max-w-7xl mx-auto w-full">
           {/* Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 sm:mb-8 pl-12 lg:pl-0">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 sm:mb-8 lg:pl-0">
             <div>
               <button
                 onClick={() => navigate("/")}

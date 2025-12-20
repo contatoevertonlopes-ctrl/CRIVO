@@ -81,14 +81,20 @@ const NotificationsDropdown = () => {
     }
   }, []);
 
-  // Send browser notification for bills due today or tomorrow
+  // Send browser notification for bills due today or tomorrow - only once per session
   useEffect(() => {
     if (!("Notification" in window) || Notification.permission !== "granted") return;
+    if (upcomingBills.length === 0) return;
 
     const urgentBills = upcomingBills.filter(b => b.daysUntilDue <= 1);
     
     if (urgentBills.length > 0) {
       const bill = urgentBills[0];
+      const notificationKey = `notification-sent-${bill.id}-${new Date().toDateString()}`;
+      
+      // Check if we already sent this notification today
+      if (sessionStorage.getItem(notificationKey)) return;
+      
       const title = bill.daysUntilDue === 0 ? "Conta vence hoje!" : "Conta vence amanhã!";
       
       new Notification(title, {
@@ -96,6 +102,9 @@ const NotificationsDropdown = () => {
         icon: "/favicon.ico",
         tag: `bill-${bill.id}`,
       });
+      
+      // Mark as sent for this session
+      sessionStorage.setItem(notificationKey, "true");
     }
   }, [upcomingBills]);
 

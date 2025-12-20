@@ -1,5 +1,4 @@
 import NotificationsDropdown from "./NotificationsDropdown";
-import ModeToggle from "./ModeToggle";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useSharedHousehold } from "@/hooks/useSharedHousehold";
 import { User, Users } from "lucide-react";
@@ -74,9 +73,8 @@ const DashboardHeader = ({ period = 30, onPeriodChange }: DashboardHeaderProps) 
         </p>
       </div>
 
-      {/* Actions */}
+      {/* Actions - Removed ModeToggle, only show on desktop */}
       <div className="flex items-center gap-2 flex-wrap">
-        <ModeToggle />
         <NotificationsDropdown />
         
         <Select
@@ -96,12 +94,12 @@ const DashboardHeader = ({ period = 30, onPeriodChange }: DashboardHeaderProps) 
           </SelectContent>
         </Select>
 
-        {/* User Avatar */}
-        <div className="flex items-center gap-2 px-2 py-1 rounded-lg border border-border/30 bg-secondary/50">
+        {/* User Avatar - Hidden on mobile */}
+        <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg border border-border/30 bg-secondary/50">
           <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center text-xs font-semibold text-primary-foreground">
             {profile.initials}
           </div>
-          <div className="hidden sm:flex flex-col">
+          <div className="flex flex-col">
             <span className="text-xs font-medium leading-tight">{profile.fullName}</span>
             <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">
               {profile.email}
