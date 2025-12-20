@@ -120,7 +120,7 @@ export const parseMonetaryValue = (value: string): number => {
   }
   
   // Keep only numbers, dots, and minus sign
-  cleaned = cleaned.replace(/[^\\d.-]/g, "");
+  cleaned = cleaned.replace(/[^\d.-]/g, "");
   
   return parseFloat(cleaned) || 0;
 };

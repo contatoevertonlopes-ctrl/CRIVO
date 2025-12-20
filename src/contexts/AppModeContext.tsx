@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useMemo, useCallback, ReactNode } from "react";
 
 export type AppMode = "survival" | "prosperity";
 
@@ -11,23 +11,31 @@ interface AppModeContextType {
 const AppModeContext = createContext<AppModeContextType | undefined>(undefined);
 
 export const AppModeProvider = ({ children }: { children: ReactNode }) => {
-  const [mode, setMode] = useState<AppMode>(() => {
+  const [mode, setModeState] = useState<AppMode>(() => {
     const saved = localStorage.getItem("appMode");
     return (saved as AppMode) || "prosperity";
   });
 
-  const handleSetMode = (newMode: AppMode) => {
-    setMode(newMode);
+  const setMode = useCallback((newMode: AppMode) => {
+    setModeState(newMode);
     localStorage.setItem("appMode", newMode);
-  };
+  }, []);
 
-  const toggleMode = () => {
-    const newMode = mode === "survival" ? "prosperity" : "survival";
-    handleSetMode(newMode);
-  };
+  const toggleMode = useCallback(() => {
+    setModeState((prev) => {
+      const newMode = prev === "survival" ? "prosperity" : "survival";
+      localStorage.setItem("appMode", newMode);
+      return newMode;
+    });
+  }, []);
+
+  const value = useMemo(
+    () => ({ mode, setMode, toggleMode }),
+    [mode, setMode, toggleMode]
+  );
 
   return (
-    <AppModeContext.Provider value={{ mode, setMode: handleSetMode, toggleMode }}>
+    <AppModeContext.Provider value={value}>
       {children}
     </AppModeContext.Provider>
   );
