@@ -10,43 +10,43 @@ interface ExpenseChartProps {
   period?: number;
 }
 
-const COLORS = ["hsl(142 76% 45%)", "hsl(217 91% 60%)", "hsl(48 96% 53%)", "hsl(0 84% 60%)"];
+const COLORS = ["hsl(var(--primary))", "hsl(217 91% 60%)", "hsl(48 96% 53%)", "hsl(var(--destructive))"];
 
 const ExpenseChart = ({ data = [], period = 30 }: ExpenseChartProps) => {
   const hasData = data.length > 0 && data[0].name !== "Sem dados";
 
   const getPeriodLabel = () => {
     switch (period) {
-      case 7: return "Últimos 7 dias";
-      case 30: return "Últimos 30 dias";
-      case 90: return "Últimos 90 dias";
-      case 365: return "Último ano";
-      default: return `Últimos ${period} dias`;
+      case 7: return "7 dias";
+      case 30: return "30 dias";
+      case 90: return "90 dias";
+      case 365: return "1 ano";
+      default: return `${period}d`;
     }
   };
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-5">
-      {/* Gradient ghost effect */}
-      <div className="absolute inset-[-40%] bg-[radial-gradient(circle_at_0%_0%,rgba(34,197,94,0.16),transparent_55%),radial-gradient(circle_at_100%_0,rgba(59,130,246,0.16),transparent_52%)] opacity-30 pointer-events-none"></div>
+    <div className="relative overflow-hidden rounded-xl bg-card border border-border/50 shadow-sm p-4">
+      {/* Subtle gradient accent */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
 
       <div className="relative z-10">
-        <div className="flex justify-between items-center mb-3">
+        <div className="flex justify-between items-start gap-2 mb-3">
           <div>
-            <h3 className="text-sm font-medium mb-0.5">Distribuição das despesas</h3>
-            <p className="text-[11px] text-muted-foreground">
-              Categorias que mais pesam no seu orçamento.
+            <h3 className="text-sm font-medium">Despesas por categoria</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Principais gastos
             </p>
           </div>
-          <span className="text-[11px] px-2 py-1 rounded-full bg-secondary/90 border border-border/50">
+          <span className="text-[10px] px-2 py-0.5 rounded-md bg-secondary/80 text-muted-foreground border border-border/30">
             {getPeriodLabel()}
           </span>
         </div>
 
-        <div className="h-[180px] mt-2">
+        <div className="h-[160px]">
           {!hasData ? (
-            <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-              Adicione despesas para visualizar
+            <div className="h-full flex items-center justify-center text-muted-foreground text-xs">
+              Adicione despesas
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
@@ -55,8 +55,8 @@ const ExpenseChart = ({ data = [], period = 30 }: ExpenseChartProps) => {
                   data={data}
                   cx="50%"
                   cy="50%"
-                  innerRadius={50}
-                  outerRadius={70}
+                  innerRadius={40}
+                  outerRadius={60}
                   fill="#8884d8"
                   paddingAngle={2}
                   dataKey="value"
@@ -67,14 +67,12 @@ const ExpenseChart = ({ data = [], period = 30 }: ExpenseChartProps) => {
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "hsl(222 47% 5%)",
-                    border: "1px solid hsl(217 33% 17%)",
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
-                    fontSize: "12px",
-                    color: "white",
+                    fontSize: "11px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                   }}
-                  itemStyle={{ color: "white" }}
-                  labelStyle={{ color: "white" }}
                   formatter={(value: number) =>
                     new Intl.NumberFormat("pt-BR", {
                       style: "currency",
@@ -82,10 +80,13 @@ const ExpenseChart = ({ data = [], period = 30 }: ExpenseChartProps) => {
                     }).format(value)
                   }
                 />
-                <Legend 
-                  wrapperStyle={{ fontSize: "11px" }} 
+                <Legend
+                  wrapperStyle={{ fontSize: "10px", paddingTop: "4px" }}
                   iconType="circle"
-                  formatter={(value) => <span style={{ color: "hsl(210 17% 98%)" }}>{value}</span>}
+                  iconSize={6}
+                  formatter={(value) => (
+                    <span style={{ color: "hsl(var(--foreground))", fontSize: "10px" }}>{value}</span>
+                  )}
                 />
               </PieChart>
             </ResponsiveContainer>
