@@ -34,7 +34,7 @@ const Index = () => {
     : period;
     
   const { metrics, cashflowData, expensesByCategory, refetch } = useDashboardData(effectivePeriod, customDateFrom, customDateTo);
-  const adaptiveData = useAdaptiveModeData(effectivePeriod);
+  const adaptiveData = useAdaptiveModeData(effectivePeriod, customDateFrom, customDateTo);
 
   useEffect(() => {
     if (!loading && !user) {

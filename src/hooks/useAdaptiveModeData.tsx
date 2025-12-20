@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useSharedHousehold } from "@/hooks/useSharedHousehold";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Transaction {
@@ -10,6 +11,8 @@ interface Transaction {
   type: "income" | "expense";
   amount: number;
   status: string;
+  user_id: string;
+  household_id: string | null;
 }
 
 interface AdaptiveModeData {
@@ -46,8 +49,13 @@ const ESSENTIAL_CATEGORIES = [
   "bills",
 ];
 
-export const useAdaptiveModeData = (period: number = 30) => {
+export const useAdaptiveModeData = (
+  period: number = 30,
+  customDateFrom?: Date,
+  customDateTo?: Date
+) => {
   const { user } = useAuth();
+  const { isShared, householdId, loading: householdLoading } = useSharedHousehold();
   const [data, setData] = useState<AdaptiveModeData>({
     currentBalance: 0,
     dailyExpenseAverage: 0,
@@ -62,25 +70,51 @@ export const useAdaptiveModeData = (period: number = 30) => {
   });
 
   const fetchData = useCallback(async () => {
-    if (!user) {
-      setData(prev => ({ ...prev, loading: false }));
+    if (!user || householdLoading) {
+      setData(prev => ({ ...prev, loading: !householdLoading }));
       return;
     }
 
     try {
-      const now = new Date();
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-      const { data: transactions, error } = await supabase
+      // Build query with user_id or household_id filter
+      let query = supabase
         .from("transactions")
         .select("*")
         .order("date", { ascending: false });
+
+      if (isShared && householdId) {
+        // Shared household: get all household transactions
+        query = query.eq("household_id", householdId);
+      } else {
+        // Individual: get only user's transactions
+        query = query.eq("user_id", user.id);
+      }
+
+      const { data: transactions, error } = await query;
 
       if (error) throw error;
 
       const allTransactions = (transactions as Transaction[]) || [];
 
-      // Calculate total balance (all time)
+      // Calculate date range based on period or custom dates
+      const now = new Date();
+      let startDate: Date;
+      let endDate: Date;
+
+      if (customDateFrom && customDateTo) {
+        startDate = new Date(customDateFrom);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(customDateTo);
+        endDate.setHours(23, 59, 59, 999);
+      } else {
+        endDate = now;
+        startDate = new Date(now.getTime() - period * 24 * 60 * 60 * 1000);
+      }
+
+      // Calculate days in period for averages
+      const daysInPeriod = Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)));
+
+      // Calculate total balance (all time confirmed transactions)
       const totalIncome = allTransactions
         .filter((t) => t.type === "income" && ["pagamento_concluido", "paid", "confirmed"].includes(t.status))
         .reduce((sum, t) => sum + Number(t.amount), 0);
@@ -91,17 +125,18 @@ export const useAdaptiveModeData = (period: number = 30) => {
 
       const currentBalance = totalIncome - totalExpenses;
 
-      // Last 30 days transactions for averages
-      const recentTransactions = allTransactions.filter(
-        (t) => new Date(t.date + "T00:00:00") >= thirtyDaysAgo
-      );
+      // Filter transactions for the selected period
+      const recentTransactions = allTransactions.filter((t) => {
+        const txDate = new Date(t.date + "T00:00:00");
+        return txDate >= startDate && txDate <= endDate;
+      });
 
-      // Calculate daily expense average (last 30 days)
+      // Calculate expenses for the period
       const recentExpenses = recentTransactions
         .filter((t) => t.type === "expense" && ["pagamento_concluido", "paid", "confirmed"].includes(t.status))
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
-      const dailyExpenseAverage = recentExpenses / 30;
+      const dailyExpenseAverage = recentExpenses / daysInPeriod;
 
       // Calculate essential expenses average
       const essentialExpenses = recentTransactions
@@ -112,23 +147,22 @@ export const useAdaptiveModeData = (period: number = 30) => {
         )
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
-      const essentialExpenseAverage = essentialExpenses / 30;
+      const essentialExpenseAverage = essentialExpenses / daysInPeriod;
 
       // Calculate days of oxygen
       const daysOfOxygen = dailyExpenseAverage > 0 
         ? Math.floor(currentBalance / dailyExpenseAverage) 
         : 999;
 
-      // Calculate monthly income and expenses for prosperity mode
-      const monthlyIncome = recentTransactions
+      // Calculate income for the period
+      const periodIncome = recentTransactions
         .filter((t) => t.type === "income" && ["pagamento_concluido", "paid", "confirmed"].includes(t.status))
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
-      const monthlyExpenses = recentExpenses;
-      const surplus = monthlyIncome - monthlyExpenses;
+      const surplus = periodIncome - recentExpenses;
       
-      const freedomRate = monthlyIncome > 0 
-        ? Math.round((surplus / monthlyIncome) * 100) 
+      const freedomRate = periodIncome > 0 
+        ? Math.round((surplus / periodIncome) * 100) 
         : 0;
 
       const daysOfFreedomEarned = dailyExpenseAverage > 0 && surplus > 0
@@ -140,8 +174,8 @@ export const useAdaptiveModeData = (period: number = 30) => {
         dailyExpenseAverage,
         essentialExpenseAverage,
         daysOfOxygen,
-        monthlyIncome,
-        monthlyExpenses,
+        monthlyIncome: periodIncome,
+        monthlyExpenses: recentExpenses,
         freedomRate,
         surplus,
         daysOfFreedomEarned,
@@ -151,7 +185,7 @@ export const useAdaptiveModeData = (period: number = 30) => {
       console.error("Error fetching adaptive mode data:", error);
       setData(prev => ({ ...prev, loading: false }));
     }
-  }, [user]);
+  }, [user, isShared, householdId, householdLoading, period, customDateFrom, customDateTo]);
 
   useEffect(() => {
     fetchData();
