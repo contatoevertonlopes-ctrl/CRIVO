@@ -11,6 +11,7 @@ import PlansCard from "@/components/PlansCard";
 import TransactionsTable from "@/components/TransactionsTable";
 import SurvivalWidget from "@/components/SurvivalWidget";
 import ProsperityWidget from "@/components/ProsperityWidget";
+import { QuickAddInput } from "@/components/QuickAddInput";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdaptiveModeData } from "@/hooks/useAdaptiveModeData";
 
@@ -81,6 +82,11 @@ const Index = () => {
       <main className="flex-1 p-4 sm:p-5 lg:p-4 flex flex-col gap-4 sm:gap-5 min-w-0">
         <div className="pl-12 lg:pl-0">
           <DashboardHeader period={period} onPeriodChange={setPeriod} />
+        </div>
+        
+        {/* Quick Add Input - Magic Bar */}
+        <div className="max-w-2xl">
+          <QuickAddInput onTransactionAdded={refetch} />
         </div>
         
         {/* Adaptive Mode Widget */}
