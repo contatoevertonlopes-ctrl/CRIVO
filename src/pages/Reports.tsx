@@ -1,32 +1,24 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
-import { supabase } from "@/integrations/supabase/client";
+import { useTransactions } from "@/hooks/useTransactions";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, TrendingUp, TrendingDown, PieChart, BarChart3, Lock, Crown } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, BarChart, Bar, Legend } from "recharts";
 import Sidebar from "@/components/Sidebar";
 import { DateRangePicker } from "@/components/DateRangePicker";
-import { format, differenceInMonths, startOfMonth, endOfMonth } from "date-fns";
+import { differenceInMonths, startOfMonth, endOfMonth } from "date-fns";
+import { useState, useEffect } from "react";
 
-interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  category: string;
-  type: "income" | "expense";
-  amount: number;
-  status: string;
-}
+const COMPLETED_STATUSES = ["pagamento_concluido", "paid", "confirmed"];
 
 const Reports = () => {
   const { user, loading: authLoading } = useAuth();
   const { subscribed, loading: subLoading } = useSubscription();
+  const { transactions, isLoading: loading } = useTransactions();
   const navigate = useNavigate();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("6months");
   const [customDateFrom, setCustomDateFrom] = useState<Date | undefined>();
   const [customDateTo, setCustomDateTo] = useState<Date | undefined>();
@@ -38,32 +30,6 @@ const Reports = () => {
     }
   }, [user, authLoading, navigate]);
 
-  const fetchTransactions = async () => {
-    if (!user) return;
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("date", { ascending: true });
-
-      if (error) throw error;
-      setTransactions((data as Transaction[]) || []);
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (user) {
-      fetchTransactions();
-    }
-  }, [user]);
-
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -71,13 +37,11 @@ const Reports = () => {
     }).format(value);
   };
 
-  const paidStatuses = ["pagamento_concluido", "paid", "confirmed"];
-
   // Get number of months based on period
   const getMonthsCount = () => {
     if (isCustomPeriod && customDateFrom && customDateTo) {
       const months = differenceInMonths(customDateTo, customDateFrom) + 1;
-      return Math.max(1, Math.min(months, 24)); // Max 24 months
+      return Math.max(1, Math.min(months, 24));
     }
     switch (period) {
       case "3months": return 3;
@@ -86,41 +50,25 @@ const Reports = () => {
     }
   };
 
-  // Get the start date for filtering
-  const getStartDate = () => {
-    if (isCustomPeriod && customDateFrom) {
-      return format(startOfMonth(customDateFrom), "yyyy-MM-dd");
-    }
-    const now = new Date();
-    const monthsCount = getMonthsCount();
-    const startDate = new Date(now.getFullYear(), now.getMonth() - monthsCount + 1, 1);
-    return format(startDate, "yyyy-MM-dd");
-  };
-
-  // Get the end date for filtering
-  const getEndDate = () => {
-    if (isCustomPeriod && customDateTo) {
-      return format(endOfMonth(customDateTo), "yyyy-MM-dd");
-    }
-    return format(new Date(), "yyyy-MM-dd");
-  };
-
-  // Process data for charts - only paid transactions
-  const getMonthlyData = () => {
+  // Process data for charts using useMemo for performance
+  const { monthlyData, categoryData, stats } = useMemo(() => {
     const monthsCount = getMonthsCount();
     
-    // First, get all paid transactions
-    const paidTransactions = transactions.filter((t) => paidStatuses.includes(t.status));
+    // Filter only paid transactions
+    const paidTransactions = transactions.filter((t) => COMPLETED_STATUSES.includes(t.status));
     
     if (paidTransactions.length === 0) {
-      return [];
+      return {
+        monthlyData: [],
+        categoryData: [],
+        stats: { totalIncome: 0, totalExpense: 0, balance: 0, avgMonthlyIncome: 0, avgMonthlyExpense: 0 },
+      };
     }
     
     // Generate month keys based on period type
     const monthKeys: string[] = [];
     
     if (isCustomPeriod && customDateFrom && customDateTo) {
-      // Use custom date range
       const startMonth = startOfMonth(customDateFrom);
       const endMonth = startOfMonth(customDateTo);
       let current = new Date(startMonth);
@@ -130,14 +78,10 @@ const Reports = () => {
         current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
       }
     } else {
-      // Find the date range of paid transactions
-      const dates = paidTransactions.map(t => t.date).sort();
-      const latestDate = dates[dates.length - 1];
-      const latestMonth = new Date(latestDate + "-01");
-      
-      // Generate months backwards from the latest transaction date
+      // Generate months backwards from today
+      const now = new Date();
       for (let i = monthsCount - 1; i >= 0; i--) {
-        const date = new Date(latestMonth.getFullYear(), latestMonth.getMonth() - i, 1);
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         monthKeys.push(key);
       }
@@ -162,38 +106,43 @@ const Reports = () => {
       if (monthlyMap.has(monthKey)) {
         const current = monthlyMap.get(monthKey)!;
         if (t.type === "income") {
-          current.income += t.amount;
+          current.income += Number(t.amount);
         } else {
-          current.expense += t.amount;
+          current.expense += Number(t.amount);
         }
       }
     });
 
-    return monthKeys.map((month) => {
+    // Calculate monthly data with running balance
+    let runningBalance = 0;
+    const monthlyDataResult = monthKeys.map((month) => {
       const data = monthlyMap.get(month) || { income: 0, expense: 0 };
+      const monthBalance = data.income - data.expense;
+      runningBalance += monthBalance;
       return {
-        month: new Date(month + "-01").toLocaleDateString("pt-BR", { month: "short", year: monthKeys.length > 6 ? "2-digit" : undefined }),
+        month: new Date(month + "-01").toLocaleDateString("pt-BR", { 
+          month: "short", 
+          year: monthKeys.length > 6 ? "2-digit" : undefined 
+        }),
         entradas: data.income,
         saidas: data.expense,
-        saldo: data.income - data.expense,
+        saldo: monthBalance,
+        saldoAcumulado: runningBalance,
       };
     });
-  };
 
-  const getCategoryData = () => {
+    // Calculate category data
     const categoryMap = new Map<string, number>();
-    
-    // Filter only paid expense transactions
-    transactions
-      .filter((t) => t.type === "expense" && paidStatuses.includes(t.status))
+    filteredTransactions
+      .filter((t) => t.type === "expense")
       .forEach((t) => {
         const current = categoryMap.get(t.category) || 0;
-        categoryMap.set(t.category, current + t.amount);
+        categoryMap.set(t.category, current + Number(t.amount));
       });
 
     const COLORS = ["hsl(142 76% 45%)", "hsl(217 91% 60%)", "hsl(48 96% 53%)", "hsl(0 84% 60%)", "hsl(280 65% 60%)", "hsl(30 100% 50%)"];
     
-    return Array.from(categoryMap.entries())
+    const categoryDataResult = Array.from(categoryMap.entries())
       .sort(([, a], [, b]) => b - a)
       .slice(0, 6)
       .map(([name, value], index) => ({
@@ -201,24 +150,27 @@ const Reports = () => {
         value,
         color: COLORS[index % COLORS.length],
       }));
-  };
 
-  const getStats = () => {
-    const paidIncomeTransactions = transactions.filter((t) => t.type === "income" && paidStatuses.includes(t.status));
-    const paidExpenseTransactions = transactions.filter((t) => t.type === "expense" && paidStatuses.includes(t.status));
+    // Calculate stats - with monthly averages
+    const totalIncome = filteredTransactions
+      .filter((t) => t.type === "income")
+      .reduce((acc, t) => acc + Number(t.amount), 0);
     
-    const totalIncome = paidIncomeTransactions.reduce((acc, t) => acc + t.amount, 0);
-    const totalExpense = paidExpenseTransactions.reduce((acc, t) => acc + t.amount, 0);
+    const totalExpense = filteredTransactions
+      .filter((t) => t.type === "expense")
+      .reduce((acc, t) => acc + Number(t.amount), 0);
+    
     const balance = totalIncome - totalExpense;
-    const avgIncome = totalIncome / Math.max(1, paidIncomeTransactions.length);
-    const avgExpense = totalExpense / Math.max(1, paidExpenseTransactions.length);
+    const monthsWithData = monthKeys.length || 1;
+    const avgMonthlyIncome = totalIncome / monthsWithData;
+    const avgMonthlyExpense = totalExpense / monthsWithData;
 
-    return { totalIncome, totalExpense, balance, avgIncome, avgExpense };
-  };
-
-  const monthlyData = getMonthlyData();
-  const categoryData = getCategoryData();
-  const stats = getStats();
+    return {
+      monthlyData: monthlyDataResult,
+      categoryData: categoryDataResult,
+      stats: { totalIncome, totalExpense, balance, avgMonthlyIncome, avgMonthlyExpense },
+    };
+  }, [transactions, period, customDateFrom, customDateTo, isCustomPeriod]);
 
   if (authLoading || subLoading) {
     return (
@@ -481,15 +433,15 @@ const Reports = () => {
             {/* Médias */}
             <ProFeatureOverlay>
               <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-4 sm:p-5">
-                <h3 className="text-xs sm:text-sm font-medium mb-3 sm:mb-4">Análise de Médias</h3>
+                <h3 className="text-xs sm:text-sm font-medium mb-3 sm:mb-4">Análise de Médias Mensais</h3>
                 <div className="space-y-3 sm:space-y-4">
                   <div className="p-3 sm:p-4 rounded-xl bg-secondary/30 border border-border">
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">Média por Entrada</p>
-                    <p className="text-lg sm:text-xl font-bold text-primary">{formatCurrency(stats.avgIncome)}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">Média Mensal de Entradas</p>
+                    <p className="text-lg sm:text-xl font-bold text-primary">{formatCurrency(stats.avgMonthlyIncome)}</p>
                   </div>
                   <div className="p-3 sm:p-4 rounded-xl bg-secondary/30 border border-border">
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">Média por Saída</p>
-                    <p className="text-lg sm:text-xl font-bold text-destructive">{formatCurrency(stats.avgExpense)}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">Média Mensal de Saídas</p>
+                    <p className="text-lg sm:text-xl font-bold text-destructive">{formatCurrency(stats.avgMonthlyExpense)}</p>
                   </div>
                   <div className="p-3 sm:p-4 rounded-xl bg-secondary/30 border border-border">
                     <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total de Transações</p>

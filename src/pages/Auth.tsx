@@ -12,16 +12,11 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
-  const {
-    signIn,
-    signUp,
-    user
-  } = useAuth();
+  const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
@@ -42,6 +37,20 @@ const Auth = () => {
 
     checkOnboardingStatus();
   }, [user, navigate]);
+
+  // Format phone number as user types
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    if (numbers.length <= 11) return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7)}`;
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhone(formatPhone(e.target.value));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -59,7 +68,6 @@ const Auth = () => {
             title: "Bem-vindo!",
             description: "Login realizado com sucesso."
           });
-          // Redirect happens via useEffect when user state updates
         }
       } else {
         if (!fullName.trim()) {
@@ -71,7 +79,11 @@ const Auth = () => {
           setLoading(false);
           return;
         }
-        const { error } = await signUp(email, password, fullName);
+        
+        // Clean phone number for storage (only digits)
+        const cleanPhone = phone.replace(/\D/g, "");
+        
+        const { error } = await signUp(email, password, fullName, cleanPhone);
         if (error) {
           toast({
             variant: "destructive",
@@ -83,14 +95,15 @@ const Auth = () => {
             title: "Conta criada!",
             description: "Verifique seu email para confirmar o cadastro."
           });
-          // New users will be redirected to onboarding via useEffect
         }
       }
     } finally {
       setLoading(false);
     }
   };
-  return <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-black p-4">
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-black p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-8">
@@ -118,34 +131,88 @@ const Auth = () => {
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && <div className="space-y-2">
-                  <Label htmlFor="fullName">Nome completo</Label>
-                  <Input id="fullName" type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Seu nome" className="bg-secondary/50 border-border/50" />
-                </div>}
+              {!isLogin && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName">Nome completo</Label>
+                    <Input 
+                      id="fullName" 
+                      type="text" 
+                      value={fullName} 
+                      onChange={e => setFullName(e.target.value)} 
+                      placeholder="Seu nome" 
+                      className="bg-secondary/50 border-border/50" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">WhatsApp (opcional)</Label>
+                    <Input 
+                      id="phone" 
+                      type="tel" 
+                      value={phone} 
+                      onChange={handlePhoneChange} 
+                      placeholder="(11) 99999-9999" 
+                      className="bg-secondary/50 border-border/50"
+                      maxLength={15}
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="ex@gmail.com" required className="bg-secondary/50 border-border/50" />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)} 
+                  placeholder="ex@gmail.com" 
+                  required 
+                  className="bg-secondary/50 border-border/50" 
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
-                <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} className="bg-secondary/50 border-border/50" />
+                <Input 
+                  id="password" 
+                  type="password" 
+                  value={password} 
+                  onChange={e => setPassword(e.target.value)} 
+                  placeholder="••••••••" 
+                  required 
+                  minLength={6} 
+                  className="bg-secondary/50 border-border/50" 
+                />
               </div>
 
-              <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-primary to-green-600 text-primary-foreground shadow-[0_8px_25px_rgba(34,197,94,0.5)] hover:shadow-[0_8px_30px_rgba(34,197,94,0.6)]">
+              <Button 
+                type="submit" 
+                disabled={loading} 
+                className="w-full bg-gradient-to-r from-primary to-green-600 text-primary-foreground shadow-[0_8px_25px_rgba(34,197,94,0.5)] hover:shadow-[0_8px_30px_rgba(34,197,94,0.6)]"
+              >
                 {loading ? "Carregando..." : isLogin ? "Entrar" : "Criar conta"}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <button 
+                type="button" 
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setPhone("");
+                  setFullName("");
+                }} 
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
                 {isLogin ? "Não tem conta? Criar agora" : "Já tem conta? Entrar"}
               </button>
             </div>
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Auth;
