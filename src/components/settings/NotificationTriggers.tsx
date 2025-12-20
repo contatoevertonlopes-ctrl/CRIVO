@@ -4,7 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Plus, Trash2, AlertTriangle, TrendingDown } from "lucide-react";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useAppMode } from "@/contexts/AppModeContext";
+import { 
+  Bell, Plus, Trash2, AlertTriangle, TrendingDown, 
+  Calendar, Send, Sparkles 
+} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -29,18 +34,59 @@ const categories = [
 
 const NotificationTriggers = () => {
   const { toast } = useToast();
+  const { mode } = useAppMode();
+  const { 
+    isSupported, 
+    permission, 
+    requestPermission, 
+    sendTestNotification 
+  } = usePushNotifications();
+  
   const [triggers, setTriggers] = useState<Trigger[]>([]);
+  const [sundaySummaryEnabled, setSundaySummaryEnabled] = useState(false);
+  const [isRequestingPermission, setIsRequestingPermission] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("notificationTriggers");
     if (saved) {
       setTriggers(JSON.parse(saved));
     }
+    
+    const sundaySummary = localStorage.getItem("sundaySummaryEnabled");
+    if (sundaySummary) {
+      setSundaySummaryEnabled(JSON.parse(sundaySummary));
+    }
   }, []);
 
   const saveTriggers = (updated: Trigger[]) => {
     setTriggers(updated);
     localStorage.setItem("notificationTriggers", JSON.stringify(updated));
+  };
+
+  const handleSundaySummaryToggle = async (enabled: boolean) => {
+    if (enabled && permission !== "granted") {
+      setIsRequestingPermission(true);
+      const granted = await requestPermission();
+      setIsRequestingPermission(false);
+      
+      if (!granted) {
+        return;
+      }
+    }
+    
+    setSundaySummaryEnabled(enabled);
+    localStorage.setItem("sundaySummaryEnabled", JSON.stringify(enabled));
+    
+    toast({
+      title: enabled ? "Resumo semanal ativado!" : "Resumo semanal desativado",
+      description: enabled 
+        ? "Você receberá um relatório todo domingo às 20h." 
+        : "Você não receberá mais o resumo semanal.",
+    });
+  };
+
+  const handleTestNotification = () => {
+    sendTestNotification(mode);
   };
 
   const addCategoryTrigger = () => {
@@ -94,6 +140,58 @@ const NotificationTriggers = () => {
 
   return (
     <div className="space-y-6">
+      {/* Sunday Summary Section */}
+      <div className="p-4 rounded-lg border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <Calendar className="w-5 h-5 text-primary" />
+              <h3 className="font-medium">Resumo de Domingo</h3>
+              <Sparkles className="w-4 h-4 text-amber-500" />
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              Receba um relatório emocional do seu progresso todo domingo às 20h.
+            </p>
+            
+            {mode === "survival" ? (
+              <p className="text-xs text-survival-primary/80 italic">
+                "Você resistiu! Suas reservas aumentaram em X dias. Estamos chegando lá. Bom descanso!"
+              </p>
+            ) : (
+              <p className="text-xs text-prosperity-primary/80 italic">
+                "Semana de crescimento! Você aportou R$ X rumo à sua liberdade financeira. Bom descanso!"
+              </p>
+            )}
+          </div>
+          
+          <Switch
+            checked={sundaySummaryEnabled}
+            onCheckedChange={handleSundaySummaryToggle}
+            disabled={isRequestingPermission || !isSupported}
+          />
+        </div>
+        
+        {sundaySummaryEnabled && permission === "granted" && (
+          <div className="mt-4 pt-4 border-t border-primary/20">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleTestNotification}
+              className="text-xs"
+            >
+              <Send className="w-3 h-3 mr-1" />
+              Enviar notificação de teste agora
+            </Button>
+          </div>
+        )}
+        
+        {!isSupported && (
+          <p className="text-xs text-destructive mt-2">
+            Seu navegador não suporta notificações push.
+          </p>
+        )}
+      </div>
+
       <div>
         <h3 className="text-sm font-medium mb-1 flex items-center gap-2">
           <Bell className="w-4 h-4 text-primary" />
