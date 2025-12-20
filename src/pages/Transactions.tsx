@@ -32,6 +32,7 @@ interface Transaction {
   recurring_interval?: string;
   paid_date?: string;
   tag?: string;
+  payment_method?: string;
 }
 
 const Transactions = () => {
@@ -76,6 +77,7 @@ const Transactions = () => {
     is_installment: false,
     installment_count: "2",
     installment_interval: "monthly",
+    payment_method: "",
   });
 
   useEffect(() => {
@@ -266,6 +268,7 @@ const Transactions = () => {
             is_recurring: false,
             recurring_interval: null,
             paid_date: i === 0 ? (formData.paid_date || null) : null,
+            payment_method: formData.payment_method || null,
           });
         }
 
@@ -286,6 +289,7 @@ const Transactions = () => {
           recurring_interval: formData.is_recurring ? formData.recurring_interval : null,
           tag: formData.tag || null,
           paid_date: formData.paid_date || null,
+          payment_method: formData.payment_method || null,
         });
 
         if (error) throw error;
@@ -318,6 +322,7 @@ const Transactions = () => {
           recurring_interval: formData.is_recurring ? formData.recurring_interval : null,
           paid_date: formData.paid_date || null,
           tag: formData.tag || null,
+          payment_method: formData.payment_method || null,
         })
         .eq("id", editingTransaction.id)
         .eq("user_id", user.id);
@@ -376,6 +381,7 @@ const Transactions = () => {
         tag: transaction.tag || null,
         is_recurring: transaction.is_recurring || false,
         recurring_interval: transaction.recurring_interval || null,
+        payment_method: transaction.payment_method || null,
       });
 
       if (error) throw error;
@@ -404,6 +410,7 @@ const Transactions = () => {
       is_installment: false,
       installment_count: "2",
       installment_interval: "monthly",
+      payment_method: transaction.payment_method || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -423,6 +430,7 @@ const Transactions = () => {
       is_installment: false,
       installment_count: "2",
       installment_interval: "monthly",
+      payment_method: "",
     });
   };
 

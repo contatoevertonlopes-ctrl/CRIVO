@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, RefreshCw, Lock, ListOrdered } from "lucide-react";
+import { Plus, RefreshCw, Lock, ListOrdered, CreditCard } from "lucide-react";
 import { addMonths, addWeeks, addDays } from "date-fns";
 
 interface AddTransactionDialogProps {
@@ -42,6 +42,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [paidDate, setPaidDate] = useState("");
   const [tag, setTag] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringInterval, setRecurringInterval] = useState("monthly");
   
@@ -91,10 +92,11 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             category,
             type,
             amount: installmentAmount,
-            status,
+            status: i === 0 ? status : "em_aberto",
             date: installmentDate.toISOString().split("T")[0],
             paid_date: i === 0 && paidDate ? paidDate : null,
             tag: tag || null,
+            payment_method: paymentMethod || null,
             is_recurring: false,
             recurring_interval: null,
           });
@@ -119,6 +121,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
           date,
           paid_date: paidDate || null,
           tag: tag || null,
+          payment_method: paymentMethod || null,
           is_recurring: subscribed ? isRecurring : false,
           recurring_interval: isRecurring ? recurringInterval : null,
         });
@@ -140,6 +143,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
       setDate(new Date().toISOString().split("T")[0]);
       setPaidDate("");
       setTag("");
+      setPaymentMethod("");
       setIsRecurring(false);
       setRecurringInterval("monthly");
       setIsInstallment(false);
@@ -280,6 +284,26 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
                 className="bg-secondary/50 border-border/50"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="paymentMethod" className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4" />
+              Forma de Pagamento
+            </Label>
+            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+              <SelectTrigger className="bg-secondary/50 border-border/50">
+                <SelectValue placeholder="Selecione a forma (opcional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pix">PIX</SelectItem>
+                <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
+                <SelectItem value="debit_card">Cartão de Débito</SelectItem>
+                <SelectItem value="cash">Dinheiro</SelectItem>
+                <SelectItem value="bank_transfer">Transferência Bancária</SelectItem>
+                <SelectItem value="boleto">Boleto</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
