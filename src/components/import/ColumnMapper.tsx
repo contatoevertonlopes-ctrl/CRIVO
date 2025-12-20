@@ -94,13 +94,13 @@ const ColumnMapper = ({ headers, mapping, onMappingChange, onApply }: ColumnMapp
           <>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Crédito</Label>
-              <Select value={mapping.credit} onValueChange={(v) => updateMapping("credit", v)}>
+              <Select value={mapping.credit || "__none__"} onValueChange={(v) => updateMapping("credit", v === "__none__" ? "" : v)}>
                 <SelectTrigger className="h-9 text-xs">
                   <SelectValue placeholder="Coluna de crédito" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="" className="text-xs text-muted-foreground">Nenhum</SelectItem>
-                  {headers.map((h) => (
+                  <SelectItem value="__none__" className="text-xs text-muted-foreground">Nenhum</SelectItem>
+                  {headers.filter(h => h && h.trim()).map((h) => (
                     <SelectItem key={h} value={h} className="text-xs">{h}</SelectItem>
                   ))}
                 </SelectContent>
@@ -108,13 +108,13 @@ const ColumnMapper = ({ headers, mapping, onMappingChange, onApply }: ColumnMapp
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Débito</Label>
-              <Select value={mapping.debit} onValueChange={(v) => updateMapping("debit", v)}>
+              <Select value={mapping.debit || "__none__"} onValueChange={(v) => updateMapping("debit", v === "__none__" ? "" : v)}>
                 <SelectTrigger className="h-9 text-xs">
                   <SelectValue placeholder="Coluna de débito" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="" className="text-xs text-muted-foreground">Nenhum</SelectItem>
-                  {headers.map((h) => (
+                  <SelectItem value="__none__" className="text-xs text-muted-foreground">Nenhum</SelectItem>
+                  {headers.filter(h => h && h.trim()).map((h) => (
                     <SelectItem key={h} value={h} className="text-xs">{h}</SelectItem>
                   ))}
                 </SelectContent>
@@ -126,13 +126,13 @@ const ColumnMapper = ({ headers, mapping, onMappingChange, onApply }: ColumnMapp
         {/* Category Column */}
         <div className="space-y-1.5">
           <Label className="text-xs text-muted-foreground">Categoria (opcional)</Label>
-          <Select value={mapping.category || ""} onValueChange={(v) => updateMapping("category", v)}>
+          <Select value={mapping.category || "__none__"} onValueChange={(v) => updateMapping("category", v === "__none__" ? "" : v)}>
             <SelectTrigger className="h-9 text-xs">
               <SelectValue placeholder="Auto-categorizar" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="" className="text-xs text-muted-foreground">Auto-categorizar</SelectItem>
-              {headers.map((h) => (
+              <SelectItem value="__none__" className="text-xs text-muted-foreground">Auto-categorizar</SelectItem>
+              {headers.filter(h => h && h.trim()).map((h) => (
                 <SelectItem key={h} value={h} className="text-xs">{h}</SelectItem>
               ))}
             </SelectContent>

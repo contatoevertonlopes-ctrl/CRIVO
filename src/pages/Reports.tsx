@@ -78,17 +78,14 @@ const Reports = () => {
         current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
       }
     } else {
-      // Find the most recent transaction date and generate months backwards from there
-      const sortedDates = paidTransactions
-        .map(t => t.date)
-        .sort((a, b) => b.localeCompare(a)); // Descending order
+      // Use today's date as reference point and generate months backwards
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth(); // 0-indexed
       
-      const mostRecentDate = sortedDates[0];
-      const [year, month] = mostRecentDate.split('-').map(Number);
-      
-      // Generate months backwards from the most recent transaction month
+      // Generate months backwards from the current month
       for (let i = monthsCount - 1; i >= 0; i--) {
-        const date = new Date(year, month - 1 - i, 1);
+        const date = new Date(currentYear, currentMonth - i, 1);
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         monthKeys.push(key);
       }
