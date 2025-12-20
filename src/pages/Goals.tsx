@@ -48,9 +48,17 @@ const Goals = () => {
     icon: string;
     target_amount: number;
     deadline: string | null;
-  }) => {
+    template_type?: string;
+    car_value?: number;
+    event_date?: string | null;
+  }, templateItems?: { title: string; category: string; estimated_amount: number }[]) => {
     if (editingGoal) {
-      const success = await updateGoal(editingGoal.id, data);
+      const success = await updateGoal(editingGoal.id, {
+        title: data.title,
+        icon: data.icon,
+        target_amount: data.target_amount,
+        deadline: data.deadline,
+      });
       if (success) {
         toast.success("Objetivo atualizado!");
         setEditingGoal(null);
@@ -63,9 +71,12 @@ const Goals = () => {
         household_id: null,
         status: "active",
         color: "primary",
-      });
+      }, templateItems);
       if (result) {
         toast.success("Objetivo criado com sucesso!");
+        if (templateItems && templateItems.length > 0) {
+          toast.info(`${templateItems.length} itens foram adicionados ao checklist`);
+        }
       } else {
         toast.error("Erro ao criar objetivo");
       }

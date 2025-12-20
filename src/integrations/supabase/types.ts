@@ -16,31 +16,43 @@ export type Database = {
     Tables: {
       goal_items: {
         Row: {
+          category: string | null
           created_at: string
+          due_date: string | null
           estimated_amount: number
           goal_id: string
           id: string
           is_paid: boolean
+          pix_key: string | null
+          supplier: string | null
           title: string
           transaction_id: string | null
           updated_at: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
+          due_date?: string | null
           estimated_amount?: number
           goal_id: string
           id?: string
           is_paid?: boolean
+          pix_key?: string | null
+          supplier?: string | null
           title: string
           transaction_id?: string | null
           updated_at?: string
         }
         Update: {
+          category?: string | null
           created_at?: string
+          due_date?: string | null
           estimated_amount?: number
           goal_id?: string
           id?: string
           is_paid?: boolean
+          pix_key?: string | null
+          supplier?: string | null
           title?: string
           transaction_id?: string | null
           updated_at?: string
@@ -64,40 +76,49 @@ export type Database = {
       }
       goals: {
         Row: {
+          car_value: number | null
           color: string | null
           created_at: string
           deadline: string | null
+          event_date: string | null
           household_id: string | null
           icon: string
           id: string
           status: string
           target_amount: number
+          template_type: string | null
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          car_value?: number | null
           color?: string | null
           created_at?: string
           deadline?: string | null
+          event_date?: string | null
           household_id?: string | null
           icon?: string
           id?: string
           status?: string
           target_amount?: number
+          template_type?: string | null
           title: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          car_value?: number | null
           color?: string | null
           created_at?: string
           deadline?: string | null
+          event_date?: string | null
           household_id?: string | null
           icon?: string
           id?: string
           status?: string
           target_amount?: number
+          template_type?: string | null
           title?: string
           updated_at?: string
           user_id?: string

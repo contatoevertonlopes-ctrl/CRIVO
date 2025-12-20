@@ -27,6 +27,10 @@ export interface GoalItem {
   estimated_amount: number;
   transaction_id: string | null;
   is_paid: boolean;
+  supplier?: string | null;
+  pix_key?: string | null;
+  due_date?: string | null;
+  category?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -94,7 +98,14 @@ export const useGoals = () => {
     }
   }, [user]);
 
-  const createGoal = async (goal: Omit<Goal, "id" | "created_at" | "updated_at" | "user_id">) => {
+  const createGoal = async (
+    goal: Omit<Goal, "id" | "created_at" | "updated_at" | "user_id"> & {
+      template_type?: string;
+      car_value?: number;
+      event_date?: string | null;
+    },
+    templateItems?: { title: string; category: string; estimated_amount: number }[]
+  ) => {
     if (!user) return null;
 
     try {
@@ -109,6 +120,26 @@ export const useGoals = () => {
         .single();
 
       if (error) throw error;
+
+      // If template items are provided, create them
+      if (templateItems && templateItems.length > 0 && data) {
+        const items = templateItems.map(item => ({
+          goal_id: data.id,
+          title: item.title,
+          category: item.category,
+          estimated_amount: item.estimated_amount,
+          is_paid: false,
+        }));
+
+        const { error: itemsError } = await supabase
+          .from("goal_items")
+          .insert(items);
+
+        if (itemsError) {
+          console.error("Error creating template items:", itemsError);
+        }
+      }
+
       await fetchGoals();
       return data;
     } catch (error) {
