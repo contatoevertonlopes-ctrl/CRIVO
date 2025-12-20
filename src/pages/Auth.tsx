@@ -34,7 +34,7 @@ const Auth = () => {
         .maybeSingle();
 
       if (profile?.onboarding_completed) {
-        navigate("/");
+        navigate("/dashboard");
       } else {
         navigate("/onboarding");
       }
