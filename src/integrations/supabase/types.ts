@@ -14,6 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
+      goal_items: {
+        Row: {
+          created_at: string
+          estimated_amount: number
+          goal_id: string
+          id: string
+          is_paid: boolean
+          title: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estimated_amount?: number
+          goal_id: string
+          id?: string
+          is_paid?: boolean
+          title: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estimated_amount?: number
+          goal_id?: string
+          id?: string
+          is_paid?: boolean
+          title?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_items_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goal_items_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goals: {
+        Row: {
+          color: string | null
+          created_at: string
+          deadline: string | null
+          household_id: string | null
+          icon: string
+          id: string
+          status: string
+          target_amount: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          deadline?: string | null
+          household_id?: string | null
+          icon?: string
+          id?: string
+          status?: string
+          target_amount?: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          deadline?: string | null
+          household_id?: string | null
+          icon?: string
+          id?: string
+          status?: string
+          target_amount?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goals_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       household_invites: {
         Row: {
           created_at: string
@@ -169,6 +267,7 @@ export type Database = {
           created_at: string
           date: string
           description: string
+          goal_id: string | null
           household_id: string | null
           id: string
           is_recurring: boolean | null
@@ -188,6 +287,7 @@ export type Database = {
           created_at?: string
           date?: string
           description: string
+          goal_id?: string | null
           household_id?: string | null
           id?: string
           is_recurring?: boolean | null
@@ -207,6 +307,7 @@ export type Database = {
           created_at?: string
           date?: string
           description?: string
+          goal_id?: string | null
           household_id?: string | null
           id?: string
           is_recurring?: boolean | null
@@ -221,6 +322,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "transactions_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "transactions_household_id_fkey"
             columns: ["household_id"]

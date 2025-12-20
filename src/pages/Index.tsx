@@ -11,10 +11,12 @@ import PlansCard from "@/components/PlansCard";
 import TransactionsTable from "@/components/TransactionsTable";
 import SurvivalWidget from "@/components/SurvivalWidget";
 import ProsperityWidget from "@/components/ProsperityWidget";
+import GoalWidget from "@/components/goals/GoalWidget";
 import { QuickAddInput } from "@/components/QuickAddInput";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdaptiveModeData } from "@/hooks/useAdaptiveModeData";
 import { differenceInDays } from "date-fns";
+import { Wallet, TrendingUp, TrendingDown, Clock } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -199,6 +201,7 @@ const Index = () => {
             <CashflowChart data={cashflowData} />
             
             <div className="flex flex-col gap-4">
+              <GoalWidget />
               <ExpenseChart data={expensesByCategory} period={period} />
               <PlansCard />
             </div>
