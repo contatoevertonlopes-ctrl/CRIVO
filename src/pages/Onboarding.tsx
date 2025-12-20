@@ -39,7 +39,7 @@ const Onboarding = () => {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/auth");
+      navigate("/auth", { replace: true });
     }
   }, [user, authLoading, navigate]);
 
@@ -54,7 +54,7 @@ const Onboarding = () => {
         .maybeSingle();
 
       if (profile?.onboarding_completed) {
-        navigate("/dashboard");
+        navigate("/", { replace: true });
       }
     };
 
@@ -129,7 +129,7 @@ const Onboarding = () => {
         description: "Seu dashboard foi personalizado com sucesso.",
       });
 
-      navigate("/dashboard");
+      navigate("/", { replace: true });
     } catch (error) {
       console.error("Error saving onboarding:", error);
       toast({

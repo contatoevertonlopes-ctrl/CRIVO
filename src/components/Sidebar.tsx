@@ -15,7 +15,7 @@ const Sidebar = () => {
   const { collapsed, toggle } = useSidebarContext();
 
   const navItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+    { icon: LayoutDashboard, label: "Dashboard", path: "/" },
     { icon: ArrowRightLeft, label: "Transações", path: "/transactions" },
     { icon: BarChart3, label: "Relatórios", path: "/reports" },
     { icon: Settings, label: "Configurações", path: "/settings" },
@@ -99,7 +99,7 @@ const Sidebar = () => {
             "flex items-center gap-2 cursor-pointer py-2",
             collapsed && "justify-center"
           )}
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate("/")}
         >
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary via-primary to-green-900 flex items-center justify-center font-bold text-sm shadow-lg shrink-0">
             CF
