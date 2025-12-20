@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Sparkles, Check, X, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Sparkles, Check, X, Loader2, Target } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,12 +7,19 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useHouseholdId } from "@/hooks/useHouseholdId";
 
+interface Goal {
+  id: string;
+  title: string;
+}
+
 interface ParsedTransaction {
   amount: number;
   description: string;
   type: "income" | "expense";
   date: Date;
   category: string;
+  goalId?: string;
+  goalTitle?: string;
 }
 
 const CATEGORY_KEYWORDS: Record<string, string[]> = {
@@ -37,7 +44,19 @@ const detectCategory = (text: string): string => {
   return "Outros";
 };
 
-const parseQuickText = (text: string): ParsedTransaction | null => {
+const detectGoal = (text: string, goals: Goal[]): { goalId: string; goalTitle: string } | null => {
+  const lowerText = text.toLowerCase();
+  for (const goal of goals) {
+    const goalWords = goal.title.toLowerCase().split(/\s+/);
+    // Check if any word from the goal title appears in the text
+    if (goalWords.some(word => word.length > 2 && lowerText.includes(word))) {
+      return { goalId: goal.id, goalTitle: goal.title };
+    }
+  }
+  return null;
+};
+
+const parseQuickText = (text: string, goals: Goal[]): ParsedTransaction | null => {
   // Extract amount: looks for numbers with optional decimal
   const amountMatch = text.match(/(?:R\$\s?)?(\d+(?:[.,]\d{1,2})?)/i);
   if (!amountMatch) return null;
@@ -69,12 +88,17 @@ const parseQuickText = (text: string): ParsedTransaction | null => {
   // Detect category
   const category = detectCategory(text);
 
+  // Detect goal
+  const goalMatch = detectGoal(text, goals);
+
   return {
     amount,
     description: description || "Transação rápida",
     type: isIncome ? "income" : "expense",
     date,
     category,
+    goalId: goalMatch?.goalId,
+    goalTitle: goalMatch?.goalTitle,
   };
 };
 
@@ -88,14 +112,28 @@ export const QuickAddInput = ({ onTransactionAdded, onFallbackToForm }: QuickAdd
   const [parsed, setParsed] = useState<ParsedTransaction | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
   const { householdId } = useHouseholdId();
 
+  // Fetch active goals for intelligent linking
+  useEffect(() => {
+    const fetchGoals = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("goals")
+        .select("id, title")
+        .eq("status", "active");
+      if (data) setGoals(data);
+    };
+    fetchGoals();
+  }, [user]);
+
   const handleInputChange = (value: string) => {
     setInputValue(value);
     if (value.trim()) {
-      const result = parseQuickText(value);
+      const result = parseQuickText(value, goals);
       setParsed(result);
     } else {
       setParsed(null);
@@ -137,13 +175,14 @@ export const QuickAddInput = ({ onTransactionAdded, onFallbackToForm }: QuickAdd
         category: parsed.category,
         status: "em_aberto",
         date: parsed.date.toISOString().split("T")[0],
+        goal_id: parsed.goalId || null,
       });
 
       if (error) throw error;
 
       toast({
         title: "Transação lançada!",
-        description: `${parsed.type === "income" ? "+" : "-"}R$ ${parsed.amount.toFixed(2)} em ${parsed.description}`,
+        description: `${parsed.type === "income" ? "+" : "-"}R$ ${parsed.amount.toFixed(2)} em ${parsed.description}${parsed.goalTitle ? ` • Vinculado a "${parsed.goalTitle}"` : ""}`,
       });
 
       setInputValue("");
@@ -204,6 +243,12 @@ export const QuickAddInput = ({ onTransactionAdded, onFallbackToForm }: QuickAdd
               <p className="text-xs text-muted-foreground">
                 {parsed.category} • {formatDate(parsed.date)}
               </p>
+              {parsed.goalTitle && (
+                <p className="text-xs text-primary flex items-center gap-1 mt-1">
+                  <Target className="h-3 w-3" />
+                  Vinculado a "{parsed.goalTitle}"
+                </p>
+              )}
             </div>
             <div className="flex gap-2">
               <Button
