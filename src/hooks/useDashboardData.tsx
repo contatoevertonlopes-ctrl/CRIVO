@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useSharedHousehold } from "@/hooks/useSharedHousehold";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Transaction {
@@ -10,6 +11,7 @@ interface Transaction {
   type: "income" | "expense";
   amount: number;
   status: string;
+  user_id?: string;
 }
 
 interface DashboardMetrics {
@@ -36,6 +38,7 @@ interface CategoryData {
 
 export const useDashboardData = (period: number = 30) => {
   const { user } = useAuth();
+  const { isShared, householdId, loading: householdLoading } = useSharedHousehold();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     currentBalance: 0,
@@ -51,7 +54,7 @@ export const useDashboardData = (period: number = 30) => {
   const [expensesByCategory, setExpensesByCategory] = useState<CategoryData[]>([]);
 
   const fetchDashboardData = useCallback(async () => {
-    if (!user) {
+    if (!user || householdLoading) {
       setLoading(false);
       return;
     }
@@ -65,11 +68,20 @@ export const useDashboardData = (period: number = 30) => {
       const previousPeriodEnd = new Date(now.getTime() - period * 24 * 60 * 60 * 1000);
       const futureDate = new Date(now.getTime() + period * 24 * 60 * 60 * 1000);
 
-      // Fetch all transactions - RLS handles household filtering
-      const { data: transactions, error } = await supabase
+      let query = supabase
         .from("transactions")
         .select("*")
         .order("date", { ascending: false });
+
+      // If NOT in a shared household, only fetch user's own transactions
+      if (!isShared) {
+        query = query.eq("user_id", user.id);
+      } else if (householdId) {
+        // If in a shared household, fetch all household transactions
+        query = query.eq("household_id", householdId);
+      }
+
+      const { data: transactions, error } = await query;
 
       if (error) throw error;
 
@@ -218,7 +230,7 @@ export const useDashboardData = (period: number = 30) => {
     } finally {
       setLoading(false);
     }
-  }, [user, period]);
+  }, [user, period, isShared, householdId, householdLoading]);
 
   useEffect(() => {
     fetchDashboardData();
