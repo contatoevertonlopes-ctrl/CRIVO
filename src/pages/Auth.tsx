@@ -34,9 +34,9 @@ const Auth = () => {
         .maybeSingle();
 
       if (profile?.onboarding_completed) {
-        navigate("/dashboard");
+        navigate("/", { replace: true });
       } else {
-        navigate("/onboarding");
+        navigate("/onboarding", { replace: true });
       }
     };
 
@@ -47,9 +47,7 @@ const Auth = () => {
     setLoading(true);
     try {
       if (isLogin) {
-        const {
-          error
-        } = await signIn(email, password);
+        const { error } = await signIn(email, password);
         if (error) {
           toast({
             variant: "destructive",
@@ -61,7 +59,7 @@ const Auth = () => {
             title: "Bem-vindo!",
             description: "Login realizado com sucesso."
           });
-          navigate("/");
+          // Redirect happens via useEffect when user state updates
         }
       } else {
         if (!fullName.trim()) {
@@ -73,9 +71,7 @@ const Auth = () => {
           setLoading(false);
           return;
         }
-        const {
-          error
-        } = await signUp(email, password, fullName);
+        const { error } = await signUp(email, password, fullName);
         if (error) {
           toast({
             variant: "destructive",
@@ -87,6 +83,7 @@ const Auth = () => {
             title: "Conta criada!",
             description: "Verifique seu email para confirmar o cadastro."
           });
+          // New users will be redirected to onboarding via useEffect
         }
       }
     } finally {

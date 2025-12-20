@@ -40,7 +40,7 @@ const Success = () => {
   }, [checkSubscription]);
 
   const handleGoToDashboard = () => {
-    navigate("/dashboard");
+    navigate("/");
   };
 
   if (!showContent) {

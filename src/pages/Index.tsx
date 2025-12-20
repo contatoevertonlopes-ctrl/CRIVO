@@ -27,7 +27,7 @@ const Index = () => {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate("/auth");
+      navigate("/auth", { replace: true });
       return;
     }
 
@@ -41,7 +41,7 @@ const Index = () => {
         .maybeSingle();
 
       if (!profile?.onboarding_completed) {
-        navigate("/onboarding");
+        navigate("/onboarding", { replace: true });
         return;
       }
 

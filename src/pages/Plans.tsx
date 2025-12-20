@@ -38,7 +38,7 @@ const Plans = () => {
       return;
     }
     if (plan === "free") {
-      navigate("/dashboard");
+      navigate("/");
       return;
     }
     
@@ -302,7 +302,7 @@ const Plans = () => {
         {/* Back link */}
         <div className="text-center">
           <button 
-            onClick={() => navigate(user ? "/dashboard" : "/")} 
+            onClick={() => navigate(user ? "/" : "/landing")} 
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             ← {user ? "Voltar para o dashboard" : "Voltar para o início"}
