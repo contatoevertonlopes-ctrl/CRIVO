@@ -46,47 +46,44 @@ export const useGoals = () => {
 
     setLoading(true);
     try {
-      // Fetch goals
+      // Fetch goals with items in a single query using relations
       const { data: goalsData, error: goalsError } = await supabase
         .from("goals")
-        .select("*")
+        .select(`
+          *,
+          goal_items (id, is_paid, estimated_amount),
+          transactions!transactions_goal_id_fkey (amount, type, status)
+        `)
         .order("created_at", { ascending: false });
 
       if (goalsError) throw goalsError;
 
-      // For each goal, calculate current_amount from linked transactions and items
-      const goalsWithAmounts = await Promise.all(
-        (goalsData || []).map(async (goal) => {
-          // Get transactions linked to this goal
-          const { data: transactions } = await supabase
-            .from("transactions")
-            .select("amount, type")
-            .eq("goal_id", goal.id)
-            .eq("status", "pagamento_concluido");
+      // Process goals with aggregated amounts
+      const goalsWithAmounts = (goalsData || []).map((goal: any) => {
+        const transactions = goal.transactions || [];
+        const items = goal.goal_items || [];
 
-          const transactionTotal = (transactions || []).reduce((sum, t) => {
-            return sum + (t.type === "expense" ? t.amount : 0);
-          }, 0);
+        // Sum completed expense transactions linked to this goal
+        const transactionTotal = transactions
+          .filter((t: any) => t.status === "pagamento_concluido" && t.type === "expense")
+          .reduce((sum: number, t: any) => sum + Number(t.amount), 0);
 
-          // Get goal items
-          const { data: items } = await supabase
-            .from("goal_items")
-            .select("*")
-            .eq("goal_id", goal.id);
+        // Sum paid items
+        const itemsPaid = items.filter((i: any) => i.is_paid).length;
+        const itemsPaidAmount = items
+          .filter((i: any) => i.is_paid)
+          .reduce((sum: number, i: any) => sum + Number(i.estimated_amount), 0);
 
-          const itemsPaid = (items || []).filter((i) => i.is_paid).length;
-          const itemsPaidAmount = (items || [])
-            .filter((i) => i.is_paid)
-            .reduce((sum, i) => sum + i.estimated_amount, 0);
+        // Clean up the response object
+        const { goal_items, transactions: _, ...cleanGoal } = goal;
 
-          return {
-            ...goal,
-            current_amount: transactionTotal + itemsPaidAmount,
-            items_count: items?.length || 0,
-            items_paid: itemsPaid,
-          };
-        })
-      );
+        return {
+          ...cleanGoal,
+          current_amount: transactionTotal + itemsPaidAmount,
+          items_count: items.length,
+          items_paid: itemsPaid,
+        };
+      });
 
       setGoals(goalsWithAmounts);
     } catch (error) {
