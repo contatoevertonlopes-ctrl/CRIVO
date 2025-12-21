@@ -14,6 +14,215 @@ export type Database = {
   }
   public: {
     Tables: {
+      card_bills: {
+        Row: {
+          billing_month: string
+          card_id: string
+          closed_at: string | null
+          created_at: string
+          due_date: string
+          household_id: string | null
+          id: string
+          paid_at: string | null
+          status: string
+          total_amount: number
+          transaction_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          billing_month: string
+          card_id: string
+          closed_at?: string | null
+          created_at?: string
+          due_date: string
+          household_id?: string | null
+          id?: string
+          paid_at?: string | null
+          status?: string
+          total_amount?: number
+          transaction_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          billing_month?: string
+          card_id?: string
+          closed_at?: string | null
+          created_at?: string
+          due_date?: string
+          household_id?: string | null
+          id?: string
+          paid_at?: string | null
+          status?: string
+          total_amount?: number
+          transaction_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_bills_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_bills_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_bills_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      card_transactions: {
+        Row: {
+          amount: number
+          billing_month: string
+          card_id: string
+          created_at: string
+          description: string
+          household_id: string | null
+          id: string
+          installment_number: number
+          is_paid: boolean
+          parent_card_transaction_id: string | null
+          purchase_date: string
+          total_installments: number
+          transaction_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          billing_month: string
+          card_id: string
+          created_at?: string
+          description: string
+          household_id?: string | null
+          id?: string
+          installment_number?: number
+          is_paid?: boolean
+          parent_card_transaction_id?: string | null
+          purchase_date?: string
+          total_installments?: number
+          transaction_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          billing_month?: string
+          card_id?: string
+          created_at?: string
+          description?: string
+          household_id?: string | null
+          id?: string
+          installment_number?: number
+          is_paid?: boolean
+          parent_card_transaction_id?: string | null
+          purchase_date?: string
+          total_installments?: number
+          transaction_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_transactions_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_transactions_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_transactions_parent_card_transaction_id_fkey"
+            columns: ["parent_card_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "card_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_transactions_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cards: {
+        Row: {
+          brand: string | null
+          closing_day: number
+          color: string | null
+          created_at: string
+          credit_limit: number
+          due_day: number
+          household_id: string | null
+          id: string
+          is_active: boolean
+          last_four_digits: string | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          closing_day: number
+          color?: string | null
+          created_at?: string
+          credit_limit?: number
+          due_day: number
+          household_id?: string | null
+          id?: string
+          is_active?: boolean
+          last_four_digits?: string | null
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand?: string | null
+          closing_day?: number
+          color?: string | null
+          created_at?: string
+          credit_limit?: number
+          due_day?: number
+          household_id?: string | null
+          id?: string
+          is_active?: boolean
+          last_four_digits?: string | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cards_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goal_items: {
         Row: {
           category: string | null
@@ -395,6 +604,10 @@ export type Database = {
       accept_household_invite: {
         Args: { p_invite_code: string }
         Returns: Json
+      }
+      calculate_billing_month: {
+        Args: { p_closing_day: number; p_purchase_date: string }
+        Returns: string
       }
       has_role: {
         Args: {

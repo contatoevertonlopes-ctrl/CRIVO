@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useSidebarContext } from "@/contexts/SidebarContext";
-import { LayoutDashboard, ArrowRightLeft, BarChart3, Settings, Crown, Shield, Sparkles, Menu, X, Target } from "lucide-react";
+import { LayoutDashboard, ArrowRightLeft, BarChart3, Settings, Crown, Shield, Sparkles, Menu, X, Target, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AppLogo from "./AppLogo";
 
@@ -18,6 +18,7 @@ const Sidebar = () => {
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/" },
     { icon: ArrowRightLeft, label: "Transações", path: "/transactions" },
+    { icon: CreditCard, label: "Cartões", path: "/cards" },
     { icon: Target, label: "Objetivos", path: "/goals" },
     { icon: BarChart3, label: "Relatórios", path: "/reports" },
     { icon: Settings, label: "Configurações", path: "/settings" },
