@@ -26,11 +26,13 @@ export const useSharedHousehold = () => {
 
     try {
       // Get user's household_id from profile
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("household_id")
         .eq("user_id", user.id)
         .maybeSingle();
+
+      console.log("[useSharedHousehold] User:", user.id, "Profile:", profile, "Error:", profileError);
 
       if (!profile?.household_id) {
         setState({ isShared: false, memberCount: 1, householdId: null, loading: false });
@@ -42,6 +44,8 @@ export const useSharedHousehold = () => {
         .from("profiles")
         .select("*", { count: "exact", head: true })
         .eq("household_id", profile.household_id);
+
+      console.log("[useSharedHousehold] Household:", profile.household_id, "Member count:", count, "Error:", error);
 
       if (error) throw error;
 
