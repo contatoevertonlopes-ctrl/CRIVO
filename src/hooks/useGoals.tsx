@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useMemo, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
-import { useHouseholdId } from "./useHouseholdId";
+import { useHouseholdContext } from "./useHouseholdContext";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Goal {
@@ -35,22 +36,32 @@ export interface GoalItem {
   updated_at: string;
 }
 
+// Query key factory for consistent cache keys
+export const goalKeys = {
+  all: ["goals"] as const,
+  list: (userId: string | undefined) => [...goalKeys.all, "list", userId] as const,
+  items: (goalId: string | null) => [...goalKeys.all, "items", goalId] as const,
+};
+
+/**
+ * Centralized hook for fetching goals with React Query caching.
+ * - Caches goals for 5 minutes (staleTime)
+ * - Keeps cache for 30 minutes (gcTime)
+ * - Provides invalidation method for mutations
+ */
 export const useGoals = () => {
   const { user } = useAuth();
-  const { householdId } = useHouseholdId();
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { householdId, loading: householdLoading } = useHouseholdContext();
+  const queryClient = useQueryClient();
 
-  const fetchGoals = useCallback(async () => {
-    if (!user) {
-      setGoals([]);
-      setLoading(false);
-      return;
-    }
+  const queryKey = goalKeys.list(user?.id);
 
-    setLoading(true);
-    try {
-      // Fetch goals with items in a single query using relations
+  // Fetch goals
+  const goalsQuery = useQuery({
+    queryKey,
+    queryFn: async (): Promise<Goal[]> => {
+      if (!user) return [];
+
       const { data: goalsData, error: goalsError } = await supabase
         .from("goals")
         .select(`
@@ -63,22 +74,19 @@ export const useGoals = () => {
       if (goalsError) throw goalsError;
 
       // Process goals with aggregated amounts
-      const goalsWithAmounts = (goalsData || []).map((goal: any) => {
+      return (goalsData || []).map((goal: any) => {
         const transactions = goal.transactions || [];
         const items = goal.goal_items || [];
 
-        // Sum completed expense transactions linked to this goal
         const transactionTotal = transactions
           .filter((t: any) => t.status === "pagamento_concluido" && t.type === "expense")
           .reduce((sum: number, t: any) => sum + Number(t.amount), 0);
 
-        // Sum paid items
         const itemsPaid = items.filter((i: any) => i.is_paid).length;
         const itemsPaidAmount = items
           .filter((i: any) => i.is_paid)
           .reduce((sum: number, i: any) => sum + Number(i.estimated_amount), 0);
 
-        // Clean up the response object
         const { goal_items, transactions: _, ...cleanGoal } = goal;
 
         return {
@@ -88,27 +96,33 @@ export const useGoals = () => {
           items_paid: itemsPaid,
         };
       });
-
-      setGoals(goalsWithAmounts);
-    } catch (error) {
-      console.error("Error fetching goals:", error);
-      setGoals([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  const createGoal = async (
-    goal: Omit<Goal, "id" | "created_at" | "updated_at" | "user_id"> & {
-      template_type?: string;
-      car_value?: number;
-      event_date?: string | null;
     },
-    templateItems?: { title: string; category: string; estimated_amount: number }[]
-  ) => {
-    if (!user) return null;
+    enabled: !!user && !householdLoading,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
 
-    try {
+  // Invalidate cache
+  const invalidateGoals = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: goalKeys.all });
+  }, [queryClient]);
+
+  // Create goal mutation
+  const createGoalMutation = useMutation({
+    mutationFn: async ({
+      goal,
+      templateItems,
+    }: {
+      goal: Omit<Goal, "id" | "created_at" | "updated_at" | "user_id"> & {
+        template_type?: string;
+        car_value?: number;
+        event_date?: string | null;
+      };
+      templateItems?: { title: string; category: string; estimated_amount: number }[];
+    }) => {
+      if (!user) throw new Error("User not authenticated");
+
       const { data, error } = await supabase
         .from("goals")
         .insert({
@@ -121,9 +135,8 @@ export const useGoals = () => {
 
       if (error) throw error;
 
-      // If template items are provided, create them
       if (templateItems && templateItems.length > 0 && data) {
-        const items = templateItems.map(item => ({
+        const items = templateItems.map((item) => ({
           goal_id: data.id,
           title: item.title,
           category: item.category,
@@ -131,82 +144,116 @@ export const useGoals = () => {
           is_paid: false,
         }));
 
-        const { error: itemsError } = await supabase
-          .from("goal_items")
-          .insert(items);
+        const { error: itemsError } = await supabase.from("goal_items").insert(items);
 
         if (itemsError) {
           console.error("Error creating template items:", itemsError);
         }
       }
 
-      await fetchGoals();
       return data;
-    } catch (error) {
+    },
+    onSuccess: () => {
+      invalidateGoals();
+    },
+    onError: (error) => {
       console.error("Error creating goal:", error);
+    },
+  });
+
+  // Update goal mutation
+  const updateGoalMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Goal> }) => {
+      const { error } = await supabase.from("goals").update(updates).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidateGoals();
+    },
+    onError: (error) => {
+      console.error("Error updating goal:", error);
+    },
+  });
+
+  // Delete goal mutation
+  const deleteGoalMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("goals").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidateGoals();
+    },
+    onError: (error) => {
+      console.error("Error deleting goal:", error);
+    },
+  });
+
+  // Wrapper functions for backward compatibility
+  const createGoal = async (
+    goal: Omit<Goal, "id" | "created_at" | "updated_at" | "user_id"> & {
+      template_type?: string;
+      car_value?: number;
+      event_date?: string | null;
+    },
+    templateItems?: { title: string; category: string; estimated_amount: number }[]
+  ) => {
+    try {
+      return await createGoalMutation.mutateAsync({ goal, templateItems });
+    } catch {
       return null;
     }
   };
 
   const updateGoal = async (id: string, updates: Partial<Goal>) => {
     try {
-      const { error } = await supabase
-        .from("goals")
-        .update(updates)
-        .eq("id", id);
-
-      if (error) throw error;
-      await fetchGoals();
+      await updateGoalMutation.mutateAsync({ id, updates });
       return true;
-    } catch (error) {
-      console.error("Error updating goal:", error);
+    } catch {
       return false;
     }
   };
 
   const deleteGoal = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from("goals")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
-      await fetchGoals();
+      await deleteGoalMutation.mutateAsync(id);
       return true;
-    } catch (error) {
-      console.error("Error deleting goal:", error);
+    } catch {
       return false;
     }
   };
 
-  useEffect(() => {
-    fetchGoals();
-  }, [fetchGoals]);
+  const loading = goalsQuery.isLoading || householdLoading;
+  const fetchGoals = invalidateGoals;
 
   return {
-    goals,
+    goals: goalsQuery.data || [],
     loading,
     fetchGoals,
     createGoal,
     updateGoal,
     deleteGoal,
+    invalidateGoals,
+    isLoading: loading,
+    isFetching: goalsQuery.isFetching,
+    error: goalsQuery.error,
   };
 };
 
+/**
+ * Hook for fetching goal items with React Query caching.
+ */
 export const useGoalItems = (goalId: string | null) => {
-  const [items, setItems] = useState<GoalItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchItems = useCallback(async () => {
-    if (!goalId) {
-      setItems([]);
-      setLoading(false);
-      return;
-    }
+  const queryKey = goalKeys.items(goalId);
 
-    setLoading(true);
-    try {
+  // Fetch items
+  const itemsQuery = useQuery({
+    queryKey,
+    queryFn: async (): Promise<GoalItem[]> => {
+      if (!goalId) return [];
+
       const { data, error } = await supabase
         .from("goal_items")
         .select("*")
@@ -214,74 +261,103 @@ export const useGoalItems = (goalId: string | null) => {
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      setItems(data || []);
-    } catch (error) {
-      console.error("Error fetching goal items:", error);
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [goalId]);
+      return (data as GoalItem[]) || [];
+    },
+    enabled: !!goalId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
 
+  // Invalidate cache
+  const invalidateItems = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: goalKeys.items(goalId) });
+    // Also invalidate goals list since items affect goal totals
+    queryClient.invalidateQueries({ queryKey: goalKeys.all });
+  }, [queryClient, goalId]);
+
+  // Create item mutation
+  const createItemMutation = useMutation({
+    mutationFn: async (item: Omit<GoalItem, "id" | "created_at" | "updated_at">) => {
+      const { data, error } = await supabase.from("goal_items").insert(item).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      invalidateItems();
+    },
+    onError: (error) => {
+      console.error("Error creating item:", error);
+    },
+  });
+
+  // Update item mutation
+  const updateItemMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<GoalItem> }) => {
+      const { error } = await supabase.from("goal_items").update(updates).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidateItems();
+    },
+    onError: (error) => {
+      console.error("Error updating item:", error);
+    },
+  });
+
+  // Delete item mutation
+  const deleteItemMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("goal_items").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidateItems();
+    },
+    onError: (error) => {
+      console.error("Error deleting item:", error);
+    },
+  });
+
+  // Wrapper functions for backward compatibility
   const createItem = async (item: Omit<GoalItem, "id" | "created_at" | "updated_at">) => {
     try {
-      const { data, error } = await supabase
-        .from("goal_items")
-        .insert(item)
-        .select()
-        .single();
-
-      if (error) throw error;
-      await fetchItems();
-      return data;
-    } catch (error) {
-      console.error("Error creating item:", error);
+      return await createItemMutation.mutateAsync(item);
+    } catch {
       return null;
     }
   };
 
   const updateItem = async (id: string, updates: Partial<GoalItem>) => {
     try {
-      const { error } = await supabase
-        .from("goal_items")
-        .update(updates)
-        .eq("id", id);
-
-      if (error) throw error;
-      await fetchItems();
+      await updateItemMutation.mutateAsync({ id, updates });
       return true;
-    } catch (error) {
-      console.error("Error updating item:", error);
+    } catch {
       return false;
     }
   };
 
   const deleteItem = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from("goal_items")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
-      await fetchItems();
+      await deleteItemMutation.mutateAsync(id);
       return true;
-    } catch (error) {
-      console.error("Error deleting item:", error);
+    } catch {
       return false;
     }
   };
 
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
+  const fetchItems = invalidateItems;
 
   return {
-    items,
-    loading,
+    items: itemsQuery.data || [],
+    loading: itemsQuery.isLoading,
     fetchItems,
     createItem,
     updateItem,
     deleteItem,
+    invalidateItems,
+    isLoading: itemsQuery.isLoading,
+    isFetching: itemsQuery.isFetching,
+    error: itemsQuery.error,
   };
 };
