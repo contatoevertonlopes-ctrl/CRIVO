@@ -59,10 +59,18 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     const fetchExisting = async () => {
       if (!user || !open) return;
       
-      const { data } = await supabase
+      // Build query - if user has household, check by household_id, otherwise by user_id
+      let query = supabase
         .from("transactions")
-        .select("date, amount, description, category")
-        .eq("user_id", user.id);
+        .select("date, amount, description, category");
+      
+      if (householdId) {
+        query = query.eq("household_id", householdId);
+      } else {
+        query = query.eq("user_id", user.id);
+      }
+      
+      const { data } = await query;
       
       if (data) {
         const keys = new Set(data.map(t => `${t.date}_${t.amount}_${t.description?.toLowerCase().substring(0, 30)}`));
@@ -75,7 +83,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     };
     
     fetchExisting();
-  }, [user, open]);
+  }, [user, householdId, open]);
 
   const checkDuplicates = useCallback((parsed: ParsedTransaction[]): ParsedTransaction[] => {
     return parsed.map(t => {
