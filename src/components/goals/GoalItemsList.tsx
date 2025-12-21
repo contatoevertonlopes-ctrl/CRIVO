@@ -1,17 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppMode } from "@/contexts/AppModeContext";
 import { cn } from "@/lib/utils";
-import { Check, Plus, Trash2, Link2, ChevronDown, ChevronUp, Edit2, Store, Key } from "lucide-react";
+import { Check, Plus, Trash2, Link2, ChevronDown, ChevronUp, Edit2, Store, Key, Unlink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { GoalItem, useGoalItems } from "@/hooks/useGoals";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useHouseholdId } from "@/hooks/useHouseholdId";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+interface Transaction {
+  id: string;
+  description: string;
+  amount: number;
+  date: string;
+  status: string;
+}
 
 interface GoalItemsListProps {
   goalId: string;
@@ -19,14 +36,22 @@ interface GoalItemsListProps {
 
 const GoalItemsList = ({ goalId }: GoalItemsListProps) => {
   const { mode } = useAppMode();
+  const { user } = useAuth();
+  const { householdId } = useHouseholdId();
   const isSurvival = mode === "survival";
-  const { items, loading, createItem, updateItem, deleteItem } = useGoalItems(goalId);
+  const { items, loading, createItem, updateItem, deleteItem, fetchItems } = useGoalItems(goalId);
   
   const [newItemTitle, setNewItemTitle] = useState("");
   const [newItemAmount, setNewItemAmount] = useState("");
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [editingSupplier, setEditingSupplier] = useState<{ id: string; value: string } | null>(null);
   const [editingPix, setEditingPix] = useState<{ id: string; value: string } | null>(null);
+  
+  // Link transaction dialog state
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [linkingItemId, setLinkingItemId] = useState<string | null>(null);
+  const [availableTransactions, setAvailableTransactions] = useState<Transaction[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -44,6 +69,99 @@ const GoalItemsList = ({ goalId }: GoalItemsListProps) => {
       style: "currency",
       currency: "BRL",
     }).format(number);
+  };
+
+  const fetchAvailableTransactions = async () => {
+    if (!user) return;
+    
+    setLoadingTransactions(true);
+    try {
+      let query = supabase
+        .from("transactions")
+        .select("id, description, amount, date, status")
+        .eq("type", "expense")
+        .is("goal_id", null)
+        .order("date", { ascending: false })
+        .limit(50);
+
+      if (householdId) {
+        query = query.eq("household_id", householdId);
+      } else {
+        query = query.eq("user_id", user.id);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      setAvailableTransactions(data || []);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      setAvailableTransactions([]);
+    } finally {
+      setLoadingTransactions(false);
+    }
+  };
+
+  const handleOpenLinkDialog = (itemId: string) => {
+    setLinkingItemId(itemId);
+    setLinkDialogOpen(true);
+    fetchAvailableTransactions();
+  };
+
+  const handleLinkTransaction = async (transactionId: string) => {
+    if (!linkingItemId) return;
+
+    try {
+      // Update the goal item with the transaction_id and mark as paid
+      const itemSuccess = await updateItem(linkingItemId, { 
+        transaction_id: transactionId,
+        is_paid: true 
+      });
+
+      if (!itemSuccess) throw new Error("Failed to update item");
+
+      // Update the transaction to link it to this goal
+      const { error: txError } = await supabase
+        .from("transactions")
+        .update({ goal_id: goalId })
+        .eq("id", transactionId);
+
+      if (txError) throw txError;
+
+      toast.success("Transação vinculada com sucesso!");
+      setLinkDialogOpen(false);
+      setLinkingItemId(null);
+      await fetchItems();
+    } catch (error) {
+      console.error("Error linking transaction:", error);
+      toast.error("Erro ao vincular transação");
+    }
+  };
+
+  const handleUnlinkTransaction = async (item: GoalItem) => {
+    if (!item.transaction_id) return;
+
+    try {
+      // Remove the goal_id from the transaction
+      const { error: txError } = await supabase
+        .from("transactions")
+        .update({ goal_id: null })
+        .eq("id", item.transaction_id);
+
+      if (txError) throw txError;
+
+      // Update the goal item to remove the transaction link
+      const success = await updateItem(item.id, { 
+        transaction_id: null,
+        is_paid: false 
+      });
+
+      if (success) {
+        toast.success("Vínculo removido");
+      }
+    } catch (error) {
+      console.error("Error unlinking transaction:", error);
+      toast.error("Erro ao remover vínculo");
+    }
   };
 
   const handleAddItem = async () => {
@@ -214,6 +332,25 @@ const GoalItemsList = ({ goalId }: GoalItemsListProps) => {
                   )}>
                     {formatCurrency(item.estimated_amount)}
                   </span>
+
+                  {/* Link/Unlink transaction button */}
+                  {item.transaction_id ? (
+                    <button
+                      onClick={() => handleUnlinkTransaction(item)}
+                      className="p-1.5 rounded-lg hover:bg-orange-500/10 text-orange-400 transition-colors"
+                      title="Desvincular transação"
+                    >
+                      <Unlink className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleOpenLinkDialog(item.id)}
+                      className="p-1.5 rounded-lg hover:bg-primary/10 text-primary transition-colors"
+                      title="Vincular transação"
+                    >
+                      <Link2 className="w-4 h-4" />
+                    </button>
+                  )}
                   
                   <CollapsibleTrigger asChild>
                     <button className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground transition-colors">
@@ -299,6 +436,51 @@ const GoalItemsList = ({ goalId }: GoalItemsListProps) => {
           ))}
         </div>
       )}
+
+      {/* Link Transaction Dialog */}
+      <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Vincular Transação</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-3 max-h-[400px] overflow-y-auto">
+            {loadingTransactions ? (
+              <div className="text-center py-6 text-muted-foreground text-sm">
+                Carregando transações...
+              </div>
+            ) : availableTransactions.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                <p className="text-sm">Nenhuma transação disponível</p>
+                <p className="text-xs mt-1">Crie uma transação de despesa para vincular</p>
+              </div>
+            ) : (
+              availableTransactions.map((tx) => (
+                <button
+                  key={tx.id}
+                  onClick={() => handleLinkTransaction(tx.id)}
+                  className="w-full p-3 rounded-lg border border-border/50 bg-secondary/30 hover:bg-secondary/60 transition-colors text-left"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium truncate">{tx.description}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(tx.date + "T00:00:00").toLocaleDateString("pt-BR")}
+                      </p>
+                    </div>
+                    <span className={cn(
+                      "text-sm font-medium",
+                      tx.status === "pagamento_concluido" ? "text-primary" : "text-foreground"
+                    )}>
+                      {formatCurrency(tx.amount)}
+                    </span>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

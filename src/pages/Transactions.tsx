@@ -175,7 +175,7 @@ const Transactions = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [showProFilters, setShowProFilters] = useState(false);
   const [sortOrder, setSortOrder] = useState<"date_desc" | "date_asc" | "amount_desc" | "amount_asc" | "priority">("priority");
-  const [groupBy, setGroupBy] = useState<"none" | "month" | "category">("month");
+  const [groupBy, setGroupBy] = useState<"none" | "month" | "category">("none");
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(new Set());
