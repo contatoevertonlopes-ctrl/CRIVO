@@ -125,28 +125,121 @@ export const parseMonetaryValue = (value: string): number => {
   return parseFloat(cleaned) || 0;
 };
 
-export const parseDate = (dateStr: string): string => {
-  if (!dateStr) return new Date().toISOString().split("T")[0];
+export interface ParsedDateResult {
+  date: string;
+  usedFallback: boolean;
+  originalValue?: string;
+}
+
+// Convert Excel serial date to YYYY-MM-DD
+const excelSerialToDate = (serial: number): string => {
+  // Excel's epoch starts at December 30, 1899
+  const excelEpoch = new Date(1899, 11, 30);
+  const millisecondsPerDay = 24 * 60 * 60 * 1000;
+  const date = new Date(excelEpoch.getTime() + serial * millisecondsPerDay);
+  
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  
+  return `${year}-${month}-${day}`;
+};
+
+// Pad single digit to two digits
+const pad = (n: string): string => n.padStart(2, "0");
+
+// Convert 2-digit year to 4-digit year
+const expandYear = (yy: string): string => {
+  const year = parseInt(yy, 10);
+  // Assume 00-49 is 2000s, 50-99 is 1900s
+  return year < 50 ? `20${pad(yy)}` : `19${pad(yy)}`;
+};
+
+export const parseDate = (dateStr: string): ParsedDateResult => {
+  const today = new Date().toISOString().split("T")[0];
+  
+  if (!dateStr || !dateStr.trim()) {
+    console.log("[parseDate] Empty date string, using fallback");
+    return { date: today, usedFallback: true, originalValue: dateStr };
+  }
   
   const cleaned = dateStr.trim();
   
-  // Try common formats
+  // Check if it's an Excel serial number (5 digits, typically 40000-50000 range for recent dates)
+  const serialMatch = cleaned.match(/^(\d{5})$/);
+  if (serialMatch) {
+    const serial = parseInt(serialMatch[1], 10);
+    if (serial >= 1 && serial <= 99999) {
+      const date = excelSerialToDate(serial);
+      console.log(`[parseDate] Excel serial ${serial} -> ${date}`);
+      return { date, usedFallback: false, originalValue: cleaned };
+    }
+  }
+  
+  // Try common formats (ordered by likelihood for Brazilian users)
   const formats = [
-    { regex: /^(\d{4})-(\d{2})-(\d{2})/, format: (m: RegExpMatchArray) => `${m[1]}-${m[2]}-${m[3]}` },
-    { regex: /^(\d{2})\/(\d{2})\/(\d{4})/, format: (m: RegExpMatchArray) => `${m[3]}-${m[2]}-${m[1]}` },
-    { regex: /^(\d{2})-(\d{2})-(\d{4})/, format: (m: RegExpMatchArray) => `${m[3]}-${m[2]}-${m[1]}` },
-    { regex: /^(\d{2})\.(\d{2})\.(\d{4})/, format: (m: RegExpMatchArray) => `${m[3]}-${m[2]}-${m[1]}` },
-    { regex: /^(\d{4})(\d{2})(\d{2})/, format: (m: RegExpMatchArray) => `${m[1]}-${m[2]}-${m[3]}` }, // OFX format
+    // YYYY-MM-DD (ISO format)
+    { regex: /^(\d{4})-(\d{1,2})-(\d{1,2})$/, format: (m: RegExpMatchArray) => `${m[1]}-${pad(m[2])}-${pad(m[3])}` },
+    // DD/MM/YYYY (Brazilian format - most common)
+    { regex: /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, format: (m: RegExpMatchArray) => `${m[3]}-${pad(m[2])}-${pad(m[1])}` },
+    // DD-MM-YYYY
+    { regex: /^(\d{1,2})-(\d{1,2})-(\d{4})$/, format: (m: RegExpMatchArray) => `${m[3]}-${pad(m[2])}-${pad(m[1])}` },
+    // DD.MM.YYYY
+    { regex: /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/, format: (m: RegExpMatchArray) => `${m[3]}-${pad(m[2])}-${pad(m[1])}` },
+    // DD/MM/YY (Brazilian with 2-digit year)
+    { regex: /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/, format: (m: RegExpMatchArray) => `${expandYear(m[3])}-${pad(m[2])}-${pad(m[1])}` },
+    // DD-MM-YY
+    { regex: /^(\d{1,2})-(\d{1,2})-(\d{2})$/, format: (m: RegExpMatchArray) => `${expandYear(m[3])}-${pad(m[2])}-${pad(m[1])}` },
+    // YYYYMMDD (OFX/compact format)
+    { regex: /^(\d{4})(\d{2})(\d{2})$/, format: (m: RegExpMatchArray) => `${m[1]}-${m[2]}-${m[3]}` },
+    // MM/DD/YYYY (American format - check day > 12 to differentiate)
+    { regex: /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, format: (m: RegExpMatchArray) => {
+      // If first number > 12, it's likely DD/MM/YYYY (already handled above)
+      // If second number > 12, it's likely MM/DD/YYYY
+      const first = parseInt(m[1], 10);
+      const second = parseInt(m[2], 10);
+      if (second > 12 && first <= 12) {
+        return `${m[3]}-${pad(m[1])}-${pad(m[2])}`; // MM/DD/YYYY
+      }
+      return null; // Skip, already handled by DD/MM/YYYY
+    }},
+    // YYYY/MM/DD
+    { regex: /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/, format: (m: RegExpMatchArray) => `${m[1]}-${pad(m[2])}-${pad(m[3])}` },
   ];
   
   for (const { regex, format } of formats) {
     const match = cleaned.match(regex);
     if (match) {
-      return format(match);
+      const result = format(match);
+      if (result) {
+        console.log(`[parseDate] "${cleaned}" -> ${result}`);
+        return { date: result, usedFallback: false, originalValue: cleaned };
+      }
     }
   }
   
-  return new Date().toISOString().split("T")[0];
+  // Try to parse with Date object as last resort
+  try {
+    const parsed = new Date(cleaned);
+    if (!isNaN(parsed.getTime())) {
+      const year = parsed.getFullYear();
+      const month = String(parsed.getMonth() + 1).padStart(2, "0");
+      const day = String(parsed.getDate()).padStart(2, "0");
+      const result = `${year}-${month}-${day}`;
+      console.log(`[parseDate] Date.parse "${cleaned}" -> ${result}`);
+      return { date: result, usedFallback: false, originalValue: cleaned };
+    }
+  } catch {
+    // Ignore parsing errors
+  }
+  
+  console.warn(`[parseDate] Could not parse date: "${cleaned}", using fallback`);
+  return { date: today, usedFallback: true, originalValue: cleaned };
+};
+
+// Simple wrapper that returns just the date string (for backward compatibility)
+export const parseDateString = (dateStr: string): string => {
+  return parseDate(dateStr).date;
 };
 
 export const generateTransactionId = (): string => {

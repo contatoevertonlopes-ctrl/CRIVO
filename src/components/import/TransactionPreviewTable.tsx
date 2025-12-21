@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, AlertTriangle, Sparkles, X } from "lucide-react";
+import { Check, AlertTriangle, Sparkles, X, Calendar } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 
 export interface ParsedTransaction {
@@ -24,6 +25,8 @@ export interface ParsedTransaction {
   selected: boolean;
   paidDate?: string;
   status?: string;
+  dateUsedFallback?: boolean;
+  originalDateValue?: string;
 }
 
 interface TransactionPreviewTableProps {
@@ -43,6 +46,7 @@ const TransactionPreviewTable = ({
   const someSelected = transactions.some((t) => t.selected) && !allSelected;
   const duplicateCount = transactions.filter((t) => t.isDuplicate).length;
   const selectedCount = transactions.filter((t) => t.selected).length;
+  const fallbackDateCount = transactions.filter((t) => t.dateUsedFallback).length;
 
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString("pt-BR", {
@@ -58,6 +62,18 @@ const TransactionPreviewTable = ({
 
   return (
     <div className="space-y-3">
+      {/* Date Fallback Warning */}
+      {fallbackDateCount > 0 && (
+        <Alert variant="destructive" className="bg-destructive/10 border-destructive/30">
+          <Calendar className="h-4 w-4" />
+          <AlertDescription className="text-xs">
+            <strong>{fallbackDateCount}</strong> transação(ões) com data não reconhecida. 
+            A data original foi: "{transactions.find(t => t.dateUsedFallback)?.originalDateValue || 'desconhecida'}".
+            Verifique se o formato está correto (DD/MM/YYYY ou YYYY-MM-DD).
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Header Stats */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -73,12 +89,20 @@ const TransactionPreviewTable = ({
           </div>
         </div>
         
-        {duplicateCount > 0 && (
-          <Badge variant="outline" className="text-amber-500 border-amber-500/50 gap-1">
-            <AlertTriangle className="w-3 h-3" />
-            {duplicateCount} possível(is) duplicada(s)
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {fallbackDateCount > 0 && (
+            <Badge variant="outline" className="text-destructive border-destructive/50 gap-1">
+              <Calendar className="w-3 h-3" />
+              {fallbackDateCount} data(s) não reconhecida(s)
+            </Badge>
+          )}
+          {duplicateCount > 0 && (
+            <Badge variant="outline" className="text-amber-500 border-amber-500/50 gap-1">
+              <AlertTriangle className="w-3 h-3" />
+              {duplicateCount} possível(is) duplicada(s)
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Table */}
@@ -113,7 +137,20 @@ const TransactionPreviewTable = ({
                     className="data-[state=checked]:bg-primary"
                   />
                 </td>
-                <td className="p-2 font-mono">{formatDate(t.date)}</td>
+                <td className="p-2">
+                  <div 
+                    className={cn(
+                      "font-mono",
+                      t.dateUsedFallback && "text-destructive"
+                    )}
+                    title={t.dateUsedFallback ? `Data original: ${t.originalDateValue}` : undefined}
+                  >
+                    {formatDate(t.date)}
+                    {t.dateUsedFallback && (
+                      <Calendar className="inline w-3 h-3 ml-1 text-destructive" />
+                    )}
+                  </div>
+                </td>
                 <td className="p-2 max-w-[200px] truncate" title={t.description}>
                   {t.description}
                 </td>
@@ -163,7 +200,7 @@ const TransactionPreviewTable = ({
       </ScrollArea>
       
       {/* Legend */}
-      <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-4 text-[10px] text-muted-foreground">
         <div className="flex items-center gap-1.5">
           <Sparkles className="w-3 h-3 text-primary" />
           <span>Categoria sugerida automaticamente</span>
@@ -171,6 +208,10 @@ const TransactionPreviewTable = ({
         <div className="flex items-center gap-1.5">
           <AlertTriangle className="w-3 h-3 text-amber-500" />
           <span>Possível duplicada</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Calendar className="w-3 h-3 text-destructive" />
+          <span>Data não reconhecida (usando data de hoje)</span>
         </div>
       </div>
     </div>
