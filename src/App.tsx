@@ -18,6 +18,7 @@ import Reports from "./pages/Reports";
 import Admin from "./pages/Admin";
 import Install from "./pages/Install";
 import Goals from "./pages/Goals";
+import Cards from "./pages/Cards";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -53,6 +54,7 @@ const App = () => (
               <Route path="/admin" element={<Admin />} />
               <Route path="/install" element={<Install />} />
               <Route path="/goals" element={<Goals />} />
+              <Route path="/cards" element={<Cards />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
