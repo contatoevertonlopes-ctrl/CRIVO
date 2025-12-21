@@ -32,9 +32,10 @@ interface Transaction {
 
 interface GoalItemsListProps {
   goalId: string;
+  onGoalUpdate?: () => void;
 }
 
-const GoalItemsList = ({ goalId }: GoalItemsListProps) => {
+const GoalItemsList = ({ goalId, onGoalUpdate }: GoalItemsListProps) => {
   const { mode } = useAppMode();
   const { user } = useAuth();
   const { householdId } = useHouseholdId();
@@ -131,6 +132,7 @@ const GoalItemsList = ({ goalId }: GoalItemsListProps) => {
       setLinkDialogOpen(false);
       setLinkingItemId(null);
       await fetchItems();
+      onGoalUpdate?.();
     } catch (error) {
       console.error("Error linking transaction:", error);
       toast.error("Erro ao vincular transação");
@@ -157,6 +159,7 @@ const GoalItemsList = ({ goalId }: GoalItemsListProps) => {
 
       if (success) {
         toast.success("Vínculo removido");
+        onGoalUpdate?.();
       }
     } catch (error) {
       console.error("Error unlinking transaction:", error);

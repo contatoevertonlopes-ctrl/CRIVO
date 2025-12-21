@@ -316,7 +316,7 @@ const Goals = () => {
               </SheetHeader>
 
               {/* Items Checklist */}
-              <GoalItemsList goalId={selectedGoal.id} />
+              <GoalItemsList goalId={selectedGoal.id} onGoalUpdate={fetchGoals} />
 
               {/* Actions */}
               <div className="flex gap-3 mt-6 pt-4 border-t border-border/30">

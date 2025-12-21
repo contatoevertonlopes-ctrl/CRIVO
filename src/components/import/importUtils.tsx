@@ -159,7 +159,6 @@ export const parseDate = (dateStr: string): ParsedDateResult => {
   const today = new Date().toISOString().split("T")[0];
   
   if (!dateStr || !dateStr.trim()) {
-    console.log("[parseDate] Empty date string, using fallback");
     return { date: today, usedFallback: true, originalValue: dateStr };
   }
   
@@ -171,7 +170,6 @@ export const parseDate = (dateStr: string): ParsedDateResult => {
     const serial = parseInt(serialMatch[1], 10);
     if (serial >= 1 && serial <= 99999) {
       const date = excelSerialToDate(serial);
-      console.log(`[parseDate] Excel serial ${serial} -> ${date}`);
       return { date, usedFallback: false, originalValue: cleaned };
     }
   }
@@ -212,7 +210,6 @@ export const parseDate = (dateStr: string): ParsedDateResult => {
     if (match) {
       const result = format(match);
       if (result) {
-        console.log(`[parseDate] "${cleaned}" -> ${result}`);
         return { date: result, usedFallback: false, originalValue: cleaned };
       }
     }
@@ -226,14 +223,14 @@ export const parseDate = (dateStr: string): ParsedDateResult => {
       const month = String(parsed.getMonth() + 1).padStart(2, "0");
       const day = String(parsed.getDate()).padStart(2, "0");
       const result = `${year}-${month}-${day}`;
-      console.log(`[parseDate] Date.parse "${cleaned}" -> ${result}`);
+      return { date: result, usedFallback: false, originalValue: cleaned };
       return { date: result, usedFallback: false, originalValue: cleaned };
     }
   } catch {
     // Ignore parsing errors
   }
   
-  console.warn(`[parseDate] Could not parse date: "${cleaned}", using fallback`);
+  
   return { date: today, usedFallback: true, originalValue: cleaned };
 };
 

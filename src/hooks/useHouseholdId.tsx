@@ -20,8 +20,6 @@ export const useHouseholdId = () => {
         .eq("user_id", user.id)
         .maybeSingle();
 
-      console.log("[useHouseholdId] User:", user.id, "Profile data:", data, "Error:", error);
-      
       setHouseholdId(data?.household_id || null);
     } catch (error) {
       console.error("Error fetching household_id:", error);

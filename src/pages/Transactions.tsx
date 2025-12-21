@@ -577,6 +577,7 @@ const Transactions = () => {
     try {
       const { error } = await supabase.from("transactions").insert({
         user_id: user.id,
+        household_id: householdId,
         description: transaction.description,
         amount: transaction.amount,
         category: transaction.category,
