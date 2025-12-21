@@ -32,8 +32,6 @@ export const useSharedHousehold = () => {
         .eq("user_id", user.id)
         .maybeSingle();
 
-      console.log("[useSharedHousehold] User:", user.id, "Profile:", profile, "Error:", profileError);
-
       if (!profile?.household_id) {
         setState({ isShared: false, memberCount: 1, householdId: null, loading: false });
         return;
@@ -44,8 +42,6 @@ export const useSharedHousehold = () => {
         .from("profiles")
         .select("*", { count: "exact", head: true })
         .eq("household_id", profile.household_id);
-
-      console.log("[useSharedHousehold] Household:", profile.household_id, "Member count:", count, "Error:", error);
 
       if (error) throw error;
 
