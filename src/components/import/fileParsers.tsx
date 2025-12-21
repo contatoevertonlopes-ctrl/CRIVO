@@ -3,7 +3,8 @@ import {
   autoCategorize, 
   parseMonetaryValue, 
   parseDate, 
-  generateTransactionId 
+  generateTransactionId,
+  type ParsedDateResult 
 } from "./importUtils";
 import type { ParsedTransaction } from "./TransactionPreviewTable";
 import type { ColumnMapping } from "./ColumnMapper";
@@ -225,17 +226,22 @@ export const applyMapping = (rawData: RawData, mapping: ColumnMapping): ParsedTr
         }
       }
       
+      const dateResult = parseDate(dateStr);
+      const paidDateResult = paidDateStr ? parseDate(paidDateStr) : null;
+      
       transactions.push({
         id: generateTransactionId(),
-        date: parseDate(dateStr),
+        date: dateResult.date,
         description: description.substring(0, 100),
         amount,
         type,
         category,
         suggestedCategory: suggested ? category : undefined,
         selected: true,
-        paidDate: paidDateStr ? parseDate(paidDateStr) : undefined,
+        paidDate: paidDateResult?.date,
         status,
+        dateUsedFallback: dateResult.usedFallback,
+        originalDateValue: dateResult.originalValue,
       });
     }
   }
