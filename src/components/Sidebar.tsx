@@ -15,12 +15,21 @@ const Sidebar = () => {
   const { subscribed } = useSubscription();
   const { collapsed, toggle } = useSidebarContext();
 
+  // Items for desktop sidebar and mobile slide-out menu (all items)
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/" },
     { icon: ArrowRightLeft, label: "Transações", path: "/transactions" },
     { icon: CreditCard, label: "Cartões", path: "/cards" },
     { icon: Target, label: "Objetivos", path: "/goals" },
     { icon: BarChart3, label: "Relatórios", path: "/reports" },
+    { icon: Settings, label: "Configurações", path: "/settings" },
+  ];
+
+  // Items for mobile bottom tab bar (simplified - only 4 main items)
+  const mobileTabItems = [
+    { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+    { icon: ArrowRightLeft, label: "Transações", path: "/transactions" },
+    { icon: CreditCard, label: "Cartões", path: "/cards" },
     { icon: Settings, label: "Configurações", path: "/settings" },
   ];
 
@@ -43,7 +52,7 @@ const Sidebar = () => {
       {/* Mobile Bottom Tab Bar */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur-sm border-t border-sidebar-border px-2 py-2 safe-area-pb">
         <div className="flex items-center justify-around max-w-md mx-auto">
-          {navItems.map((item) => {
+          {mobileTabItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
             return (
