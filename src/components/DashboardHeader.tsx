@@ -15,6 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { DateRangePicker } from "./DateRangePicker";
+import { startOfMonth, endOfMonth } from "date-fns";
 
 interface DashboardHeaderProps {
   period?: number;
@@ -35,8 +36,16 @@ const DashboardHeader = ({
   const { isShared, memberCount, loading: householdLoading } = useSharedHousehold();
   
   const isCustomPeriod = customDateFrom !== undefined && customDateTo !== undefined;
+  
+  // Check if current selection is "this month"
+  const today = new Date();
+  const monthStart = startOfMonth(today);
+  const monthEnd = endOfMonth(today);
+  const isThisMonth = customDateFrom?.getTime() === monthStart.getTime() && 
+                      customDateTo?.getTime() === monthEnd.getTime();
 
   const periodOptions = [
+    { value: "this-month", label: "Este mês" },
     { value: "7", label: "7 dias" },
     { value: "30", label: "30 dias" },
     { value: "60", label: "60 dias" },
@@ -44,10 +53,16 @@ const DashboardHeader = ({
     { value: "custom", label: "Personalizado" },
   ];
 
+  const getCurrentValue = () => {
+    if (isThisMonth) return "this-month";
+    if (isCustomPeriod) return "custom";
+    return period.toString();
+  };
+
   const handlePeriodSelect = (value: string) => {
-    if (value === "custom") {
-      // Set default custom dates: last 30 days
-      const today = new Date();
+    if (value === "this-month") {
+      onCustomDateChange?.(monthStart, monthEnd);
+    } else if (value === "custom") {
       const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
       onCustomDateChange?.(thirtyDaysAgo, today);
     } else {
@@ -102,10 +117,10 @@ const DashboardHeader = ({
         <NotificationsDropdown />
         
         <Select
-          value={isCustomPeriod ? "custom" : period.toString()}
+          value={getCurrentValue()}
           onValueChange={handlePeriodSelect}
         >
-          <SelectTrigger className="h-8 w-[110px] rounded-lg border-border/50 bg-secondary/60 text-xs text-muted-foreground hover:border-border hover:text-foreground">
+          <SelectTrigger className="h-8 w-[120px] rounded-lg border-border/50 bg-secondary/60 text-xs text-muted-foreground hover:border-border hover:text-foreground">
             <span className="w-1.5 h-1.5 rounded-full bg-primary mr-1.5"></span>
             <SelectValue />
           </SelectTrigger>
@@ -118,7 +133,7 @@ const DashboardHeader = ({
           </SelectContent>
         </Select>
         
-        {(isCustomPeriod || period.toString() === "custom") && onCustomDateChange && (
+        {(isCustomPeriod && !isThisMonth) && onCustomDateChange && (
           <DateRangePicker
             dateFrom={customDateFrom}
             dateTo={customDateTo}
