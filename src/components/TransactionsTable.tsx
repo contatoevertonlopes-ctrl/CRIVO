@@ -10,17 +10,10 @@ import StatusSelector from "./StatusSelector";
 import TransactionCard from "./TransactionCard";
 import TransactionTimeline from "./TransactionTimeline";
 import TransactionPagination from "./TransactionPagination";
-import { sortTransactionsByPriority } from "@/utils/transactionSort";
+
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Filter, Tag, LayoutList, Clock } from "lucide-react";
+import { Tag, LayoutList, Clock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Tooltip,
@@ -55,9 +48,6 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
   const { mode } = useAppMode();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [tagFilter, setTagFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"timeline" | "table">("timeline");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -81,24 +71,14 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
         query = query.eq("household_id", householdId);
       }
 
-      if (statusFilter !== "all") {
-        query = query.eq("status", statusFilter);
-      }
-
-      if (typeFilter !== "all") {
-        query = query.eq("type", typeFilter);
-      }
-
-      if (tagFilter !== "all") {
-        query = query.eq("tag", tagFilter);
-      }
+      // Order by created_at to show latest added transactions first
+      query = query.order("created_at", { ascending: false });
 
       const { data, error } = await query;
 
       if (error) throw error;
 
-      const sortedData = sortTransactionsByPriority((data as Transaction[]) || []);
-      setTransactions(sortedData);
+      setTransactions((data as Transaction[]) || []);
     } catch (error) {
       console.error("Error fetching transactions:", error);
       setTransactions([]);
@@ -110,7 +90,7 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
   useEffect(() => {
     fetchTransactions();
     setCurrentPage(1);
-  }, [user, statusFilter, typeFilter, tagFilter, isShared, householdId, householdLoading]);
+  }, [user, isShared, householdId, householdLoading]);
 
   const handleSuccess = () => {
     fetchTransactions();
@@ -254,45 +234,6 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 p-3 border-b border-border/30 bg-secondary/30">
-        <Filter className="w-4 h-4 text-muted-foreground" />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[120px] h-7 text-xs bg-background border-border/50">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="em_aberto">Em aberto</SelectItem>
-            <SelectItem value="a_vencer">A vencer</SelectItem>
-            <SelectItem value="vencido">Vencido</SelectItem>
-            <SelectItem value="pagamento_concluido">Pago</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-[100px] h-7 text-xs bg-background border-border/50">
-            <SelectValue placeholder="Tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="income">Entrada</SelectItem>
-            <SelectItem value="expense">Saída</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={tagFilter} onValueChange={setTagFilter}>
-          <SelectTrigger className="w-[110px] h-7 text-xs bg-background border-border/50">
-            <SelectValue placeholder="Tag" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
-            <SelectItem value="fixa">Fixa</SelectItem>
-            <SelectItem value="variavel">Variável</SelectItem>
-            <SelectItem value="esporadica">Esporádica</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
 
       {/* Content */}
       <div className="p-3 md:p-4">
