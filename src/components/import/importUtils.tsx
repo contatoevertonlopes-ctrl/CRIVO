@@ -224,12 +224,10 @@ export const parseDate = (dateStr: string): ParsedDateResult => {
       const day = String(parsed.getDate()).padStart(2, "0");
       const result = `${year}-${month}-${day}`;
       return { date: result, usedFallback: false, originalValue: cleaned };
-      return { date: result, usedFallback: false, originalValue: cleaned };
     }
   } catch {
     // Ignore parsing errors
   }
-  
   
   return { date: today, usedFallback: true, originalValue: cleaned };
 };
