@@ -19,11 +19,13 @@ import {
   CheckCircle,
   AlertCircle,
   Settings,
-  Trash2
+  Trash2,
+  Pencil
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, parseISO, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import EditCardTransactionDialog from "./EditCardTransactionDialog";
 
 interface CardDetailsDrawerProps {
   open: boolean;
@@ -57,6 +59,7 @@ const CardDetailsDrawer = ({
   onDelete
 }: CardDetailsDrawerProps) => {
   const [activeTab, setActiveTab] = useState("installments");
+  const [editingTransaction, setEditingTransaction] = useState<CardTransaction | null>(null);
 
   // Filter and group transactions for this card
   const cardTransactions = useMemo(() => {
@@ -221,10 +224,10 @@ const CardDetailsDrawer = ({
                   <div 
                     key={purchase.id}
                     className={cn(
-                      "p-4 rounded-xl border transition-all",
+                      "p-4 rounded-xl border transition-all group",
                       purchase.isFullyPaid 
                         ? "bg-secondary/30 border-border/30 opacity-60"
-                        : "bg-card border-border/50"
+                        : "bg-card border-border/50 hover:border-primary/30"
                     )}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -235,11 +238,24 @@ const CardDetailsDrawer = ({
                         </p>
                       </div>
                       
-                      <div className="text-right shrink-0">
-                        <p className="font-bold text-sm">{formatCurrency(purchase.totalAmount)}</p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {purchase.totalInstallments}x {formatCurrency(purchase.installmentAmount)}
-                        </p>
+                      <div className="flex items-start gap-2">
+                        <div className="text-right shrink-0">
+                          <p className="font-bold text-sm">{formatCurrency(purchase.totalAmount)}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {purchase.totalInstallments}x {formatCurrency(purchase.installmentAmount)}
+                          </p>
+                        </div>
+                        
+                        {!purchase.isFullyPaid && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                            onClick={() => setEditingTransaction(purchase.installments[0])}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
 
@@ -428,6 +444,12 @@ const CardDetailsDrawer = ({
           </ScrollArea>
         </Tabs>
       </SheetContent>
+
+      <EditCardTransactionDialog
+        open={!!editingTransaction}
+        onOpenChange={(open) => !open && setEditingTransaction(null)}
+        transaction={editingTransaction}
+      />
     </Sheet>
   );
 };
