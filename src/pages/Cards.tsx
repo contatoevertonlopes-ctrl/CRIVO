@@ -1,25 +1,38 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useCards } from "@/hooks/useCards";
+import { useCards, CardWithBill } from "@/hooks/useCards";
 import Sidebar from "@/components/Sidebar";
 import CreditCardVisual from "@/components/cards/CreditCardVisual";
 import CardDialog from "@/components/cards/CardDialog";
 import CardExpenseDialog from "@/components/cards/CardExpenseDialog";
+import CardDetailsDrawer from "@/components/cards/CardDetailsDrawer";
 import FutureCommitmentsChart from "@/components/cards/FutureCommitmentsChart";
 import RealBalanceWidget from "@/components/cards/RealBalanceWidget";
 import { Button } from "@/components/ui/button";
 import { Plus, CreditCard, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Cards = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const {
     cards,
+    cardTransactions,
     loading: cardsLoading,
     createCard,
     updateCard,
+    deleteCard,
     addCardExpense,
     getFutureCommitments,
     getTotalOpenBills,
@@ -27,7 +40,10 @@ const Cards = () => {
 
   const [cardDialogOpen, setCardDialogOpen] = useState(false);
   const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
-  const [editingCard, setEditingCard] = useState<typeof cards[0] | null>(null);
+  const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<CardWithBill | null>(null);
+  const [editingCard, setEditingCard] = useState<CardWithBill | null>(null);
   const [currentBalance, setCurrentBalance] = useState(0);
   const [monthlyIncome, setMonthlyIncome] = useState(0);
 
@@ -66,14 +82,33 @@ const Cards = () => {
     setEditingCard(null);
   };
 
-  const handleCardClick = (card: typeof cards[0]) => {
-    setEditingCard(card);
-    setCardDialogOpen(true);
+  const handleCardClick = (card: CardWithBill) => {
+    setSelectedCard(card);
+    setDetailsDrawerOpen(true);
   };
 
   const handleAddCard = () => {
     setEditingCard(null);
     setCardDialogOpen(true);
+  };
+
+  const handleEditCard = () => {
+    setEditingCard(selectedCard);
+    setDetailsDrawerOpen(false);
+    setCardDialogOpen(true);
+  };
+
+  const handleDeleteCard = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteCard = async () => {
+    if (selectedCard) {
+      await deleteCard(selectedCard.id);
+      setSelectedCard(null);
+      setDetailsDrawerOpen(false);
+      setDeleteDialogOpen(false);
+    }
   };
 
   const futureCommitments = getFutureCommitments();
@@ -181,7 +216,17 @@ const Cards = () => {
             <FutureCommitmentsChart data={futureCommitments} />
           )}
 
-          {/* Dialogs */}
+          {/* Card Details Drawer */}
+          <CardDetailsDrawer
+            open={detailsDrawerOpen}
+            onOpenChange={setDetailsDrawerOpen}
+            card={selectedCard}
+            transactions={cardTransactions}
+            onEdit={handleEditCard}
+            onDelete={handleDeleteCard}
+          />
+
+          {/* Card Edit Dialog */}
           <CardDialog
             open={cardDialogOpen}
             onOpenChange={setCardDialogOpen}
@@ -189,6 +234,7 @@ const Cards = () => {
             onSave={handleSaveCard}
           />
 
+          {/* Card Expense Dialog */}
           <CardExpenseDialog
             open={expenseDialogOpen}
             onOpenChange={setExpenseDialogOpen}
@@ -196,6 +242,28 @@ const Cards = () => {
             onSave={addCardExpense}
             monthlyIncome={monthlyIncome}
           />
+
+          {/* Delete Confirmation Dialog */}
+          <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remover Cartão</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tem certeza que deseja remover o cartão "{selectedCard?.name}"? 
+                  O histórico de transações será mantido, mas o cartão não aparecerá mais na lista.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={confirmDeleteCard}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Remover
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </main>
 
