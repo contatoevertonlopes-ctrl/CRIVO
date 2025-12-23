@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useSidebarContext } from "@/contexts/SidebarContext";
+import { useModulePreferences } from "@/hooks/useModulePreferences";
 import { LayoutDashboard, ArrowRightLeft, BarChart3, Settings, Crown, Shield, Sparkles, Menu, X, Target, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AppLogo from "./AppLogo";
@@ -14,22 +15,28 @@ const Sidebar = () => {
   const { isAdmin } = useAdmin();
   const { subscribed } = useSubscription();
   const { collapsed, toggle } = useSidebarContext();
+  const { modules } = useModulePreferences();
 
-  // Items for desktop sidebar and mobile slide-out menu (all items)
-  const navItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-    { icon: ArrowRightLeft, label: "Transações", path: "/transactions" },
-    { icon: CreditCard, label: "Cartões", path: "/cards" },
-    { icon: Target, label: "Objetivos", path: "/goals" },
-    { icon: BarChart3, label: "Relatórios", path: "/reports" },
-    { icon: Settings, label: "Configurações", path: "/settings" },
+  // Base nav items
+  const baseNavItems = [
+    { icon: LayoutDashboard, label: "Dashboard", path: "/", alwaysShow: true },
+    { icon: ArrowRightLeft, label: "Transações", path: "/transactions", alwaysShow: true },
+    { icon: CreditCard, label: "Cartões", path: "/cards", module: "creditCards" as const },
+    { icon: Target, label: "Objetivos", path: "/goals", module: "budgets" as const },
+    { icon: BarChart3, label: "Relatórios", path: "/reports", alwaysShow: true },
+    { icon: Settings, label: "Configurações", path: "/settings", alwaysShow: true },
   ];
 
-  // Items for mobile bottom tab bar (simplified - only 4 main items)
+  // Filter items based on active modules
+  const navItems = baseNavItems.filter(
+    (item) => item.alwaysShow || (item.module && modules[item.module])
+  );
+
+  // Mobile tab items - only show active modules
   const mobileTabItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/" },
     { icon: ArrowRightLeft, label: "Transações", path: "/transactions" },
-    { icon: CreditCard, label: "Cartões", path: "/cards" },
+    ...(modules.creditCards ? [{ icon: CreditCard, label: "Cartões", path: "/cards" }] : []),
     { icon: Settings, label: "Configurações", path: "/settings" },
   ];
 
