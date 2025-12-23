@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppMode } from "@/contexts/AppModeContext";
+import { useModulePreferences } from "@/hooks/useModulePreferences";
 import Sidebar from "@/components/Sidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 import MetricCard from "@/components/MetricCard";
@@ -16,7 +17,6 @@ import { QuickAddInput } from "@/components/QuickAddInput";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdaptiveModeData } from "@/hooks/useAdaptiveModeData";
 import { differenceInDays } from "date-fns";
-import { Wallet, TrendingUp, TrendingDown, Clock } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -27,6 +27,7 @@ const Index = () => {
   const [customDateFrom, setCustomDateFrom] = useState<Date | undefined>();
   const [customDateTo, setCustomDateTo] = useState<Date | undefined>();
   const { mode, setMode } = useAppMode();
+  const { modules } = useModulePreferences();
   
   // Calculate actual period for custom dates
   const effectivePeriod = customDateFrom && customDateTo 
@@ -35,6 +36,10 @@ const Index = () => {
     
   const { metrics, cashflowData, expensesByCategory, refetch } = useDashboardData(effectivePeriod, customDateFrom, customDateTo);
   const adaptiveData = useAdaptiveModeData(effectivePeriod, customDateFrom, customDateTo);
+
+  // Check if any widget-related module is active
+  const showBalanceWidget = modules.bankAccounts;
+  const showGoalsWidget = modules.budgets;
 
   useEffect(() => {
     if (!loading && !user) {
@@ -165,13 +170,15 @@ const Index = () => {
             
             {/* Metrics Grid - 2x2 */}
             <div className="grid grid-cols-2 gap-3">
-              <MetricCard
-                title="Saldo atual"
-                value={formatCurrency(metrics.currentBalance)}
-                pill="Consolidado"
-                trend={`${formatPercent(metrics.balanceChange)} ${getPreviousPeriodLabel()}`}
-                trendUp={metrics.balanceChange >= 0}
-              />
+              {showBalanceWidget && (
+                <MetricCard
+                  title="Saldo atual"
+                  value={formatCurrency(metrics.currentBalance)}
+                  pill="Consolidado"
+                  trend={`${formatPercent(metrics.balanceChange)} ${getPreviousPeriodLabel()}`}
+                  trendUp={metrics.balanceChange >= 0}
+                />
+              )}
               <MetricCard
                 title="Entradas"
                 value={formatCurrency(metrics.monthlyIncome)}
@@ -201,7 +208,7 @@ const Index = () => {
             <CashflowChart data={cashflowData} />
             
             <div className="flex flex-col gap-4">
-              <GoalWidget />
+              {showGoalsWidget && <GoalWidget />}
               <ExpenseChart data={expensesByCategory} period={period} />
               <PlansCard />
             </div>

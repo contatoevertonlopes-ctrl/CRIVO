@@ -14,7 +14,8 @@ import GoalsSection from "@/components/settings/GoalsSection";
 import CategoryManager from "@/components/settings/CategoryManager";
 import NotificationTriggers from "@/components/settings/NotificationTriggers";
 import DataManagement from "@/components/settings/DataManagement";
-import { User, Wallet, Bell, LogOut, MessageSquare } from "lucide-react";
+import ModuleSettings from "@/components/settings/ModuleSettings";
+import { User, Wallet, Bell, LogOut, MessageSquare, Sparkles } from "lucide-react";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
@@ -159,6 +160,10 @@ const Settings = () => {
             <TabsTrigger value="general" className="data-[state=active]:bg-background gap-2">
               <User className="w-4 h-4" />
               <span className="hidden sm:inline">Geral</span>
+            </TabsTrigger>
+            <TabsTrigger value="experience" className="data-[state=active]:bg-background gap-2">
+              <Sparkles className="w-4 h-4" />
+              <span className="hidden sm:inline">Experiência</span>
             </TabsTrigger>
             <TabsTrigger value="financial" className="data-[state=active]:bg-background gap-2">
               <Wallet className="w-4 h-4" />
@@ -313,6 +318,13 @@ const Settings = () => {
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair da conta
               </Button>
+            </section>
+          </TabsContent>
+
+          {/* Experience Tab - Module Settings */}
+          <TabsContent value="experience" className="space-y-6">
+            <section className="rounded-2xl bg-gradient-to-bl from-background to-card border border-border/50 shadow-lg p-5 sm:p-6">
+              <ModuleSettings />
             </section>
           </TabsContent>
 
