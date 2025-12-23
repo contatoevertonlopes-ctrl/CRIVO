@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useHouseholdId } from "@/hooks/useHouseholdId";
 import { useHousehold } from "@/hooks/useHousehold";
 import { useSharedHousehold } from "@/hooks/useSharedHousehold";
 import { useAppMode } from "@/contexts/AppModeContext";
+import { useTransactions, Transaction } from "@/hooks/useTransactions";
 import { supabase } from "@/integrations/supabase/client";
 import AddTransactionDialog from "./AddTransactionDialog";
 import StatusSelector from "./StatusSelector";
@@ -22,20 +23,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  category: string;
-  type: "income" | "expense";
-  amount: number;
-  status: string;
-  paid_date?: string | null;
-  tag?: string | null;
-  is_recurring?: boolean;
-  user_id: string;
-}
-
 interface TransactionsTableProps {
   onRefresh?: () => void;
 }
@@ -44,58 +31,26 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
   const { user } = useAuth();
   const { householdId } = useHouseholdId();
   const { members } = useHousehold();
-  const { isShared, loading: householdLoading } = useSharedHousehold();
+  const { isShared } = useSharedHousehold();
   const { mode } = useAppMode();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { transactions, isLoading, invalidateTransactions } = useTransactions();
   const [viewMode, setViewMode] = useState<"timeline" | "table">("timeline");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
   const isSurvival = mode === "survival";
 
-  const fetchTransactions = async () => {
-    if (!user || householdLoading) {
-      setTransactions([]);
-      setLoading(false);
-      return;
-    }
+  // Sort transactions by created_at for display
+  const sortedTransactions = useMemo(() => {
+    return [...transactions].sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+  }, [transactions]);
 
-    setLoading(true);
-    try {
-      let query = supabase.from("transactions").select("*");
-
-      if (!isShared) {
-        query = query.eq("user_id", user.id);
-      } else if (householdId) {
-        query = query.eq("household_id", householdId);
-      }
-
-      // Order by created_at to show latest added transactions first
-      query = query.order("created_at", { ascending: false });
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      setTransactions((data as Transaction[]) || []);
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-      setTransactions([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTransactions();
-    setCurrentPage(1);
-  }, [user, isShared, householdId, householdLoading]);
-
-  const handleSuccess = () => {
-    fetchTransactions();
+  const handleSuccess = useCallback(() => {
+    invalidateTransactions();
     onRefresh?.();
-  };
+  }, [invalidateTransactions, onRefresh]);
 
   const normalizeStatus = (status: string) => {
     const legacyMap: Record<string, string> = {
@@ -184,11 +139,10 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
     return { name, initials, avatar: member.avatar_url };
   };
 
-  const paginatedTransactions = transactions.slice(
+  const paginatedTransactions = sortedTransactions.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
   return (
     <div className={cn(
       "rounded-2xl border overflow-hidden card-shadow-soft",
@@ -237,11 +191,11 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
 
       {/* Content */}
       <div className="p-3 md:p-4">
-        {loading ? (
+        {isLoading ? (
           <div className="text-center py-8 text-muted-foreground text-sm">
             Carregando...
           </div>
-        ) : transactions.length === 0 ? (
+        ) : sortedTransactions.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <p className="text-sm mb-1">Nenhuma transação</p>
             <p className="text-xs">Adicione sua primeira transação</p>
@@ -255,7 +209,7 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
                 onEdit={() => {}}
                 onDelete={() => {}}
                 onDuplicate={handleDuplicate}
-                onStatusChange={fetchTransactions}
+                onStatusChange={handleSuccess}
                 getMemberInfo={getMemberInfo}
                 showMember={isShared && members.length > 1}
               />
@@ -273,7 +227,7 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
                       onEdit={() => {}}
                       onDelete={() => {}}
                       onDuplicate={handleDuplicate}
-                      onStatusChange={fetchTransactions}
+                      onStatusChange={handleSuccess}
                       memberInfo={memberInfo}
                       showMember={isShared && members.length > 1}
                     />
@@ -368,7 +322,7 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
                             <StatusSelector
                               transactionId={transaction.id}
                               currentStatus={transaction.status}
-                              onStatusChange={fetchTransactions}
+                              onStatusChange={handleSuccess}
                               size="sm"
                             />
                           </td>
@@ -383,7 +337,7 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
             <div className="mt-3">
               <TransactionPagination
                 currentPage={currentPage}
-                totalPages={Math.ceil(transactions.length / itemsPerPage)}
+                totalPages={Math.ceil(sortedTransactions.length / itemsPerPage)}
                 onPageChange={setCurrentPage}
               />
             </div>
