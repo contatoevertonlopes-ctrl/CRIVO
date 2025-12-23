@@ -98,13 +98,15 @@ const Cards = () => {
           {/* Header */}
           <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                <CreditCard className="w-5 h-5 text-primary" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center border border-primary/20">
+                <CreditCard className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">Gestão de Cartões</h1>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                  Central de Crédito
+                </h1>
                 <p className="text-sm text-muted-foreground">
-                  Controle seus cartões e faturas
+                  Inteligência financeira para seus cartões
                 </p>
               </div>
             </div>
@@ -115,11 +117,12 @@ const Cards = () => {
                 size="sm"
                 onClick={() => setExpenseDialogOpen(true)}
                 disabled={cards.length === 0}
+                className="border-border/50"
               >
                 <Wallet className="w-4 h-4 mr-2" />
                 Lançar Gasto
               </Button>
-              <Button size="sm" onClick={handleAddCard}>
+              <Button size="sm" onClick={handleAddCard} className="shadow-lg shadow-primary/20">
                 <Plus className="w-4 h-4 mr-2" />
                 Novo Cartão
               </Button>
