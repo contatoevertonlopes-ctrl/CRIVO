@@ -32,7 +32,7 @@ const Landing = () => {
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-green-600 flex items-center justify-center font-bold text-lg shadow-lg">
                 F
               </div>
-              <span className="font-semibold text-lg hidden sm:block">ClubFinanceTrack</span>
+              <span className="font-semibold text-lg hidden sm:block">Finance Club</span>
             </div>
             
             <nav className="hidden md:flex items-center gap-8">
@@ -386,7 +386,7 @@ const Landing = () => {
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-green-600 flex items-center justify-center font-bold">
                   F
                 </div>
-                <span className="font-semibold">ClubFinanceTrack</span>
+                <span className="font-semibold">Finance Club</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 A ferramenta financeira adaptativa para todas as fases da sua vida.
@@ -428,7 +428,7 @@ const Landing = () => {
           </div>
           
           <div className="pt-8 border-t border-border/50 text-center text-sm text-muted-foreground">
-            <p>© {new Date().getFullYear()} ClubFinanceTrack. Todos os direitos reservados.</p>
+            <p>© {new Date().getFullYear()} Finance Club. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>
