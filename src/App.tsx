@@ -19,6 +19,7 @@ import Admin from "./pages/Admin";
 import Install from "./pages/Install";
 import Goals from "./pages/Goals";
 import Cards from "./pages/Cards";
+import BankAccounts from "./pages/BankAccounts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/install" element={<Install />} />
               <Route path="/goals" element={<Goals />} />
               <Route path="/cards" element={<Cards />} />
+              <Route path="/accounts" element={<BankAccounts />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

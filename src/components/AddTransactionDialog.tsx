@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useHouseholdId } from "@/hooks/useHouseholdId";
+import { useBankAccounts } from "@/hooks/useBankAccounts";
+import { useCards } from "@/hooks/useCards";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,8 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, RefreshCw, Lock, ListOrdered, CreditCard } from "lucide-react";
-import { addMonths, addWeeks, addDays } from "date-fns";
+import { Plus, RefreshCw, Lock, ListOrdered, CreditCard, Landmark, Wallet } from "lucide-react";
+import { addMonths, addWeeks, addDays, format } from "date-fns";
 import GoalItemLinkDialog from "./GoalItemLinkDialog";
 
 interface AddTransactionDialogProps {
@@ -34,6 +36,8 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   const { user } = useAuth();
   const { subscribed } = useSubscription();
   const { householdId } = useHouseholdId();
+  const { accounts } = useBankAccounts();
+  const { cards } = useCards();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -49,6 +53,10 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringInterval, setRecurringInterval] = useState("monthly");
   
+  // Bank account / Card selection
+  const [selectedBankAccountId, setSelectedBankAccountId] = useState<string>("");
+  const [selectedCardId, setSelectedCardId] = useState<string>("");
+  
   // Installment mode
   const [isInstallment, setIsInstallment] = useState(false);
   const [installmentCount, setInstallmentCount] = useState("2");
@@ -60,6 +68,10 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
     amount: number;
     description: string;
   } | null>(null);
+
+  // Determine if we should show bank account or card selector
+  const requiresBankAccount = ["pix", "bank_transfer", "debit_card"].includes(paymentMethod);
+  const requiresCard = paymentMethod === "credit_card";
 
   const getNextInstallmentDate = (baseDate: Date, index: number, interval: string) => {
     switch (interval) {
@@ -87,6 +99,12 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
     setLoading(true);
     try {
       if (isInstallment && parseInt(installmentCount) > 1) {
+        // For credit card installments, use the card transaction system
+        if (requiresCard && selectedCardId) {
+          // Add card expense - this will be handled by useCards hook
+          // For now, we'll just create the transactions
+        }
+        
         // Create multiple transactions for installments
         const totalAmount = parseFloat(amount);
         const numInstallments = parseInt(installmentCount);
@@ -110,6 +128,8 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             payment_method: paymentMethod || null,
             is_recurring: false,
             recurring_interval: null,
+            bank_account_id: requiresBankAccount ? (selectedBankAccountId || null) : null,
+            card_id: requiresCard ? (selectedCardId || null) : null,
           });
         }
 
@@ -136,6 +156,8 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
           payment_method: paymentMethod || null,
           is_recurring: subscribed ? isRecurring : false,
           recurring_interval: isRecurring ? recurringInterval : null,
+          bank_account_id: requiresBankAccount ? (selectedBankAccountId || null) : null,
+          card_id: requiresCard ? (selectedCardId || null) : null,
         });
 
         if (error) throw error;
@@ -165,6 +187,8 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
       setPaidDate("");
       setTag("");
       setPaymentMethod("");
+      setSelectedBankAccountId("");
+      setSelectedCardId("");
       setIsRecurring(false);
       setRecurringInterval("monthly");
       setIsInstallment(false);
@@ -347,6 +371,62 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Bank Account Selector - shows for PIX, Transfer, Debit */}
+          {requiresBankAccount && accounts.length > 0 && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Landmark className="w-4 h-4 text-primary" />
+                Selecionar Conta
+              </Label>
+              <Select value={selectedBankAccountId} onValueChange={setSelectedBankAccountId}>
+                <SelectTrigger className="bg-secondary/50 border-border/50">
+                  <SelectValue placeholder="Escolha a conta bancária" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: account.color }}
+                        />
+                        {account.bank_name} - {account.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Card Selector - shows for Credit Card */}
+          {requiresCard && cards.length > 0 && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-primary" />
+                Selecionar Cartão
+              </Label>
+              <Select value={selectedCardId} onValueChange={setSelectedCardId}>
+                <SelectTrigger className="bg-secondary/50 border-border/50">
+                  <SelectValue placeholder="Escolha o cartão" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cards.map((card) => (
+                    <SelectItem key={card.id} value={card.id}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: card.color || "#8B5CF6" }}
+                        />
+                        {card.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="tag">Tag</Label>
