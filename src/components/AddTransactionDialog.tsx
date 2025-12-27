@@ -96,6 +96,36 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
       return;
     }
 
+    // Validate payment method is required
+    if (!paymentMethod) {
+      toast({
+        variant: "destructive",
+        title: "Campo obrigatório",
+        description: "Selecione uma forma de pagamento.",
+      });
+      return;
+    }
+
+    // Validate account selection for bank-based payment methods
+    if (requiresBankAccount && accounts.length > 0 && !selectedBankAccountId) {
+      toast({
+        variant: "destructive",
+        title: "Campo obrigatório",
+        description: "Selecione uma conta bancária para esta forma de pagamento.",
+      });
+      return;
+    }
+
+    // Validate card selection for credit card payments
+    if (requiresCard && cards.length > 0 && !selectedCardId) {
+      toast({
+        variant: "destructive",
+        title: "Campo obrigatório",
+        description: "Selecione um cartão de crédito.",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       if (isInstallment && parseInt(installmentCount) > 1) {
@@ -354,12 +384,17 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="paymentMethod" className="flex items-center gap-2">
-              <CreditCard className="w-4 h-4" />
-              Forma de Pagamento
+              <Wallet className="w-4 h-4" />
+              Forma de Pagamento <span className="text-destructive">*</span>
             </Label>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+            <Select value={paymentMethod} onValueChange={(value) => {
+              setPaymentMethod(value);
+              // Reset account/card selection when payment method changes
+              setSelectedBankAccountId("");
+              setSelectedCardId("");
+            }} required>
               <SelectTrigger className="bg-secondary/50 border-border/50">
-                <SelectValue placeholder="Selecione a forma (opcional)" />
+                <SelectValue placeholder="Selecione a forma de pagamento" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="pix">PIX</SelectItem>
