@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppMode } from "@/contexts/AppModeContext";
 import { useModulePreferences } from "@/hooks/useModulePreferences";
+import { useBankAccounts } from "@/hooks/useBankAccounts";
 import Sidebar from "@/components/Sidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 import MetricCard from "@/components/MetricCard";
@@ -17,6 +18,7 @@ import { QuickAddInput } from "@/components/QuickAddInput";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdaptiveModeData } from "@/hooks/useAdaptiveModeData";
 import { differenceInDays } from "date-fns";
+import { Landmark } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -28,6 +30,7 @@ const Index = () => {
   const [customDateTo, setCustomDateTo] = useState<Date | undefined>();
   const { mode, setMode } = useAppMode();
   const { modules } = useModulePreferences();
+  const { totalPatrimony, accounts } = useBankAccounts();
   
   // Calculate actual period for custom dates
   const effectivePeriod = customDateFrom && customDateTo 
@@ -170,15 +173,23 @@ const Index = () => {
             
             {/* Metrics Grid - 2x2 */}
             <div className="grid grid-cols-2 gap-3">
-              {showBalanceWidget && (
+              {showBalanceWidget && accounts.length > 0 && (
                 <MetricCard
-                  title="Saldo atual"
-                  value={formatCurrency(metrics.currentBalance)}
-                  pill="Consolidado"
-                  trend={`${formatPercent(metrics.balanceChange)} ${getPreviousPeriodLabel()}`}
-                  trendUp={metrics.balanceChange >= 0}
+                  title="Patrimônio"
+                  value={formatCurrency(totalPatrimony)}
+                  pill={`${accounts.length} conta${accounts.length > 1 ? 's' : ''}`}
+                  trend="Saldo total das contas"
+                  trendUp={totalPatrimony >= 0}
+                  icon={Landmark}
                 />
               )}
+              <MetricCard
+                title="Saldo atual"
+                value={formatCurrency(metrics.currentBalance)}
+                pill="Consolidado"
+                trend={`${formatPercent(metrics.balanceChange)} ${getPreviousPeriodLabel()}`}
+                trendUp={metrics.balanceChange >= 0}
+              />
               <MetricCard
                 title="Entradas"
                 value={formatCurrency(metrics.monthlyIncome)}
