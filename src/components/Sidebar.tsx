@@ -4,7 +4,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useSidebarContext } from "@/contexts/SidebarContext";
 import { useModulePreferences } from "@/hooks/useModulePreferences";
-import { LayoutDashboard, ArrowRightLeft, BarChart3, Settings, Crown, Shield, Sparkles, Menu, X, Target, CreditCard } from "lucide-react";
+import { LayoutDashboard, ArrowRightLeft, BarChart3, Settings, Crown, Shield, Sparkles, Menu, X, Target, CreditCard, Landmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AppLogo from "./AppLogo";
 
@@ -21,6 +21,7 @@ const Sidebar = () => {
   const baseNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/", alwaysShow: true },
     { icon: ArrowRightLeft, label: "Transações", path: "/transactions", alwaysShow: true },
+    { icon: Landmark, label: "Contas", path: "/accounts", module: "bankAccounts" as const },
     { icon: CreditCard, label: "Cartões", path: "/cards", module: "creditCards" as const },
     { icon: Target, label: "Objetivos", path: "/goals", module: "budgets" as const },
     { icon: BarChart3, label: "Relatórios", path: "/reports", alwaysShow: true },
@@ -36,6 +37,7 @@ const Sidebar = () => {
   const mobileTabItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/" },
     { icon: ArrowRightLeft, label: "Transações", path: "/transactions" },
+    ...(modules.bankAccounts ? [{ icon: Landmark, label: "Contas", path: "/accounts" }] : []),
     ...(modules.creditCards ? [{ icon: CreditCard, label: "Cartões", path: "/cards" }] : []),
     { icon: Settings, label: "Configurações", path: "/settings" },
   ];

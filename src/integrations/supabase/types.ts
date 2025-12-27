@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      bank_accounts: {
+        Row: {
+          account_type: string
+          balance: number
+          bank_name: string
+          color: string | null
+          created_at: string
+          household_id: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_type?: string
+          balance?: number
+          bank_name: string
+          color?: string | null
+          created_at?: string
+          household_id?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_type?: string
+          balance?: number
+          bank_name?: string
+          color?: string | null
+          created_at?: string
+          household_id?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       card_bills: {
         Row: {
           billing_month: string
@@ -493,6 +546,8 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
+          bank_account_id: string | null
+          card_id: string | null
           category: string
           created_at: string
           date: string
@@ -513,6 +568,8 @@ export type Database = {
         }
         Insert: {
           amount: number
+          bank_account_id?: string | null
+          card_id?: string | null
           category: string
           created_at?: string
           date?: string
@@ -533,6 +590,8 @@ export type Database = {
         }
         Update: {
           amount?: number
+          bank_account_id?: string | null
+          card_id?: string | null
           category?: string
           created_at?: string
           date?: string
@@ -552,6 +611,20 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "transactions_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "transactions_goal_id_fkey"
             columns: ["goal_id"]
