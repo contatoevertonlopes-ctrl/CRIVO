@@ -25,6 +25,8 @@ interface CategoryData {
 
 const COMPLETED_STATUSES = ["pagamento_concluido", "paid", "confirmed"];
 const PENDING_STATUSES = ["em_aberto", "a_vencer", "pending"];
+// Exclude transfers from expense/income calculations to avoid double counting
+const isTransfer = (t: Transaction) => t.category === "Transferência" || t.tag === "transferencia";
 
 export const useDashboardData = (period: number = 30, customDateFrom?: Date, customDateTo?: Date) => {
   const { transactions, isLoading, refetch } = useTransactions();
@@ -78,22 +80,22 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
       return tDate >= previousPeriodStart && tDate < previousPeriodEnd;
     });
 
-    // Current period income/expenses
+    // Current period income/expenses (excluding transfers)
     const periodIncome = currentPeriodTransactions
-      .filter((t) => t.type === "income" && COMPLETED_STATUSES.includes(t.status))
+      .filter((t) => t.type === "income" && COMPLETED_STATUSES.includes(t.status) && !isTransfer(t))
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const periodExpenses = currentPeriodTransactions
-      .filter((t) => t.type === "expense" && COMPLETED_STATUSES.includes(t.status))
+      .filter((t) => t.type === "expense" && COMPLETED_STATUSES.includes(t.status) && !isTransfer(t))
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
-    // Previous period for comparison
+    // Previous period for comparison (excluding transfers)
     const previousPeriodIncome = previousPeriodTransactions
-      .filter((t) => t.type === "income" && COMPLETED_STATUSES.includes(t.status))
+      .filter((t) => t.type === "income" && COMPLETED_STATUSES.includes(t.status) && !isTransfer(t))
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const previousPeriodExpenses = previousPeriodTransactions
-      .filter((t) => t.type === "expense" && COMPLETED_STATUSES.includes(t.status))
+      .filter((t) => t.type === "expense" && COMPLETED_STATUSES.includes(t.status) && !isTransfer(t))
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     // Total balance (all time income - expenses)
@@ -179,10 +181,10 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
       });
     }
 
-    // Calculate expenses by category
+    // Calculate expenses by category (excluding transfers)
     const categoryMap = new Map<string, number>();
     currentPeriodTransactions
-      .filter((t) => t.type === "expense")
+      .filter((t) => t.type === "expense" && !isTransfer(t))
       .forEach((t) => {
         const current = categoryMap.get(t.category) || 0;
         categoryMap.set(t.category, current + Number(t.amount));

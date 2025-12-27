@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { BankAccountCard } from "@/components/accounts/BankAccountCard";
 import { BankAccountDialog } from "@/components/accounts/BankAccountDialog";
-import { Plus, Landmark, TrendingUp, Wallet } from "lucide-react";
+import { TransferDialog } from "@/components/accounts/TransferDialog";
+import { Plus, Landmark, TrendingUp, Wallet, ArrowRightLeft } from "lucide-react";
 import { Navigate } from "react-router-dom";
 
 const formatCurrency = (value: number) => {
@@ -41,6 +42,7 @@ const BankAccounts = () => {
   } = useBankAccounts();
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
   const [deletingAccount, setDeletingAccount] = useState<BankAccount | null>(null);
 
@@ -116,16 +118,27 @@ const BankAccounts = () => {
             </p>
           </div>
           
-          <Button
-            onClick={() => {
-              setEditingAccount(null);
-              setDialogOpen(true);
-            }}
-            className="bg-gradient-to-r from-primary to-green-600 text-primary-foreground shadow-lg"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Conta
-          </Button>
+          <div className="flex gap-2">
+            {accounts.length >= 2 && (
+              <Button
+                variant="outline"
+                onClick={() => setTransferOpen(true)}
+              >
+                <ArrowRightLeft className="w-4 h-4 mr-2" />
+                Transferir
+              </Button>
+            )}
+            <Button
+              onClick={() => {
+                setEditingAccount(null);
+                setDialogOpen(true);
+              }}
+              className="bg-gradient-to-r from-primary to-green-600 text-primary-foreground shadow-lg"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Conta
+            </Button>
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -233,6 +246,11 @@ const BankAccounts = () => {
         account={editingAccount}
         onSave={handleSave}
         isLoading={isCreating || isUpdating}
+      />
+
+      <TransferDialog 
+        open={transferOpen} 
+        onOpenChange={setTransferOpen} 
       />
 
       <AlertDialog open={!!deletingAccount} onOpenChange={() => setDeletingAccount(null)}>
