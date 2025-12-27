@@ -40,8 +40,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
     <div className="space-y-4">
       <div className="space-y-2">
         <Label>Descrição *</Label>
-        <input
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+        <Input
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           placeholder="Ex: Salário, Aluguel..."
@@ -51,8 +50,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>{isInstallment ? "Valor Total *" : "Valor *"}</Label>
-          <input
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+          <Input
             type="number"
             value={formData.amount}
             onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
@@ -62,8 +60,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
         </div>
         <div className="space-y-2">
           <Label>Categoria *</Label>
-          <input
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+          <Input
             value={formData.category}
             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
             placeholder="Ex: Serviços"
@@ -102,8 +99,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>{isInstallment ? "Data 1ª Parcela" : "Data de Vencimento"}</Label>
-          <input
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+          <Input
             type="date"
             value={formData.date}
             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
@@ -111,8 +107,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
         </div>
         <div className="space-y-2">
           <Label>Data de Pagamento</Label>
-          <input
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+          <Input
             type="date"
             value={formData.paid_date}
             onChange={(e) => setFormData({ ...formData, paid_date: e.target.value })}

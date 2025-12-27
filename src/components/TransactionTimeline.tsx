@@ -105,13 +105,15 @@ const getCategoryIcon = (category: string): LucideIcon => {
 
 const TransactionTimeline = ({ 
   transactions, 
-  onEdit, 
-  onDelete, 
-  onDuplicate, 
-  onStatusChange,
+  onEdit: _onEdit, 
+  onDelete: _onDelete, 
+  onDuplicate: _onDuplicate, 
+  onStatusChange: _onStatusChange,
   getMemberInfo,
   showMember 
 }: TransactionTimelineProps) => {
+  // Note: onEdit, onDelete, onDuplicate, onStatusChange are available for future inline editing
+  // Currently using simplified timeline view without actions
   // Group transactions by date
   const groupedTransactions = useMemo(() => {
     const groups: Record<string, Transaction[]> = {};
