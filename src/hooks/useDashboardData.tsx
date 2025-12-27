@@ -162,16 +162,17 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
       const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
 
       const monthTransactions = transactions.filter((t) => {
-        const tDate = new Date(t.date);
+        const tDate = new Date(t.date + "T00:00:00");
         return tDate >= monthDate && tDate <= monthEnd;
       });
 
+      // Exclude transfers from cashflow calculations to avoid double counting
       const receitas = monthTransactions
-        .filter((t) => t.type === "income" && COMPLETED_STATUSES.includes(t.status))
+        .filter((t) => t.type === "income" && COMPLETED_STATUSES.includes(t.status) && !isTransfer(t))
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
       const despesas = monthTransactions
-        .filter((t) => t.type === "expense" && COMPLETED_STATUSES.includes(t.status))
+        .filter((t) => t.type === "expense" && COMPLETED_STATUSES.includes(t.status) && !isTransfer(t))
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
       last6Months.push({
