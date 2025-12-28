@@ -408,58 +408,70 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
           </div>
 
           {/* Bank Account Selector - shows for PIX, Transfer, Debit */}
-          {requiresBankAccount && accounts.length > 0 && (
-            <div className="space-y-2">
+          {requiresBankAccount && (
+            <div className="space-y-2 animate-in fade-in-0 slide-in-from-top-2 duration-200">
               <Label className="flex items-center gap-2">
                 <Landmark className="w-4 h-4 text-primary" />
-                Selecionar Conta
+                Selecionar Conta <span className="text-destructive">*</span>
               </Label>
-              <Select value={selectedBankAccountId} onValueChange={setSelectedBankAccountId}>
-                <SelectTrigger className="bg-secondary/50 border-border/50">
-                  <SelectValue placeholder="Escolha a conta bancária" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: account.color }}
-                        />
-                        {account.bank_name} - {account.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {accounts.length > 0 ? (
+                <Select value={selectedBankAccountId} onValueChange={setSelectedBankAccountId} required>
+                  <SelectTrigger className="bg-secondary/50 border-border/50">
+                    <SelectValue placeholder="Escolha a conta bancária" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: account.color || "#6366f1" }}
+                          />
+                          {account.bank_name} - {account.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                  Nenhuma conta bancária cadastrada. Cadastre uma conta em "Contas Bancárias".
+                </p>
+              )}
             </div>
           )}
 
           {/* Card Selector - shows for Credit Card */}
-          {requiresCard && cards.length > 0 && (
-            <div className="space-y-2">
+          {requiresCard && (
+            <div className="space-y-2 animate-in fade-in-0 slide-in-from-top-2 duration-200">
               <Label className="flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-primary" />
-                Selecionar Cartão
+                Selecionar Cartão <span className="text-destructive">*</span>
               </Label>
-              <Select value={selectedCardId} onValueChange={setSelectedCardId}>
-                <SelectTrigger className="bg-secondary/50 border-border/50">
-                  <SelectValue placeholder="Escolha o cartão" />
-                </SelectTrigger>
-                <SelectContent>
-                  {cards.map((card) => (
-                    <SelectItem key={card.id} value={card.id}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: card.color || "#8B5CF6" }}
-                        />
-                        {card.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {cards.length > 0 ? (
+                <Select value={selectedCardId} onValueChange={setSelectedCardId} required>
+                  <SelectTrigger className="bg-secondary/50 border-border/50">
+                    <SelectValue placeholder="Escolha o cartão" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cards.map((card) => (
+                      <SelectItem key={card.id} value={card.id}>
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: card.color || "#8B5CF6" }}
+                          />
+                          {card.name} {card.last_four_digits && `•••• ${card.last_four_digits}`}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                  Nenhum cartão cadastrado. Cadastre um cartão em "Cartões de Crédito".
+                </p>
+              )}
             </div>
           )}
 
