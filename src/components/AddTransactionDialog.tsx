@@ -24,9 +24,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, RefreshCw, Lock, ListOrdered, CreditCard, Landmark, Wallet } from "lucide-react";
+import { Plus, RefreshCw, Lock, ListOrdered, CreditCard, Landmark, Wallet, AlertCircle } from "lucide-react";
 import { addMonths, addWeeks, addDays, format } from "date-fns";
 import GoalItemLinkDialog from "./GoalItemLinkDialog";
+import { cn } from "@/lib/utils";
 
 interface AddTransactionDialogProps {
   onSuccess: () => void;
@@ -69,9 +70,26 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
     description: string;
   } | null>(null);
 
+  // Validation state - tracks which fields have been touched
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
   // Determine if we should show bank account or card selector
   const requiresBankAccount = ["pix", "bank_transfer", "debit_card"].includes(paymentMethod);
   const requiresCard = paymentMethod === "credit_card";
+
+  // Compute validation errors
+  const errors = {
+    description: touched.description && !description.trim(),
+    amount: touched.amount && (!amount || parseFloat(amount) <= 0),
+    category: touched.category && !category.trim(),
+    paymentMethod: touched.paymentMethod && !paymentMethod,
+    bankAccount: touched.bankAccount && requiresBankAccount && accounts.length > 0 && !selectedBankAccountId,
+    card: touched.card && requiresCard && cards.length > 0 && !selectedCardId,
+  };
+
+  const handleBlur = (field: string) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
 
   const getNextInstallmentDate = (baseDate: Date, index: number, interval: string) => {
     switch (interval) {
@@ -87,6 +105,17 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Mark all required fields as touched
+    setTouched({
+      description: true,
+      amount: true,
+      category: true,
+      paymentMethod: true,
+      bankAccount: requiresBankAccount,
+      card: requiresCard,
+    });
+
     if (!user) {
       toast({
         variant: "destructive",
@@ -96,32 +125,20 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
       return;
     }
 
-    // Validate payment method is required
-    if (!paymentMethod) {
-      toast({
-        variant: "destructive",
-        title: "Campo obrigatório",
-        description: "Selecione uma forma de pagamento.",
-      });
-      return;
-    }
+    // Validate all required fields
+    const hasErrors = !description.trim() || 
+      !amount || 
+      parseFloat(amount) <= 0 || 
+      !category.trim() ||
+      !paymentMethod ||
+      (requiresBankAccount && accounts.length > 0 && !selectedBankAccountId) ||
+      (requiresCard && cards.length > 0 && !selectedCardId);
 
-    // Validate account selection for bank-based payment methods
-    if (requiresBankAccount && accounts.length > 0 && !selectedBankAccountId) {
+    if (hasErrors) {
       toast({
         variant: "destructive",
-        title: "Campo obrigatório",
-        description: "Selecione uma conta bancária para esta forma de pagamento.",
-      });
-      return;
-    }
-
-    // Validate card selection for credit card payments
-    if (requiresCard && cards.length > 0 && !selectedCardId) {
-      toast({
-        variant: "destructive",
-        title: "Campo obrigatório",
-        description: "Selecione um cartão de crédito.",
+        title: "Campos obrigatórios",
+        description: "Preencha todos os campos obrigatórios.",
       });
       return;
     }
@@ -224,6 +241,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
       setIsInstallment(false);
       setInstallmentCount("2");
       setInstallmentInterval("monthly");
+      setTouched({});
       setOpen(false);
       onSuccess();
     } catch (error: any) {
@@ -283,16 +301,24 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="description">Descrição</Label>
+            <Label htmlFor="description" className={cn(errors.description && "text-destructive")}>
+              Descrição <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              onBlur={() => handleBlur("description")}
               placeholder="Ex: Pagamento cliente X"
-              required
-              className="bg-secondary/50 border-border/50"
+              className={cn("bg-secondary/50 border-border/50", errors.description && "border-destructive focus-visible:ring-destructive")}
               autoComplete="off"
             />
+            {errors.description && (
+              <p className="text-xs text-destructive flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                Descrição é obrigatória
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -310,7 +336,9 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="amount">{isInstallment ? "Valor Total (R$)" : "Valor (R$)"}</Label>
+              <Label htmlFor="amount" className={cn(errors.amount && "text-destructive")}>
+                {isInstallment ? "Valor Total (R$)" : "Valor (R$)"} <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="amount"
                 type="number"
@@ -318,26 +346,40 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
                 min="0"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
+                onBlur={() => handleBlur("amount")}
                 placeholder="0,00"
-                required
-                className="bg-secondary/50 border-border/50"
+                className={cn("bg-secondary/50 border-border/50", errors.amount && "border-destructive focus-visible:ring-destructive")}
                 autoComplete="off"
               />
+              {errors.amount && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  Valor inválido
+                </p>
+              )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="category">Categoria</Label>
+              <Label htmlFor="category" className={cn(errors.category && "text-destructive")}>
+                Categoria <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
+                onBlur={() => handleBlur("category")}
                 placeholder="Ex: Serviços"
-                required
-                className="bg-secondary/50 border-border/50"
+                className={cn("bg-secondary/50 border-border/50", errors.category && "border-destructive focus-visible:ring-destructive")}
                 autoComplete="off"
               />
+              {errors.category && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  Categoria é obrigatória
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -383,17 +425,17 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="paymentMethod" className="flex items-center gap-2">
+            <Label htmlFor="paymentMethod" className={cn("flex items-center gap-2", errors.paymentMethod && "text-destructive")}>
               <Wallet className="w-4 h-4" />
               Forma de Pagamento <span className="text-destructive">*</span>
             </Label>
             <Select value={paymentMethod} onValueChange={(value) => {
               setPaymentMethod(value);
-              // Reset account/card selection when payment method changes
               setSelectedBankAccountId("");
               setSelectedCardId("");
-            }} required>
-              <SelectTrigger className="bg-secondary/50 border-border/50">
+              setTouched(prev => ({ ...prev, paymentMethod: true }));
+            }}>
+              <SelectTrigger className={cn("bg-secondary/50 border-border/50", errors.paymentMethod && "border-destructive focus:ring-destructive")}>
                 <SelectValue placeholder="Selecione a forma de pagamento" />
               </SelectTrigger>
               <SelectContent>
@@ -405,37 +447,51 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
                 <SelectItem value="boleto">Boleto</SelectItem>
               </SelectContent>
             </Select>
+            {errors.paymentMethod && (
+              <p className="text-xs text-destructive flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                Forma de pagamento é obrigatória
+              </p>
+            )}
           </div>
 
           {/* Bank Account Selector - shows for PIX, Transfer, Debit */}
           {requiresBankAccount && (
             <div className="space-y-2 animate-in fade-in-0 slide-in-from-top-2 duration-200">
-              <Label className="flex items-center gap-2">
+              <Label className={cn("flex items-center gap-2", errors.bankAccount && "text-destructive")}>
                 <Landmark className="w-4 h-4 text-primary" />
                 Selecionar Conta <span className="text-destructive">*</span>
               </Label>
               {accounts.length > 0 ? (
-                <Select value={selectedBankAccountId} onValueChange={setSelectedBankAccountId} required>
-                  <SelectTrigger className="bg-secondary/50 border-border/50">
-                    <SelectValue placeholder="Escolha a conta bancária" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {accounts.map((account) => (
-                      <SelectItem key={account.id} value={account.id}>
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: account.color || "#6366f1" }}
-                          />
-                          {account.bank_name} - {account.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <>
+                  <Select value={selectedBankAccountId} onValueChange={(v) => {
+                    setSelectedBankAccountId(v);
+                    setTouched(prev => ({ ...prev, bankAccount: true }));
+                  }}>
+                    <SelectTrigger className={cn("bg-secondary/50 border-border/50", errors.bankAccount && "border-destructive focus:ring-destructive")}>
+                      <SelectValue placeholder="Escolha a conta bancária" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: account.color || "#6366f1" }} />
+                            {account.bank_name} - {account.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.bankAccount && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      Selecione uma conta bancária
+                    </p>
+                  )}
+                </>
               ) : (
                 <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-                  Nenhuma conta bancária cadastrada. Cadastre uma conta em "Contas Bancárias".
+                  Nenhuma conta bancária cadastrada.
                 </p>
               )}
             </div>
@@ -444,32 +500,40 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
           {/* Card Selector - shows for Credit Card */}
           {requiresCard && (
             <div className="space-y-2 animate-in fade-in-0 slide-in-from-top-2 duration-200">
-              <Label className="flex items-center gap-2">
+              <Label className={cn("flex items-center gap-2", errors.card && "text-destructive")}>
                 <CreditCard className="w-4 h-4 text-primary" />
                 Selecionar Cartão <span className="text-destructive">*</span>
               </Label>
               {cards.length > 0 ? (
-                <Select value={selectedCardId} onValueChange={setSelectedCardId} required>
-                  <SelectTrigger className="bg-secondary/50 border-border/50">
-                    <SelectValue placeholder="Escolha o cartão" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cards.map((card) => (
-                      <SelectItem key={card.id} value={card.id}>
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: card.color || "#8B5CF6" }}
-                          />
-                          {card.name} {card.last_four_digits && `•••• ${card.last_four_digits}`}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <>
+                  <Select value={selectedCardId} onValueChange={(v) => {
+                    setSelectedCardId(v);
+                    setTouched(prev => ({ ...prev, card: true }));
+                  }}>
+                    <SelectTrigger className={cn("bg-secondary/50 border-border/50", errors.card && "border-destructive focus:ring-destructive")}>
+                      <SelectValue placeholder="Escolha o cartão" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cards.map((card) => (
+                        <SelectItem key={card.id} value={card.id}>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: card.color || "#8B5CF6" }} />
+                            {card.name} {card.last_four_digits && `•••• ${card.last_four_digits}`}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.card && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      Selecione um cartão
+                    </p>
+                  )}
+                </>
               ) : (
                 <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-                  Nenhum cartão cadastrado. Cadastre um cartão em "Cartões de Crédito".
+                  Nenhum cartão cadastrado.
                 </p>
               )}
             </div>
