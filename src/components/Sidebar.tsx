@@ -59,8 +59,11 @@ const Sidebar = () => {
       </div>
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur-sm border-t border-sidebar-border px-2 py-2 safe-area-pb">
-        <div className="flex items-center justify-around max-w-md mx-auto">
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur-sm border-t border-sidebar-border px-2 py-2 safe-area-pb"
+        style={{ paddingLeft: 'env(safe-area-inset-left,12px)', paddingRight: 'env(safe-area-inset-right,12px)' }}
+      >
+        <div className="flex items-center justify-between w-full">
           {mobileTabItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
@@ -69,14 +72,12 @@ const Sidebar = () => {
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  "flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all",
-                  isActive
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground"
+                  "flex-1 min-w-0 flex flex-col items-center gap-1 py-2 rounded-xl transition-all",
+                  isActive ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium">{item.label.split(" ")[0]}</span>
+                <span className="text-[10px] font-medium truncate w-full text-center">{item.label}</span>
               </button>
             );
           })}
@@ -90,15 +91,7 @@ const Sidebar = () => {
             className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
             onClick={toggle}
           />
-          <aside className="lg:hidden fixed top-[60px] left-0 bottom-[72px] w-72 bg-sidebar border-r border-sidebar-border z-50 flex flex-col p-4 animate-in slide-in-from-left-full duration-300">
-            {/* Logo */}
-            <div className="flex items-center gap-2 mb-6 pb-4 border-b border-sidebar-border/50">
-              <AppLogo size={32} className="text-primary" />
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold">Finance Club</span>
-                <span className="text-[10px] text-muted-foreground">Dashboard Financeiro</span>
-              </div>
-            </div>
+          <aside className="lg:hidden fixed top-[60px] left-0 bottom-[72px] w-72 bg-sidebar border-r border-sidebar-border z-50 flex flex-col p-3 animate-in slide-in-from-left-full duration-300">
 
             {/* Navigation */}
             <nav className="flex flex-col gap-1">
