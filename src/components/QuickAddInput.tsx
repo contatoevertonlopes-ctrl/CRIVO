@@ -169,6 +169,13 @@ export const QuickAddInput = ({ onTransactionAdded, onFallbackToForm }: QuickAdd
 
     setIsLoading(true);
     try {
+      // Determine status: mark as paid if date is today or in the past
+      const txDate = new Date(parsed.date);
+      txDate.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const status = txDate <= today ? "pagamento_concluido" : "em_aberto";
+
       const { error } = await supabase.from("transactions").insert({
         user_id: user.id,
         household_id: householdId,
@@ -176,7 +183,7 @@ export const QuickAddInput = ({ onTransactionAdded, onFallbackToForm }: QuickAdd
         description: parsed.description,
         type: parsed.type,
         category: parsed.category,
-        status: "em_aberto",
+        status,
         date: parsed.date.toISOString().split("T")[0],
         goal_id: parsed.goalId || null,
       });

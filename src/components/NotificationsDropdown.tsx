@@ -7,7 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bell, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Bell, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface UpcomingBill {
@@ -23,6 +23,7 @@ const NotificationsDropdown = () => {
   const { user } = useAuth();
   const [upcomingBills, setUpcomingBills] = useState<UpcomingBill[]>([]);
   const [loading, setLoading] = useState(true);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   const fetchUpcomingBills = async () => {
     if (!user) return;
@@ -109,6 +110,7 @@ const NotificationsDropdown = () => {
   }, [upcomingBills]);
 
   const markAsPaid = async (id: string) => {
+    setProcessingId(id);
     try {
       const { error } = await supabase
         .from("transactions")
@@ -123,12 +125,13 @@ const NotificationsDropdown = () => {
     } catch (error) {
       console.error("Error marking as paid:", error);
       // show more info when available
-      // Supabase returns an object with message/code/details
       if (error && typeof error === "object" && "message" in (error as any)) {
         toast.error(`Erro: ${(error as any).message}`);
       } else {
         toast.error("Erro ao atualizar status");
       }
+    } finally {
+      setProcessingId((cur) => (cur === id ? null : cur));
     }
   };
 
@@ -221,12 +224,22 @@ const NotificationsDropdown = () => {
                         <p className={`text-sm font-semibold ${typeInfo.class}`}>
                           {formatCurrency(bill.amount)}
                         </p>
-                        <button
-                          onClick={() => markAsPaid(bill.id)}
-                          className="text-[10px] text-primary hover:underline mt-1"
-                        >
-                          Marcar {bill.type === "income" ? "recebido" : "pago"}
-                        </button>
+                        <div className="mt-2">
+                          <Button
+                            size="sm"
+                            onClick={() => markAsPaid(bill.id)}
+                            disabled={processingId === bill.id}
+                            aria-label={`Marcar ${bill.type === "income" ? "recebido" : "pago"}`}
+                            className={`h-7 px-3 text-xs ${processingId === bill.id ? "opacity-70 cursor-wait" : ""} ${
+                              bill.type === "income" ? "" : "bg-emerald-600 text-white hover:bg-emerald-700"
+                            }`}
+                          >
+                            {processingId === bill.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : null}
+                            Marcar {bill.type === "income" ? "recebido" : "pago"}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
