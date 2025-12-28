@@ -112,7 +112,8 @@ const NotificationsDropdown = () => {
     try {
       const { error } = await supabase
         .from("transactions")
-        .update({ status: "paid" })
+        // Use DB-compatible status value. 'paid' caused check-constraint violations.
+        .update({ status: "pagamento_concluido" })
         .eq("id", id);
 
       if (error) throw error;
@@ -121,7 +122,13 @@ const NotificationsDropdown = () => {
       fetchUpcomingBills();
     } catch (error) {
       console.error("Error marking as paid:", error);
-      toast.error("Erro ao atualizar status");
+      // show more info when available
+      // Supabase returns an object with message/code/details
+      if (error && typeof error === "object" && "message" in (error as any)) {
+        toast.error(`Erro: ${(error as any).message}`);
+      } else {
+        toast.error("Erro ao atualizar status");
+      }
     }
   };
 

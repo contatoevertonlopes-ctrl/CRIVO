@@ -75,9 +75,12 @@ const parseQuickText = (text: string, goals: Goal[]): ParsedTransaction | null =
   }
 
   // Clean text to get description
+  // Use word boundaries so we don't remove substrings inside words (ex: 'na' in 'gasolina')
   let description = text
     .replace(amountMatch[0], "")
-    .replace(/R\$|reais|pila|conto|hoje|ontem|gastei|ganhei|recebi|paguei|comprei|em|de|no|na|por/gi, "")
+    .replace(/\b(?:R\$|reais|pila|conto|hoje|ontem|gastei|ganhei|recebi|paguei|comprei|em|de|no|na|por)\b/gi, "")
+    .replace(/[^\u0000-\u007F\p{L}\d\s]/gu, "") // remove stray punctuation but keep unicode letters
+    .replace(/\s{2,}/g, " ")
     .trim();
 
   // Capitalize first letter
