@@ -1,9 +1,13 @@
+import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { RefreshCw, Lock, Tag, ListOrdered, CreditCard } from "lucide-react";
+import { RefreshCw, Lock, Tag, ListOrdered, CreditCard, Landmark, Wallet, AlertCircle } from "lucide-react";
+import { useBankAccounts } from "@/hooks/useBankAccounts";
+import { useCards } from "@/hooks/useCards";
+import { cn } from "@/lib/utils";
 
 interface TransactionFormData {
   description: string;
@@ -20,6 +24,8 @@ interface TransactionFormData {
   installment_count: string;
   installment_interval: string;
   payment_method: string;
+  bank_account_id?: string;
+  card_id?: string;
 }
 
 interface TransactionFormProps {
@@ -31,41 +37,141 @@ interface TransactionFormProps {
   showInstallment?: boolean;
 }
 
+interface ValidationErrors {
+  description: boolean;
+  amount: boolean;
+  category: boolean;
+  payment_method: boolean;
+  bank_account_id: boolean;
+  card_id: boolean;
+}
+
 const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscribed, showInstallment = true }: TransactionFormProps) => {
+  const { accounts } = useBankAccounts();
+  const { cards } = useCards();
   const isInstallment = formData.is_installment || false;
   const installmentCount = formData.installment_count || "2";
   const installmentInterval = formData.installment_interval || "monthly";
 
+  // Validation state - tracks which fields have been touched
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  
+  // Determine if we should show bank account or card selector
+  const requiresBankAccount = ["pix", "bank_transfer", "debit_card"].includes(formData.payment_method);
+  const requiresCard = formData.payment_method === "credit_card";
+
+  // Compute validation errors
+  const errors: ValidationErrors = {
+    description: touched.description && !formData.description.trim(),
+    amount: touched.amount && (!formData.amount || parseFloat(formData.amount) <= 0),
+    category: touched.category && !formData.category.trim(),
+    payment_method: touched.payment_method && !formData.payment_method,
+    bank_account_id: touched.bank_account_id && requiresBankAccount && accounts.length > 0 && !formData.bank_account_id,
+    card_id: touched.card_id && requiresCard && cards.length > 0 && !formData.card_id,
+  };
+
+  const handleBlur = (field: string) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
+
+  // Reset bank_account_id and card_id when payment method changes
+  useEffect(() => {
+    if (!requiresBankAccount && formData.bank_account_id) {
+      setFormData({ ...formData, bank_account_id: "" });
+    }
+    if (!requiresCard && formData.card_id) {
+      setFormData({ ...formData, card_id: "" });
+    }
+  }, [formData.payment_method]);
+
+  const handleSubmit = () => {
+    // Mark all required fields as touched
+    const allTouched = {
+      description: true,
+      amount: true,
+      category: true,
+      payment_method: true,
+      bank_account_id: requiresBankAccount,
+      card_id: requiresCard,
+    };
+    setTouched(allTouched);
+
+    // Validate all fields
+    const hasErrors = !formData.description.trim() || 
+      !formData.amount || 
+      parseFloat(formData.amount) <= 0 || 
+      !formData.category.trim() ||
+      !formData.payment_method ||
+      (requiresBankAccount && accounts.length > 0 && !formData.bank_account_id) ||
+      (requiresCard && cards.length > 0 && !formData.card_id);
+
+    if (hasErrors) {
+      return;
+    }
+
+    onSubmit();
+  };
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Descrição *</Label>
+        <Label className={cn(errors.description && "text-destructive")}>
+          Descrição <span className="text-destructive">*</span>
+        </Label>
         <Input
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          onBlur={() => handleBlur("description")}
           placeholder="Ex: Salário, Aluguel..."
           autoComplete="off"
+          className={cn(errors.description && "border-destructive focus-visible:ring-destructive")}
         />
+        {errors.description && (
+          <p className="text-xs text-destructive flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" />
+            Descrição é obrigatória
+          </p>
+        )}
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>{isInstallment ? "Valor Total *" : "Valor *"}</Label>
+          <Label className={cn(errors.amount && "text-destructive")}>
+            {isInstallment ? "Valor Total" : "Valor"} <span className="text-destructive">*</span>
+          </Label>
           <Input
             type="number"
             value={formData.amount}
             onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+            onBlur={() => handleBlur("amount")}
             placeholder="0,00"
             autoComplete="off"
+            className={cn(errors.amount && "border-destructive focus-visible:ring-destructive")}
           />
+          {errors.amount && (
+            <p className="text-xs text-destructive flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              Valor inválido
+            </p>
+          )}
         </div>
         <div className="space-y-2">
-          <Label>Categoria *</Label>
+          <Label className={cn(errors.category && "text-destructive")}>
+            Categoria <span className="text-destructive">*</span>
+          </Label>
           <Input
             value={formData.category}
             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+            onBlur={() => handleBlur("category")}
             placeholder="Ex: Serviços"
             autoComplete="off"
+            className={cn(errors.category && "border-destructive focus-visible:ring-destructive")}
           />
+          {errors.category && (
+            <p className="text-xs text-destructive flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              Categoria é obrigatória
+            </p>
+          )}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -117,12 +223,18 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
       
       {/* Payment Method field */}
       <div className="space-y-2">
-        <Label className="flex items-center gap-2">
-          <CreditCard className="w-4 h-4" />
-          Forma de Pagamento
+        <Label className={cn("flex items-center gap-2", errors.payment_method && "text-destructive")}>
+          <Wallet className="w-4 h-4" />
+          Forma de Pagamento <span className="text-destructive">*</span>
         </Label>
-        <Select value={formData.payment_method || "none"} onValueChange={(v) => setFormData({ ...formData, payment_method: v === "none" ? "" : v })}>
-          <SelectTrigger>
+        <Select 
+          value={formData.payment_method || "none"} 
+          onValueChange={(v) => {
+            setFormData({ ...formData, payment_method: v === "none" ? "" : v, bank_account_id: "", card_id: "" });
+            setTouched(prev => ({ ...prev, payment_method: true }));
+          }}
+        >
+          <SelectTrigger className={cn(errors.payment_method && "border-destructive focus:ring-destructive")}>
             <SelectValue placeholder="Selecione a forma de pagamento" />
           </SelectTrigger>
           <SelectContent>
@@ -135,7 +247,109 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
             <SelectItem value="boleto">Boleto</SelectItem>
           </SelectContent>
         </Select>
+        {errors.payment_method && (
+          <p className="text-xs text-destructive flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" />
+            Forma de pagamento é obrigatória
+          </p>
+        )}
       </div>
+
+      {/* Bank Account Selector - shows for PIX, Transfer, Debit */}
+      {requiresBankAccount && (
+        <div className="space-y-2 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+          <Label className={cn("flex items-center gap-2", errors.bank_account_id && "text-destructive")}>
+            <Landmark className="w-4 h-4 text-primary" />
+            Selecionar Conta <span className="text-destructive">*</span>
+          </Label>
+          {accounts.length > 0 ? (
+            <>
+              <Select 
+                value={formData.bank_account_id || ""} 
+                onValueChange={(v) => {
+                  setFormData({ ...formData, bank_account_id: v });
+                  setTouched(prev => ({ ...prev, bank_account_id: true }));
+                }}
+              >
+                <SelectTrigger className={cn(errors.bank_account_id && "border-destructive focus:ring-destructive")}>
+                  <SelectValue placeholder="Escolha a conta bancária" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: account.color || "#6366f1" }}
+                        />
+                        {account.bank_name} - {account.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.bank_account_id && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  Selecione uma conta bancária
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+              Nenhuma conta bancária cadastrada. Cadastre uma conta em "Contas Bancárias".
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Card Selector - shows for Credit Card */}
+      {requiresCard && (
+        <div className="space-y-2 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+          <Label className={cn("flex items-center gap-2", errors.card_id && "text-destructive")}>
+            <CreditCard className="w-4 h-4 text-primary" />
+            Selecionar Cartão <span className="text-destructive">*</span>
+          </Label>
+          {cards.length > 0 ? (
+            <>
+              <Select 
+                value={formData.card_id || ""} 
+                onValueChange={(v) => {
+                  setFormData({ ...formData, card_id: v });
+                  setTouched(prev => ({ ...prev, card_id: true }));
+                }}
+              >
+                <SelectTrigger className={cn(errors.card_id && "border-destructive focus:ring-destructive")}>
+                  <SelectValue placeholder="Escolha o cartão" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cards.map((card) => (
+                    <SelectItem key={card.id} value={card.id}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: card.color || "#8B5CF6" }}
+                        />
+                        {card.name} {card.last_four_digits && `•••• ${card.last_four_digits}`}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.card_id && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  Selecione um cartão
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+              Nenhum cartão cadastrado. Cadastre um cartão em "Cartões de Crédito".
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Tag field */}
       <div className="space-y-2">
@@ -292,7 +506,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
       )}
 
       <div className="flex justify-end gap-2 pt-4">
-        <Button onClick={onSubmit}>
+        <Button onClick={handleSubmit}>
           {isInstallment && parseInt(installmentCount) > 1 
             ? `Criar ${installmentCount} parcelas` 
             : submitLabel}
