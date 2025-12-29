@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -18,9 +18,22 @@ const Auth = () => {
   const [resetLoading, setResetLoading] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
+   const location = useLocation();
+   const [isRecovery, setIsRecovery] = useState(false);
+   const [newPassword, setNewPassword] = useState("");
+   const [confirmPassword, setConfirmPassword] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
+    // Detect recovery flow from query params (supabase sends ?type=recovery&access_token=...)
+    const params = new URLSearchParams(location.search);
+    const type = params.get("type");
+
+    if (type === "recovery") {
+      setIsRecovery(true);
+      return;
+    }
+
     const checkOnboardingStatus = async () => {
       if (!user) return;
 
@@ -104,6 +117,34 @@ const Auth = () => {
     }
   };
 
+  const handleSetNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!newPassword || newPassword.length < 6) {
+      toast({ variant: 'destructive', title: 'Senha inválida', description: 'A senha precisa ter ao menos 6 caracteres.' });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({ variant: 'destructive', title: 'Confirmação incorreta', description: 'As senhas não conferem.' });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword } as any);
+      if (error) {
+        toast({ variant: 'destructive', title: 'Erro', description: error.message });
+        return;
+      }
+
+      toast({ title: 'Senha atualizada', description: 'Sua senha foi redefinida com sucesso.' });
+      // After resetting, redirect to root (onboarding flow may continue if needed)
+      navigate('/', { replace: true });
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Erro', description: err?.message || 'Erro ao atualizar senha' });
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-black p-4">
       <div className="w-full max-w-md">
@@ -125,14 +166,53 @@ const Auth = () => {
           <div className="absolute inset-[-40%] bg-[radial-gradient(circle_at_0%_0%,rgba(34,197,94,0.1),transparent_55%)] pointer-events-none"></div>
           
           <div className="relative z-10">
-            <h1 className="text-2xl font-bold mb-2 text-center">
-              {isLogin ? "Entrar" : "Criar conta"}
-            </h1>
-            <p className="text-muted-foreground text-sm text-center mb-6">
-              {isLogin ? "Acesse sua conta para continuar" : "Preencha os dados para começar"}
-            </p>
+            {isRecovery ? (
+              <>
+                <h1 className="text-2xl font-bold mb-2 text-center">Redefinir senha</h1>
+                <p className="text-muted-foreground text-sm text-center mb-6">Defina uma nova senha para sua conta.</p>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSetNewPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword">Nova senha</Label>
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      minLength={6}
+                      className="bg-secondary/50 border-border/50"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirmar senha</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      minLength={6}
+                      className="bg-secondary/50 border-border/50"
+                    />
+                  </div>
+
+                  <Button type="submit" className="w-full">Redefinir senha</Button>
+                </form>
+              </>
+            ) : (
+              <>
+                <h1 className="text-2xl font-bold mb-2 text-center">
+                  {isLogin ? "Entrar" : "Criar conta"}
+                </h1>
+                <p className="text-muted-foreground text-sm text-center mb-6">
+                  {isLogin ? "Acesse sua conta para continuar" : "Preencha os dados para começar"}
+                </p>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
                 <>
                   <div className="space-y-2">
