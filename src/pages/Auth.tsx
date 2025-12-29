@@ -14,6 +14,8 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -195,18 +197,96 @@ const Auth = () => {
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
-              <button 
-                type="button" 
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setPhone("");
-                  setFullName("");
-                }} 
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {isLogin ? "Não tem conta? Criar agora" : "Já tem conta? Entrar"}
-              </button>
+            <div className="mt-6 text-center space-y-2">
+              {isLogin ? (
+                <>
+                  <div className="flex justify-between items-center">
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setIsLogin(false);
+                        setPhone("");
+                        setFullName("");
+                      }} 
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Não tem conta? Criar agora
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowForgot(true)}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Esqueceu a senha?
+                    </button>
+                  </div>
+
+                  {showForgot && (
+                    <div className="mt-4 p-4 bg-secondary/10 rounded-lg">
+                      <h3 className="text-sm font-medium mb-2">Recuperar senha</h3>
+                      <p className="text-xs text-muted-foreground mb-3">Informe o email cadastrado e enviaremos instruções para redefinir sua senha.</p>
+                      <div className="space-y-2">
+                        <Input
+                          id="resetEmail"
+                          type="email"
+                          value={email}
+                          onChange={e => setEmail(e.target.value)}
+                          placeholder="seu@email.com"
+                          className="bg-secondary/50 border-border/50"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={async () => {
+                              setResetLoading(true);
+                              try {
+                                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                                  redirectTo: `${window.location.origin}/auth`
+                                } as any);
+
+                                if (error) {
+                                  toast({ variant: 'destructive', title: 'Erro', description: error.message });
+                                } else {
+                                  toast({ title: 'Email enviado', description: 'Verifique sua caixa de entrada para instruções.' });
+                                  setShowForgot(false);
+                                }
+                              } catch (err: any) {
+                                toast({ variant: 'destructive', title: 'Erro', description: err?.message || 'Erro ao solicitar recuperação' });
+                              } finally {
+                                setResetLoading(false);
+                              }
+                            }}
+                            disabled={resetLoading}
+                            className="flex-1"
+                          >
+                            {resetLoading ? 'Enviando...' : 'Enviar instruções'}
+                          </Button>
+
+                          <button
+                            onClick={() => setShowForgot(false)}
+                            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setIsLogin(true);
+                      setPhone("");
+                      setFullName("");
+                    }} 
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Já tem conta? Entrar
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
