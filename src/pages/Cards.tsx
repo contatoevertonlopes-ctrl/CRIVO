@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useBankAccounts } from "@/hooks/useBankAccounts";
 import { useCards, CardWithBill } from "@/hooks/useCards";
 import Sidebar from "@/components/Sidebar";
 import CreditCardVisual from "@/components/cards/CreditCardVisual";
@@ -44,22 +45,21 @@ const Cards = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<CardWithBill | null>(null);
   const [editingCard, setEditingCard] = useState<CardWithBill | null>(null);
-  const [currentBalance, setCurrentBalance] = useState(0);
   const [monthlyIncome, setMonthlyIncome] = useState(0);
+  const { totalPatrimony } = useBankAccounts();
 
-  // Fetch profile data
+  // Fetch profile monthly income only (patrimônio é derivado das contas)
   useEffect(() => {
     const fetchProfileData = async () => {
       if (!user) return;
 
       const { data } = await supabase
         .from("profiles")
-        .select("current_balance, monthly_income")
+        .select("monthly_income")
         .eq("user_id", user.id)
         .maybeSingle();
 
       if (data) {
-        setCurrentBalance(Number(data.current_balance) || 0);
         setMonthlyIncome(Number(data.monthly_income) || 0);
       }
     };
@@ -166,7 +166,7 @@ const Cards = () => {
 
           {/* Real Balance Widget */}
           <RealBalanceWidget
-            currentBalance={currentBalance}
+            currentBalance={totalPatrimony}
             totalOpenBills={totalOpenBills}
           />
 

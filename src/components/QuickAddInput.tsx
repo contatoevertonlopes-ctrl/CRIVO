@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { Sparkles, Check, X, Loader2, Target } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useHouseholdId } from "@/hooks/useHouseholdId";
+import { useBankAccounts } from "@/hooks/useBankAccounts";
 
 interface Goal {
   id: string;
@@ -119,6 +121,14 @@ export const QuickAddInput = ({ onTransactionAdded, onFallbackToForm }: QuickAdd
   const { toast } = useToast();
   const { user } = useAuth();
   const { householdId } = useHouseholdId();
+  const { accounts } = useBankAccounts();
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedAccountId && accounts && accounts.length > 0) {
+      setSelectedAccountId(accounts[0].id);
+    }
+  }, [accounts, selectedAccountId]);
 
   // Fetch active goals for intelligent linking
   useEffect(() => {
@@ -176,7 +186,7 @@ export const QuickAddInput = ({ onTransactionAdded, onFallbackToForm }: QuickAdd
       today.setHours(0, 0, 0, 0);
       const status = txDate <= today ? "pagamento_concluido" : "em_aberto";
 
-      const { error } = await supabase.from("transactions").insert({
+      const insertPayload: any = {
         user_id: user.id,
         household_id: householdId,
         amount: parsed.amount,
@@ -186,8 +196,15 @@ export const QuickAddInput = ({ onTransactionAdded, onFallbackToForm }: QuickAdd
         status,
         date: parsed.date.toISOString().split("T")[0],
         goal_id: parsed.goalId || null,
-      });
+      };
 
+      if ((status === "pagamento_concluido") && (accounts && accounts.length > 0)) {
+        // prefer selected account if user chose one
+        insertPayload.bank_account_id = selectedAccountId || accounts[0].id;
+        insertPayload.paid_date = parsed.date.toISOString().split("T")[0];
+      }
+
+      const { error } = await supabase.from("transactions").insert(insertPayload);
       if (error) throw error;
 
       toast({
@@ -258,6 +275,30 @@ export const QuickAddInput = ({ onTransactionAdded, onFallbackToForm }: QuickAdd
                   <Target className="h-3 w-3" />
                   Vinculado a "{parsed.goalTitle}"
                 </p>
+              )}
+
+              {accounts && accounts.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs text-muted-foreground mb-1">Conta</p>
+                  <Select value={selectedAccountId || ""} onValueChange={(v) => setSelectedAccountId(v)}>
+                    <SelectTrigger className="w-56">
+                      <SelectValue placeholder="Selecione a conta" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accounts.map((acc) => (
+                        <SelectItem key={acc.id} value={acc.id}>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: acc.color || "#6366f1" }}
+                            />
+                            {acc.bank_name} - {acc.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
             </div>
             <div className="flex gap-2">

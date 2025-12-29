@@ -29,6 +29,29 @@ const getIcon = (iconName: string, color: string) => {
   }
 };
 
+// Helpers to determine if a color is dark so we can pick a readable text color
+const hexToRgb = (hex: string) => {
+  const clean = hex.replace('#', '').trim();
+  const bigint = parseInt(clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean, 16);
+  return {
+    r: (bigint >> 16) & 255,
+    g: (bigint >> 8) & 255,
+    b: bigint & 255,
+  };
+};
+
+const isColorDark = (hex: string) => {
+  try {
+    const { r, g, b } = hexToRgb(hex);
+    const [Rsrgb, Gsrgb, Bsrgb] = [r, g, b].map(v => v / 255);
+    const [R, G, B] = [Rsrgb, Gsrgb, Bsrgb].map(c => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
+    const lum = 0.2126 * R + 0.7152 * G + 0.0722 * B;
+    return lum < 0.179; // WCAG threshold for dark backgrounds
+  } catch (e) {
+    return false;
+  }
+};
+
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -41,6 +64,8 @@ export const BankAccountCard = ({ account, onEdit, onDelete }: BankAccountCardPr
   const color = account.color || preset.color;
   const icon = account.icon || preset.icon;
   const isNegative = account.balance < 0;
+  const readableColor = isColorDark(color) ? "#ffffff" : color;
+  const iconColor = readableColor;
 
   return (
     <Card 
@@ -62,7 +87,7 @@ export const BankAccountCard = ({ account, onEdit, onDelete }: BankAccountCardPr
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: `${color}20` }}
             >
-              {getIcon(icon, color)}
+              {getIcon(icon, iconColor)}
             </div>
             <div>
               <h3 className="font-semibold text-sm">{account.bank_name}</h3>
@@ -108,7 +133,7 @@ export const BankAccountCard = ({ account, onEdit, onDelete }: BankAccountCardPr
           </div>
           <p 
             className={`text-xl font-bold ${isNegative ? "text-destructive" : ""}`}
-            style={{ color: isNegative ? undefined : color }}
+            style={{ color: isNegative ? undefined : readableColor }}
           >
             {formatCurrency(account.balance)}
           </p>

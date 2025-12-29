@@ -84,6 +84,20 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
     }
   }, [formData.payment_method]);
 
+  // If transaction is marked as paid and there's exactly one bank account,
+  // auto-select it and set paid_date (if not set).
+  useEffect(() => {
+    if (formData.status === "pagamento_concluido" && accounts.length === 1) {
+      const only = accounts[0];
+      const updates: Partial<TransactionFormData> = {};
+      if (!formData.bank_account_id) updates.bank_account_id = only.id;
+      if (!formData.paid_date) updates.paid_date = formData.date || new Date().toISOString().split("T")[0];
+      if (Object.keys(updates).length > 0) {
+        setFormData({ ...formData, ...updates });
+      }
+    }
+  }, [formData.status, accounts]);
+
   const handleSubmit = () => {
     // Mark all required fields as touched
     const allTouched = {
@@ -95,6 +109,10 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
       card_id: requiresCard,
     };
     setTouched(allTouched);
+    // If marking as paid and there's exactly one account, auto-fill it
+    if (formData.status === "pagamento_concluido" && accounts.length === 1 && !formData.bank_account_id) {
+      formData.bank_account_id = accounts[0].id;
+    }
 
     // Validate all fields
     const hasErrors = !formData.description.trim() || 
