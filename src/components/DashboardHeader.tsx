@@ -1,7 +1,16 @@
 import NotificationsDropdown from "./NotificationsDropdown";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useSharedHousehold } from "@/hooks/useSharedHousehold";
-import { User, Users } from "lucide-react";
+import { User, Users, Settings as SettingsIcon, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -34,6 +43,8 @@ const DashboardHeader = ({
 }: DashboardHeaderProps) => {
   const { profile } = useUserProfile();
   const { isShared, memberCount, loading: householdLoading } = useSharedHousehold();
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
   
   const isCustomPeriod = customDateFrom !== undefined && customDateTo !== undefined;
   
@@ -142,17 +153,43 @@ const DashboardHeader = ({
           />
         )}
 
-        {/* User Avatar - Hidden on mobile */}
-        <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg border border-border/30 bg-secondary/50">
-          <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center text-xs font-semibold text-primary-foreground">
-            {profile.initials}
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-medium leading-tight">{profile.fullName}</span>
-            <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">
-              {profile.email}
-            </span>
-          </div>
+        {/* User Avatar + Menu - Hidden on mobile */}
+        <div className="hidden sm:flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="flex items-center gap-2 px-2 py-1 rounded-lg border border-border/30 bg-secondary/50 cursor-pointer">
+                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center text-xs font-semibold text-primary-foreground">
+                  {profile.initials}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium leading-tight">{profile.fullName}</span>
+                  <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">
+                    {profile.email}
+                  </span>
+                </div>
+              </div>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-3 py-2">
+                <div className="text-sm font-medium">{profile.fullName}</div>
+                <div className="text-xs text-muted-foreground truncate">{profile.email}</div>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate('/settings')}>
+                <SettingsIcon className="w-4 h-4 mr-2 inline" /> Configurações
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={async () => {
+                  await signOut();
+                  navigate('/auth');
+                }}
+              >
+                <LogOut className="w-4 h-4 mr-2 inline" /> Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
