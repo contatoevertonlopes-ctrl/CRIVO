@@ -118,10 +118,12 @@ const Auth = () => {
         // mas aqui dá um feedback imediato.
         toast({ title: "Bem-vindo!", description: "Login realizado com sucesso." });
       } else {
-        const { error } = await signUp(email.trim(), password, {
-          full_name: fullName?.trim() || null,
-          phone: phone?.trim() || null,
-        });
+        const { error } = await signUp(
+          email.trim(), 
+          password, 
+          fullName?.trim() || "", 
+          phone?.trim() || undefined
+        );
 
         if (error) {
           toast({ variant: "destructive", title: "Erro", description: error.message });
