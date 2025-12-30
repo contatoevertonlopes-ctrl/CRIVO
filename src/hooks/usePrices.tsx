@@ -5,10 +5,12 @@ interface PriceData {
   monthly: {
     amount: number;
     priceId: string | null;
+    productId?: string | null;
   };
   annual: {
     amount: number;
     priceId: string | null;
+    productId?: string | null;
     monthlyEquivalent: number;
     savings: number;
   };

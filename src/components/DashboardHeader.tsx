@@ -23,6 +23,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DateRangePicker } from "./DateRangePicker";
 import { startOfMonth, endOfMonth } from "date-fns";
 
@@ -158,9 +159,13 @@ const DashboardHeader = ({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div className="flex items-center gap-2 px-2 py-1 rounded-lg border border-border/30 bg-secondary/50 cursor-pointer">
-                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center text-xs font-semibold text-primary-foreground">
-                  {profile.initials}
-                </div>
+                <Avatar className="w-6 h-6">
+                  {profile?.avatarUrl ? (
+                    <AvatarImage src={profile.avatarUrl || undefined} />
+                  ) : (
+                    <AvatarFallback className="text-xs bg-primary/20 text-primary">{profile.initials}</AvatarFallback>
+                  )}
+                </Avatar>
                 <div className="flex flex-col">
                   <span className="text-xs font-medium leading-tight">{profile.fullName}</span>
                   <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">

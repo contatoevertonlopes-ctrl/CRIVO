@@ -66,7 +66,32 @@ export const useHousehold = () => {
         .eq("household_id", profile.household_id);
 
       if (membersData) {
-        setMembers(membersData);
+        // Private avatars: only the owner can read their own object.
+        // For other members, keep avatar_url only if it's an actual URL (legacy/public setup).
+        const hydrated = await Promise.all(
+          membersData.map(async (member) => {
+            const raw = member.avatar_url;
+
+            if (!raw) return member;
+
+            // Legacy/back-compat
+            if (/^https?:\/\//i.test(raw)) return member;
+
+            // Only sign current user's avatar (others won't have permission under private policy)
+            if (member.user_id !== user.id) return { ...member, avatar_url: null };
+
+            const { data: signed, error } = await supabase.storage
+              .from("avatars")
+              .createSignedUrl(raw, 60 * 60 * 24 * 7);
+
+            if (error) return { ...member, avatar_url: null };
+
+            const signedUrl = (signed as any)?.signedUrl || (signed as any)?.signedURL || null;
+            return { ...member, avatar_url: signedUrl };
+          })
+        );
+
+        setMembers(hydrated);
       }
 
       // Get active invites

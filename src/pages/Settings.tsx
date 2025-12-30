@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import ImageCropper from "@/components/ImageCropper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import HouseholdSection from "@/components/HouseholdSection";
 import ModeSelector from "@/components/settings/ModeSelector";
@@ -19,6 +22,7 @@ import { User, Wallet, Bell, LogOut, MessageSquare, Sparkles } from "lucide-reac
 
 const Settings = () => {
   const { user, signOut } = useAuth();
+  const { profile, refresh: refreshProfile } = useUserProfile();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [fullName, setFullName] = useState("");
@@ -26,6 +30,12 @@ const Settings = () => {
   const [loading, setLoading] = useState(false);
   const [phoneLoading, setPhoneLoading] = useState(false);
   const [subscription, setSubscription] = useState<any>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarRemoveRequested, setAvatarRemoveRequested] = useState(false);
+  const [showCropper, setShowCropper] = useState(false);
+  const [selectedImageSrc, setSelectedImageSrc] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -35,6 +45,12 @@ const Settings = () => {
     fetchProfile();
     fetchSubscription();
   }, [user, navigate]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    };
+  }, [avatarPreview]);
 
   const fetchProfile = async () => {
     if (!user) return;
@@ -69,12 +85,64 @@ const Settings = () => {
     
     setLoading(true);
     try {
+      // Read current avatar path (needed for delete / cleanup)
+      const { data: currentProfile, error: currentProfileError } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (currentProfileError) throw currentProfileError;
+
+      const currentAvatar = currentProfile?.avatar_url || null;
+
+      let nextAvatarPath: string | null | undefined = undefined;
+
+      // If a new avatar was selected, upload it and store the object path.
+      if (avatarFile) {
+        const path = `${user.id}/${Date.now()}_${avatarFile.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(path, avatarFile, { upsert: true });
+
+        if (uploadError) throw uploadError;
+        nextAvatarPath = path;
+      } else if (avatarRemoveRequested) {
+        // Remove requested: clear the avatar path.
+        nextAvatarPath = null;
+      }
+
+      const updatePayload: Record<string, any> = { full_name: fullName };
+      if (nextAvatarPath !== undefined) updatePayload.avatar_url = nextAvatarPath;
+
       const { error } = await supabase
         .from("profiles")
-        .update({ full_name: fullName })
+        .update(updatePayload)
         .eq("user_id", user.id);
 
       if (error) throw error;
+
+      // Cleanup old avatar object if we replaced or removed it.
+      const shouldCleanupOld =
+        currentAvatar &&
+        typeof currentAvatar === "string" &&
+        !/^https?:\/\//i.test(currentAvatar) &&
+        (nextAvatarPath === null || (typeof nextAvatarPath === "string" && nextAvatarPath !== currentAvatar));
+
+      if (shouldCleanupOld) {
+        const { error: removeError } = await supabase.storage
+          .from("avatars")
+          .remove([currentAvatar]);
+
+        if (removeError) console.warn("Could not remove old avatar object:", removeError);
+      }
+
+      // Clear local pending avatar state
+      setAvatarFile(null);
+      setAvatarPreview(null);
+      setAvatarRemoveRequested(false);
+      window.dispatchEvent(new Event("profileUpdated"));
+      refreshProfile();
 
       toast({
         title: "Perfil atualizado",
@@ -119,6 +187,40 @@ const Settings = () => {
     } finally {
       setPhoneLoading(false);
     }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setSelectedImageSrc(url);
+    setSelectedFileName(file.name);
+    setShowCropper(true);
+    // allow re-selecting the same file
+    e.target.value = "";
+  };
+
+  const handleCropComplete = async (blob: Blob) => {
+    // convert blob to File to preserve name/type
+    const name = selectedFileName || `avatar_${Date.now()}.jpg`;
+    const file = new File([blob], name, { type: blob.type || "image/jpeg" });
+    // revoke previous preview
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    const previewUrl = URL.createObjectURL(file);
+    setAvatarFile(file);
+    setAvatarPreview(previewUrl);
+    setAvatarRemoveRequested(false);
+    setShowCropper(false);
+    if (selectedImageSrc) URL.revokeObjectURL(selectedImageSrc);
+    setSelectedImageSrc(null);
+    setSelectedFileName(null);
+  };
+
+  const handleCropCancel = () => {
+    setShowCropper(false);
+    if (selectedImageSrc) URL.revokeObjectURL(selectedImageSrc);
+    setSelectedImageSrc(null);
+    setSelectedFileName(null);
   };
 
   const handleSignOut = async () => {
@@ -187,6 +289,44 @@ const Settings = () => {
               <h3 className="text-sm font-medium mb-4">Perfil</h3>
               
               <form onSubmit={handleUpdateProfile} className="space-y-4">
+                <div className="flex items-center gap-4 mb-4">
+                  <Avatar className="w-16 h-16">
+                    {avatarPreview ? (
+                      <AvatarImage src={avatarPreview} />
+                    ) : avatarRemoveRequested ? (
+                      <AvatarFallback className="text-xl">{profile?.initials}</AvatarFallback>
+                    ) : profile?.avatarUrl ? (
+                      <AvatarImage src={profile.avatarUrl || undefined} />
+                    ) : (
+                      <AvatarFallback className="text-xl">{profile?.initials}</AvatarFallback>
+                    )}
+                  </Avatar>
+
+                  <div className="flex flex-col gap-2">
+                    <input id="avatar" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                    <label htmlFor="avatar" className="inline-flex items-center gap-2 px-3 py-1 rounded-md border border-border/50 bg-secondary cursor-pointer text-sm">
+                      Escolher foto
+                    </label>
+                    {avatarFile && <div className="text-xs text-muted-foreground">{avatarFile.name}</div>}
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setAvatarFile(null);
+                          setAvatarPreview(null);
+                          setAvatarRemoveRequested(true);
+                        }}
+                      >
+                        Remover
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                {showCropper && selectedImageSrc && (
+                  <ImageCropper src={selectedImageSrc} aspect={1} onCancel={handleCropCancel} onComplete={handleCropComplete} />
+                )}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>

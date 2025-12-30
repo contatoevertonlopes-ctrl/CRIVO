@@ -72,9 +72,9 @@ const Admin = () => {
   const [updatingMonthly, setUpdatingMonthly] = useState(false);
   const [updatingAnnual, setUpdatingAnnual] = useState(false);
 
-  // Stripe product IDs
-  const MONTHLY_PRODUCT_ID = "prod_TXoqM83X412xRF";
-  const ANNUAL_PRODUCT_ID = "prod_TXoru4mtSgWkWf";
+  // Stripe product IDs (resolved dynamically via get-prices)
+  const [monthlyProductId, setMonthlyProductId] = useState<string | null>(null);
+  const [annualProductId, setAnnualProductId] = useState<string | null>(null);
 
   // Coupon state
   const [couponName, setCouponName] = useState("");
@@ -94,6 +94,24 @@ const Admin = () => {
       }
     }
   }, [user, isAdmin, authLoading, adminLoading, navigate]);
+
+  useEffect(() => {
+    const fetchStripeProducts = async () => {
+      if (!isAdmin) return;
+      try {
+        const { data, error } = await supabase.functions.invoke("get-prices");
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+
+        setMonthlyProductId(data?.monthly?.productId ?? null);
+        setAnnualProductId(data?.annual?.productId ?? null);
+      } catch (e) {
+        console.warn("Could not resolve Stripe product IDs via get-prices:", e);
+      }
+    };
+
+    fetchStripeProducts();
+  }, [isAdmin]);
 
   const fetchData = async () => {
     if (!isAdmin) return;
@@ -423,7 +441,13 @@ const Admin = () => {
                 />
               </div>
               <Button 
-                onClick={() => updatePrice(MONTHLY_PRODUCT_ID, parseFloat(monthlyPrice), "month")}
+                onClick={() => {
+                  if (!monthlyProductId) {
+                    toast.error("Produto mensal não encontrado no Stripe. Verifique os nomes dos produtos.");
+                    return;
+                  }
+                  updatePrice(monthlyProductId, parseFloat(monthlyPrice), "month");
+                }}
                 disabled={updatingMonthly}
                 className="w-full gap-2"
                 size="sm"
@@ -455,7 +479,13 @@ const Admin = () => {
                 />
               </div>
               <Button 
-                onClick={() => updatePrice(ANNUAL_PRODUCT_ID, parseFloat(annualPrice), "year")}
+                onClick={() => {
+                  if (!annualProductId) {
+                    toast.error("Produto anual não encontrado no Stripe. Verifique os nomes dos produtos.");
+                    return;
+                  }
+                  updatePrice(annualProductId, parseFloat(annualPrice), "year");
+                }}
                 disabled={updatingAnnual}
                 className="w-full gap-2"
                 size="sm"
