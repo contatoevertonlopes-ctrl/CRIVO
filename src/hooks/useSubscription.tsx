@@ -50,9 +50,59 @@ export const useSubscription = () => {
     }
   }, [user, session]);
 
+  // Initial check
   useEffect(() => {
     checkSubscription();
   }, [checkSubscription]);
+
+  // Realtime listener for subscription changes
+  useEffect(() => {
+    if (!user) return;
+
+    console.log("[useSubscription] Setting up realtime listener for user:", user.id);
+
+    const channel = supabase
+      .channel('subscription-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'subscriptions',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log("[useSubscription] Realtime update received:", payload);
+          
+          const newData = payload.new as {
+            plan: string;
+            status: string;
+            expires_at: string | null;
+          };
+
+          // Update subscription state immediately
+          setSubscription({
+            subscribed: newData.status === "active" && newData.plan === "pro",
+            planType: newData.plan === "pro" ? "monthly" : null, // Default to monthly for admin-granted
+            subscriptionEnd: newData.expires_at,
+            loading: false,
+          });
+
+          console.log("[useSubscription] Subscription updated via realtime:", {
+            plan: newData.plan,
+            status: newData.status,
+          });
+        }
+      )
+      .subscribe((status) => {
+        console.log("[useSubscription] Realtime subscription status:", status);
+      });
+
+    return () => {
+      console.log("[useSubscription] Removing realtime channel");
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   const createCheckout = async (priceType: "monthly" | "annual") => {
     if (!session) return null;
