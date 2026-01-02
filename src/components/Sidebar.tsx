@@ -4,7 +4,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useSidebarContext } from "@/contexts/SidebarContext";
 import { useModulePreferences } from "@/hooks/useModulePreferences";
-import { LayoutDashboard, ArrowRightLeft, BarChart3, Crown, Shield, Sparkles, Menu, X, Target, CreditCard, Landmark } from "lucide-react";
+import { LayoutDashboard, ArrowRightLeft, BarChart3, Crown, Shield, Sparkles, Menu, X, Target, CreditCard, Landmark, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AppLogo from "./AppLogo";
 
@@ -38,6 +38,7 @@ const Sidebar = () => {
     { icon: ArrowRightLeft, label: "Transações", path: "/transactions" },
     ...(modules.bankAccounts ? [{ icon: Landmark, label: "Contas", path: "/accounts" }] : []),
     ...(modules.creditCards ? [{ icon: CreditCard, label: "Cartões", path: "/cards" }] : []),
+    { icon: Settings, label: "Config", path: "/settings" },
   ];
 
   return (
