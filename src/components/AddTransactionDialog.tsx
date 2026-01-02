@@ -104,6 +104,78 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
     }
   };
 
+  const createCardTransactionsSeries = async (params: {
+    cardId: string;
+    purchaseDateStr: string;
+    description: string;
+    totalAmount: number;
+    installments: number;
+    transactionIds?: string[];
+  }) => {
+    if (!user) throw new Error("User not authenticated");
+
+    const card = cards.find((c) => c.id === params.cardId);
+    if (!card) throw new Error("Cartão não encontrado");
+
+    const purchaseDate = new Date(params.purchaseDateStr + "T00:00:00");
+    const purchaseDay = purchaseDate.getDate();
+
+    let firstBillingMonth = new Date(purchaseDate.getFullYear(), purchaseDate.getMonth(), 1);
+    if (purchaseDay > card.closing_day) {
+      firstBillingMonth.setMonth(firstBillingMonth.getMonth() + 1);
+    }
+
+    const installmentAmount = Math.round((params.totalAmount / params.installments) * 100) / 100;
+    const firstDescription = params.installments > 1
+      ? `${params.description} (1/${params.installments})`
+      : params.description;
+
+    const { data: root, error: rootError } = await supabase
+      .from("card_transactions")
+      .insert({
+        card_id: params.cardId,
+        transaction_id: params.transactionIds?.[0] ?? null,
+        user_id: user.id,
+        household_id: householdId,
+        description: firstDescription,
+        amount: installmentAmount,
+        purchase_date: params.purchaseDateStr,
+        installment_number: 1,
+        total_installments: params.installments,
+        billing_month: firstBillingMonth.toISOString().split("T")[0],
+      })
+      .select("id")
+      .single();
+
+    if (rootError) throw rootError;
+    const rootId = root?.id as string | undefined;
+    if (!rootId) throw new Error("Falha ao criar gasto no cartão");
+
+    if (params.installments > 1) {
+      const rows: any[] = [];
+      for (let i = 2; i <= params.installments; i++) {
+        const billingMonth = new Date(firstBillingMonth);
+        billingMonth.setMonth(billingMonth.getMonth() + (i - 1));
+        rows.push({
+          card_id: params.cardId,
+          transaction_id: params.transactionIds?.[i - 1] ?? null,
+          user_id: user.id,
+          household_id: householdId,
+          description: `${params.description} (${i}/${params.installments})`,
+          amount: installmentAmount,
+          purchase_date: params.purchaseDateStr,
+          installment_number: i,
+          total_installments: params.installments,
+          parent_card_transaction_id: rootId,
+          billing_month: billingMonth.toISOString().split("T")[0],
+        });
+      }
+
+      const { error: rowsError } = await supabase.from("card_transactions").insert(rows);
+      if (rowsError) throw rowsError;
+    }
+  };
+
   const computeUnpaidStatus = (dateStr: string) => {
     const todayStr = new Date().toISOString().split("T")[0];
     if (dateStr > todayStr) return "a_vencer";
@@ -190,6 +262,8 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
       const { error: futureError } = await supabase.from("transactions").insert(future);
       if (futureError) throw futureError;
     }
+
+    return rootId;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -235,42 +309,85 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
     setLoading(true);
     try {
       if (isInstallment && parseInt(installmentCount) > 1) {
-        // For credit card installments, use the card transaction system
-        if (requiresCard && selectedCardId) {
-          // Add card expense - this will be handled by useCards hook
-          // For now, we'll just create the transactions
-        }
-        
         // Create multiple transactions for installments
         const totalAmount = parseFloat(amount);
         const numInstallments = parseInt(installmentCount);
         const installmentAmount = Math.round((totalAmount / numInstallments) * 100) / 100;
         const baseDate = new Date(date);
-        
-        const transactions = [];
-        for (let i = 0; i < numInstallments; i++) {
-          const installmentDate = getNextInstallmentDate(baseDate, i, installmentInterval);
-          transactions.push({
+
+        const firstInstallmentDate = getNextInstallmentDate(baseDate, 0, installmentInterval);
+        const firstDateStr = firstInstallmentDate.toISOString().split("T")[0];
+
+        const { data: rootTx, error: rootTxError } = await supabase
+          .from("transactions")
+          .insert({
             user_id: user.id,
             household_id: householdId,
-            description: `${description} ${i + 1}/${numInstallments}`,
+            description: `${description} 1/${numInstallments}`,
             category,
             type,
             amount: installmentAmount,
-            status: i === 0 ? status : "em_aberto",
-            date: installmentDate.toISOString().split("T")[0],
-            paid_date: i === 0 && paidDate ? paidDate : null,
+            status,
+            date: firstDateStr,
+            paid_date: paidDate || null,
             tag: tag || null,
             payment_method: paymentMethod || null,
             is_recurring: false,
             recurring_interval: null,
             bank_account_id: requiresBankAccount ? (selectedBankAccountId || null) : null,
             card_id: requiresCard ? (selectedCardId || null) : null,
+          })
+          .select("id")
+          .single();
+
+        if (rootTxError) throw rootTxError;
+        const rootTransactionId = rootTx?.id as string | undefined;
+        if (!rootTransactionId) throw new Error("Falha ao criar transação raiz do parcelamento");
+
+        const childRows: any[] = [];
+        for (let i = 1; i < numInstallments; i++) {
+          const installmentDate = getNextInstallmentDate(baseDate, i, installmentInterval);
+          childRows.push({
+            user_id: user.id,
+            household_id: householdId,
+            description: `${description} ${i + 1}/${numInstallments}`,
+            category,
+            type,
+            amount: installmentAmount,
+            status: "em_aberto",
+            date: installmentDate.toISOString().split("T")[0],
+            paid_date: null,
+            tag: tag || null,
+            payment_method: paymentMethod || null,
+            is_recurring: false,
+            recurring_interval: null,
+            parent_transaction_id: rootTransactionId,
+            bank_account_id: requiresBankAccount ? (selectedBankAccountId || null) : null,
+            card_id: requiresCard ? (selectedCardId || null) : null,
           });
         }
 
-        const { error } = await supabase.from("transactions").insert(transactions);
-        if (error) throw error;
+        let transactionIds: string[] = [rootTransactionId];
+        if (childRows.length > 0) {
+          const { data: insertedChildren, error: childrenError } = await supabase
+            .from("transactions")
+            .insert(childRows)
+            .select("id");
+          if (childrenError) throw childrenError;
+          transactionIds = transactionIds.concat((insertedChildren || []).map((r: any) => r.id));
+        }
+
+        // Also register into card_transactions so it appears on Cards screen
+        if (requiresCard && selectedCardId) {
+          await createCardTransactionsSeries({
+            cardId: selectedCardId,
+            purchaseDateStr: date,
+            description,
+            totalAmount,
+            installments: numInstallments,
+            transactionIds,
+          });
+        }
 
         toast({
           title: "Parcelas criadas",
@@ -278,8 +395,9 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
         });
       } else {
         // Single transaction
+        let createdTransactionId: string | null = null;
         if (subscribed && isRecurring) {
-          await createRecurringSeries({
+          createdTransactionId = await createRecurringSeries({
             description,
             category,
             type,
@@ -294,7 +412,9 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             card_id: requiresCard ? (selectedCardId || null) : null,
           });
         } else {
-          const { error } = await supabase.from("transactions").insert({
+          const { data: created, error } = await supabase
+            .from("transactions")
+            .insert({
             user_id: user.id,
             household_id: householdId,
             description,
@@ -310,9 +430,24 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             recurring_interval: null,
             bank_account_id: requiresBankAccount ? (selectedBankAccountId || null) : null,
             card_id: requiresCard ? (selectedCardId || null) : null,
-          });
+            })
+            .select("id")
+            .single();
 
           if (error) throw error;
+          createdTransactionId = (created?.id as string | undefined) ?? null;
+        }
+
+        // If it's a credit-card purchase, also register into card_transactions
+        if (requiresCard && selectedCardId) {
+          await createCardTransactionsSeries({
+            cardId: selectedCardId,
+            purchaseDateStr: date,
+            description,
+            totalAmount: parseFloat(amount),
+            installments: 1,
+            transactionIds: createdTransactionId ? [createdTransactionId] : undefined,
+          });
         }
 
         // If it's an expense, show goal item link dialog

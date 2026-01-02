@@ -26,9 +26,12 @@ import {
 
 interface TransactionsTableProps {
   onRefresh?: () => void;
+  periodDays?: number;
+  customDateFrom?: Date;
+  customDateTo?: Date;
 }
 
-const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
+const TransactionsTable = ({ onRefresh, periodDays = 30, customDateFrom, customDateTo }: TransactionsTableProps) => {
   const { user } = useAuth();
   const { householdId } = useHouseholdId();
   const { members } = useHousehold();
@@ -41,12 +44,37 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
   
   const isSurvival = mode === "survival";
 
-  // Sort transactions by created_at for display
+  const { startDate, endDate } = useMemo(() => {
+    const now = new Date();
+    if (customDateFrom && customDateTo) {
+      const start = new Date(customDateFrom);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(customDateTo);
+      end.setHours(23, 59, 59, 999);
+      return { startDate: start, endDate: end };
+    }
+
+    const end = now;
+    const start = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
+    return { startDate: start, endDate: end };
+  }, [customDateFrom, customDateTo, periodDays]);
+
+  const filteredByPeriod = useMemo(() => {
+    return transactions.filter((t) => {
+      const txDate = new Date(t.date + "T00:00:00");
+      return txDate >= startDate && txDate <= endDate;
+    });
+  }, [transactions, startDate, endDate]);
+
+  // Sort by transaction date (what matters to the period), not created_at
   const sortedTransactions = useMemo(() => {
-    return [...transactions].sort((a, b) => 
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-  }, [transactions]);
+    return [...filteredByPeriod].sort((a, b) => {
+      const aDate = new Date(a.date + "T00:00:00").getTime();
+      const bDate = new Date(b.date + "T00:00:00").getTime();
+      if (aDate !== bDate) return bDate - aDate;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  }, [filteredByPeriod]);
 
   const handleSuccess = useCallback(() => {
     invalidateTransactions();

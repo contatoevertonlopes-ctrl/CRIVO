@@ -37,6 +37,7 @@ const Cards = () => {
     addCardExpense,
     getFutureCommitments,
     getTotalOpenBills,
+    invalidateCards,
   } = useCards();
 
   const [cardDialogOpen, setCardDialogOpen] = useState(false);
@@ -72,6 +73,12 @@ const Cards = () => {
       navigate("/auth", { replace: true });
     }
   }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      invalidateCards();
+    }
+  }, [authLoading, user, invalidateCards]);
 
   const handleSaveCard = async (cardData: Parameters<typeof createCard>[0]) => {
     if (editingCard) {

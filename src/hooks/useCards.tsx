@@ -106,7 +106,8 @@ export const useCards = () => {
     enabled: !!user && !householdLoading,
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
+    refetchOnMount: "always",
   });
 
   // Fetch card transactions
@@ -128,9 +129,10 @@ export const useCards = () => {
       return (data as CardTransaction[]) || [];
     },
     enabled: !!user && !householdLoading,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
+    refetchOnMount: "always",
   });
 
   // Calculate cards with bill info
@@ -139,6 +141,7 @@ export const useCards = () => {
     const rawTransactions = transactionsQuery.data || [];
     const today = new Date();
     const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const currentMonthKey = currentMonth.toISOString().split("T")[0].substring(0, 7); // YYYY-MM
 
     return rawCards.map((card: Card) => {
       const cardTxs = rawTransactions.filter(
@@ -146,11 +149,9 @@ export const useCards = () => {
       );
 
       const currentMonthTxs = cardTxs.filter((tx: CardTransaction) => {
-        const txMonth = new Date(tx.billing_month);
-        return (
-          txMonth.getMonth() === currentMonth.getMonth() &&
-          txMonth.getFullYear() === currentMonth.getFullYear()
-        );
+        // Avoid timezone issues with Date("YYYY-MM-DD") by comparing YYYY-MM strings
+        const txMonthKey = tx.billing_month.substring(0, 7);
+        return txMonthKey === currentMonthKey;
       });
 
       const currentBill = currentMonthTxs.reduce(
@@ -276,19 +277,19 @@ export const useCards = () => {
         billingMonth.setMonth(billingMonth.getMonth() + 1);
       }
 
-      const installmentAmount = amount / installments;
-      const descriptionWithInstallment =
-        installments > 1 ? `${description} (1/${installments})` : description;
+      const purchaseDateStr = purchaseDate.toISOString().split("T")[0];
+      const installmentAmount = Math.round((amount / installments) * 100) / 100;
+      const firstDescription = installments > 1 ? `${description} (1/${installments})` : description;
 
-      const { data, error } = await supabase
+      const { data: root, error: rootError } = await supabase
         .from("card_transactions")
         .insert({
           card_id: cardId,
           user_id: user.id,
           household_id: householdId,
-          description: descriptionWithInstallment,
+          description: firstDescription,
           amount: installmentAmount,
-          purchase_date: purchaseDate.toISOString().split("T")[0],
+          purchase_date: purchaseDateStr,
           installment_number: 1,
           total_installments: installments,
           billing_month: billingMonth.toISOString().split("T")[0],
@@ -296,8 +297,32 @@ export const useCards = () => {
         .select()
         .single();
 
-      if (error) throw error;
-      return { data, installments, installmentAmount };
+      if (rootError) throw rootError;
+
+      if (installments > 1) {
+        const rows: any[] = [];
+        for (let i = 2; i <= installments; i++) {
+          const installmentBillingMonth = new Date(billingMonth);
+          installmentBillingMonth.setMonth(installmentBillingMonth.getMonth() + (i - 1));
+          rows.push({
+            card_id: cardId,
+            user_id: user.id,
+            household_id: householdId,
+            description: `${description} (${i}/${installments})`,
+            amount: installmentAmount,
+            purchase_date: purchaseDateStr,
+            installment_number: i,
+            total_installments: installments,
+            parent_card_transaction_id: root.id,
+            billing_month: installmentBillingMonth.toISOString().split("T")[0],
+          });
+        }
+
+        const { error: rowsError } = await supabase.from("card_transactions").insert(rows);
+        if (rowsError) throw rowsError;
+      }
+
+      return { data: root, installments, installmentAmount };
     },
     onSuccess: (result) => {
       toast.success(
@@ -383,8 +408,14 @@ export const useCards = () => {
 
   // Calculate total open bills
   const getTotalOpenBills = useCallback(() => {
+    const today = new Date();
+    const currentMonthKey = new Date(today.getFullYear(), today.getMonth(), 1)
+      .toISOString()
+      .split("T")[0]
+      .substring(0, 7); // YYYY-MM
+
     return cardTransactions
-      .filter((tx) => !tx.is_paid)
+      .filter((tx) => !tx.is_paid && tx.billing_month.substring(0, 7) === currentMonthKey)
       .reduce((sum, tx) => sum + Number(tx.amount), 0);
   }, [cardTransactions]);
 

@@ -214,7 +214,12 @@ const Index = () => {
 
           {/* Transactions */}
           <section>
-            <TransactionsTable onRefresh={refetch} />
+            <TransactionsTable
+              onRefresh={refetch}
+              periodDays={effectivePeriod}
+              customDateFrom={customDateFrom}
+              customDateTo={customDateTo}
+            />
           </section>
         </div>
       </main>

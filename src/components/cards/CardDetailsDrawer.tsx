@@ -78,7 +78,6 @@ const CardDetailsDrawer = ({
       existing.push(tx);
       purchases.set(key, existing);
     });
-
     // Convert to array and sort by purchase date
     return Array.from(purchases.entries())
       .map(([key, txs]) => {
@@ -102,20 +101,26 @@ const CardDetailsDrawer = ({
           isFullyPaid: paidCount === firstTx.total_installments,
         };
       })
-      .sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
+      .sort(
+        (a, b) =>
+          new Date(b.purchaseDate + "T00:00:00").getTime() -
+          new Date(a.purchaseDate + "T00:00:00").getTime()
+      );
   }, [cardTransactions]);
 
   // Group transactions by billing month for history
   const billsHistory = useMemo(() => {
     const grouped: Map<string, { transactions: CardTransaction[]; total: number; isPast: boolean }> = new Map();
     const today = new Date();
+    const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
     
     cardTransactions.forEach(tx => {
       const month = tx.billing_month.substring(0, 7); // YYYY-MM
       const existing = grouped.get(month) || { transactions: [], total: 0, isPast: false };
       existing.transactions.push(tx);
       existing.total += Number(tx.amount);
-      existing.isPast = new Date(tx.billing_month) < new Date(today.getFullYear(), today.getMonth(), 1);
+      // Avoid timezone issues: compare YYYY-MM strings
+      existing.isPast = month < currentMonthKey;
       grouped.set(month, existing);
     });
 
