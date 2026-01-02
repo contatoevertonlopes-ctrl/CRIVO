@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useHouseholdId } from "@/hooks/useHouseholdId";
 import { useBankAccounts } from "@/hooks/useBankAccounts";
+import { detectCategory } from "@/utils/categorySuggestion";
 
 interface Goal {
   id: string;
@@ -24,27 +25,7 @@ interface ParsedTransaction {
   goalTitle?: string;
 }
 
-const CATEGORY_KEYWORDS: Record<string, string[]> = {
-  "Alimentação": ["pizza", "lanche", "restaurante", "ifood", "almoço", "jantar", "café", "mercado", "supermercado", "padaria", "açougue"],
-  "Transporte": ["uber", "99", "gasolina", "combustível", "estacionamento", "ônibus", "metrô", "táxi", "pedágio"],
-  "Moradia": ["aluguel", "condomínio", "iptu", "luz", "água", "gás", "internet", "energia"],
-  "Saúde": ["farmácia", "remédio", "médico", "consulta", "exame", "hospital", "dentista"],
-  "Lazer": ["cinema", "show", "festa", "bar", "balada", "netflix", "spotify", "jogo", "viagem"],
-  "Educação": ["curso", "livro", "escola", "faculdade", "mensalidade"],
-  "Compras": ["roupa", "sapato", "eletrônico", "celular", "presente"],
-  "Salário": ["salário", "pagamento", "freelance", "bônus"],
-  "Investimentos": ["dividendo", "rendimento", "juros", "investimento"],
-};
-
-const detectCategory = (text: string): string => {
-  const lowerText = text.toLowerCase();
-  for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-    if (keywords.some(keyword => lowerText.includes(keyword))) {
-      return category;
-    }
-  }
-  return "Outros";
-};
+// category detection lives in src/utils/categorySuggestion.ts
 
 const detectGoal = (text: string, goals: Goal[]): { goalId: string; goalTitle: string } | null => {
   const lowerText = text.toLowerCase();

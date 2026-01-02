@@ -1,15 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { RefreshCw, Lock, Tag, ListOrdered, CreditCard, Landmark, Wallet, AlertCircle } from "lucide-react";
+import { RefreshCw, Lock, Tag, ListOrdered, CreditCard, Landmark, Wallet, AlertCircle, ThumbsUp, ThumbsDown } from "lucide-react";
 import { useBankAccounts } from "@/hooks/useBankAccounts";
 import { useCards } from "@/hooks/useCards";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { detectCategory } from "@/utils/categorySuggestion";
 
-interface TransactionFormData {
+export interface TransactionFormData {
   description: string;
   amount: string;
   category: string;
@@ -35,6 +38,7 @@ interface TransactionFormProps {
   submitLabel: string;
   subscribed: boolean;
   showInstallment?: boolean;
+  variant?: "full" | "compact";
 }
 
 interface ValidationErrors {
@@ -46,12 +50,24 @@ interface ValidationErrors {
   card_id: boolean;
 }
 
-const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscribed, showInstallment = true }: TransactionFormProps) => {
+const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscribed, showInstallment = true, variant = "full" }: TransactionFormProps) => {
   const { accounts } = useBankAccounts();
   const { cards } = useCards();
   const isInstallment = formData.is_installment || false;
   const installmentCount = formData.installment_count || "2";
   const installmentInterval = formData.installment_interval || "monthly";
+  const isCompact = variant === "compact";
+
+  const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
+
+  const computeUnpaidStatus = (dateStr: string) => {
+    const date = dateStr || todayStr;
+    if (date > todayStr) return "a_vencer";
+    if (date < todayStr) return "vencido";
+    return "em_aberto";
+  };
+
+  const isPaid = formData.status === "pagamento_concluido";
 
   // Validation state - tracks which fields have been touched
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -64,7 +80,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
   const errors: ValidationErrors = {
     description: touched.description && !formData.description.trim(),
     amount: touched.amount && (!formData.amount || parseFloat(formData.amount) <= 0),
-    category: touched.category && !formData.category.trim(),
+    category: !isCompact && touched.category && !formData.category.trim(),
     payment_method: touched.payment_method && !formData.payment_method,
     bank_account_id: touched.bank_account_id && requiresBankAccount && accounts.length > 0 && !formData.bank_account_id,
     card_id: touched.card_id && requiresCard && cards.length > 0 && !formData.card_id,
@@ -84,41 +100,73 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
     }
   }, [formData.payment_method]);
 
-  // If transaction is marked as paid and there's exactly one bank account,
-  // auto-select it and set paid_date (if not set).
+  // Auto-select the only bank account / card when applicable.
   useEffect(() => {
-    if (formData.status === "pagamento_concluido" && accounts.length === 1) {
-      const only = accounts[0];
-      const updates: Partial<TransactionFormData> = {};
-      if (!formData.bank_account_id) updates.bank_account_id = only.id;
-      if (!formData.paid_date) updates.paid_date = formData.date || new Date().toISOString().split("T")[0];
-      if (Object.keys(updates).length > 0) {
-        setFormData({ ...formData, ...updates });
-      }
+    const updates: Partial<TransactionFormData> = {};
+    if (requiresBankAccount && accounts.length === 1 && !formData.bank_account_id) {
+      updates.bank_account_id = accounts[0].id;
     }
-  }, [formData.status, accounts]);
+    if (requiresCard && cards.length === 1 && !formData.card_id) {
+      updates.card_id = cards[0].id;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      setFormData({ ...formData, ...updates });
+    }
+  }, [requiresBankAccount, requiresCard, accounts, cards]);
+
+  // Compact mode: keep status automatic when not paid.
+  useEffect(() => {
+    if (!isCompact) return;
+    if (isPaid) return;
+    const nextStatus = computeUnpaidStatus(formData.date);
+    if (formData.status !== nextStatus) {
+      setFormData({ ...formData, status: nextStatus, paid_date: "" });
+    }
+  }, [isCompact, formData.date]);
+
+  // Auto-fill category from description when user hasn't set one.
+  useEffect(() => {
+    const description = formData.description.trim();
+    if (!description) return;
+    if (touched.category) return;
+
+    const currentCategory = (formData.category || "").trim();
+    const canAutoFill = !currentCategory || currentCategory.toLowerCase() === "outros";
+    if (!canAutoFill) return;
+
+    const suggested = detectCategory(description);
+    if (suggested && suggested !== "Outros" && suggested !== formData.category) {
+      setFormData({ ...formData, category: suggested });
+    }
+  }, [formData.description]);
 
   const handleSubmit = () => {
     // Mark all required fields as touched
     const allTouched = {
       description: true,
       amount: true,
-      category: true,
+      category: !isCompact,
       payment_method: true,
       bank_account_id: requiresBankAccount,
       card_id: requiresCard,
     };
     setTouched(allTouched);
-    // If marking as paid and there's exactly one account, auto-fill it
-    if (formData.status === "pagamento_concluido" && accounts.length === 1 && !formData.bank_account_id) {
-      formData.bank_account_id = accounts[0].id;
-    }
+
+    // Normalize compact-mode fields before validating
+    const normalizedCategory = (formData.category || "").trim() || (isCompact ? "Outros" : "");
+    const normalizedStatus = isCompact
+      ? (isPaid ? "pagamento_concluido" : computeUnpaidStatus(formData.date))
+      : formData.status;
+    const normalizedPaidDate = isCompact
+      ? (normalizedStatus === "pagamento_concluido" ? (formData.paid_date || todayStr) : "")
+      : formData.paid_date;
 
     // Validate all fields
     const hasErrors = !formData.description.trim() || 
       !formData.amount || 
       parseFloat(formData.amount) <= 0 || 
-      !formData.category.trim() ||
+      (!isCompact && !formData.category.trim()) ||
       !formData.payment_method ||
       (requiresBankAccount && accounts.length > 0 && !formData.bank_account_id) ||
       (requiresCard && cards.length > 0 && !formData.card_id);
@@ -127,11 +175,61 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
       return;
     }
 
+    // Ensure normalized values are reflected in the external state (best-effort).
+    const nextFormData: TransactionFormData = {
+      ...formData,
+      category: normalizedCategory,
+      status: normalizedStatus,
+      paid_date: normalizedPaidDate,
+    };
+
+    if (
+      nextFormData.category !== formData.category ||
+      nextFormData.status !== formData.status ||
+      nextFormData.paid_date !== formData.paid_date
+    ) {
+      setFormData(nextFormData);
+    }
+
     onSubmit();
   };
 
+  const setPaidState = (paid: boolean) => {
+    if (!paid) {
+      setFormData({
+        ...formData,
+        status: computeUnpaidStatus(formData.date),
+        paid_date: "",
+      });
+      return;
+    }
+    setFormData({
+      ...formData,
+      status: "pagamento_concluido",
+      paid_date: formData.paid_date || todayStr,
+    });
+  };
+
+  const repeatMode: "none" | "recurring" | "installment" =
+    formData.is_installment ? "installment" : formData.is_recurring ? "recurring" : "none";
+
   return (
-    <div className="space-y-4">
+    <div className={cn("space-y-4", isCompact && "space-y-3")}>
+      {isCompact && (
+        <div className="space-y-2">
+          <Label>Tipo</Label>
+          <Tabs
+            value={formData.type}
+            onValueChange={(v) => setFormData({ ...formData, type: v as "income" | "expense" })}
+          >
+            <TabsList className="w-full h-9">
+              <TabsTrigger value="expense" className="flex-1 py-1">Despesa</TabsTrigger>
+              <TabsTrigger value="income" className="flex-1 py-1">Receita</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label className={cn(errors.description && "text-destructive")}>
           Descrição <span className="text-destructive">*</span>
@@ -142,7 +240,10 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
           onBlur={() => handleBlur("description")}
           placeholder="Ex: Salário, Aluguel..."
           autoComplete="off"
-          className={cn(errors.description && "border-destructive focus-visible:ring-destructive")}
+          className={cn(
+            errors.description && "border-destructive focus-visible:ring-destructive",
+            isCompact && "h-10"
+          )}
         />
         {errors.description && (
           <p className="text-xs text-destructive flex items-center gap-1">
@@ -151,127 +252,349 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
           </p>
         )}
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label className={cn(errors.amount && "text-destructive")}>
-            {isInstallment ? "Valor Total" : "Valor"} <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            type="number"
-            value={formData.amount}
-            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-            onBlur={() => handleBlur("amount")}
-            placeholder="0,00"
-            autoComplete="off"
-            className={cn(errors.amount && "border-destructive focus-visible:ring-destructive")}
-          />
-          {errors.amount && (
-            <p className="text-xs text-destructive flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" />
-              Valor inválido
-            </p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <Label className={cn(errors.category && "text-destructive")}>
-            Categoria <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            value={formData.category}
-            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            onBlur={() => handleBlur("category")}
-            placeholder="Ex: Serviços"
-            autoComplete="off"
-            className={cn(errors.category && "border-destructive focus-visible:ring-destructive")}
-          />
-          {errors.category && (
-            <p className="text-xs text-destructive flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" />
-              Categoria é obrigatória
-            </p>
-          )}
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Tipo</Label>
-          <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v as "income" | "expense" })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="income">Entrada</SelectItem>
-              <SelectItem value="expense">Saída</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Status</Label>
-          <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="em_aberto">Em aberto</SelectItem>
-              <SelectItem value="a_vencer">A vencer</SelectItem>
-              <SelectItem value="vencido">Vencido</SelectItem>
-              <SelectItem value="pagamento_concluido">Pagamento concluído</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>{isInstallment ? "Data 1ª Parcela" : "Data de Vencimento"}</Label>
-          <Input
-            type="date"
-            value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Data de Pagamento</Label>
-          <Input
-            type="date"
-            value={formData.paid_date}
-            onChange={(e) => setFormData({ ...formData, paid_date: e.target.value })}
-          />
-        </div>
-      </div>
-      
-      {/* Payment Method field */}
-      <div className="space-y-2">
-        <Label className={cn("flex items-center gap-2", errors.payment_method && "text-destructive")}>
-          <Wallet className="w-4 h-4" />
-          Forma de Pagamento <span className="text-destructive">*</span>
-        </Label>
-        <Select 
-          value={formData.payment_method || "none"} 
-          onValueChange={(v) => {
-            setFormData({ ...formData, payment_method: v === "none" ? "" : v, bank_account_id: "", card_id: "" });
-            setTouched(prev => ({ ...prev, payment_method: true }));
-          }}
-        >
-          <SelectTrigger className={cn(errors.payment_method && "border-destructive focus:ring-destructive")}>
-            <SelectValue placeholder="Selecione a forma de pagamento" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">Nenhuma</SelectItem>
-            <SelectItem value="pix">PIX</SelectItem>
-            <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
-            <SelectItem value="debit_card">Cartão de Débito</SelectItem>
-            <SelectItem value="cash">Dinheiro</SelectItem>
-            <SelectItem value="bank_transfer">Transferência Bancária</SelectItem>
-            <SelectItem value="boleto">Boleto</SelectItem>
-          </SelectContent>
-        </Select>
-        {errors.payment_method && (
-          <p className="text-xs text-destructive flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" />
-            Forma de pagamento é obrigatória
-          </p>
-        )}
-      </div>
+      {isCompact ? (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2 h-9">
+                <Label className={cn(errors.amount && "text-destructive")}>
+                  {isInstallment ? "Valor Total" : "Valor"} <span className="text-destructive">*</span>
+                </Label>
+                <ToggleGroup
+                  type="single"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1"
+                  value={isPaid ? "paid" : "unpaid"}
+                  onValueChange={(v) => {
+                    if (!v) return;
+                    setPaidState(v === "paid");
+                  }}
+                >
+                  <ToggleGroupItem value="unpaid" aria-label="Não pago" className="h-9 w-9 p-0 rounded-full">
+                    <ThumbsDown className={cn("w-4 h-4", !isPaid && "fill-current")} />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="paid" aria-label="Pago" className="h-9 w-9 p-0 rounded-full">
+                    <ThumbsUp className={cn("w-4 h-4", isPaid && "fill-current")} />
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+              <Input
+                type="number"
+                value={formData.amount}
+                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                onBlur={() => handleBlur("amount")}
+                placeholder="0,00"
+                autoComplete="off"
+                className={cn(
+                  errors.amount && "border-destructive focus-visible:ring-destructive",
+                  "h-10"
+                )}
+              />
+              {errors.amount && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  Valor inválido
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="h-9 flex items-center">
+                <Label>{isInstallment ? "Data 1ª Parcela" : "Data"}</Label>
+              </div>
+              <Input
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                className="h-10"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className={cn(errors.category && "text-destructive")}>
+              Categoria <span className="text-muted-foreground">(opcional)</span>
+            </Label>
+            <Input
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              onBlur={() => handleBlur("category")}
+              placeholder="Outros"
+              autoComplete="off"
+              className={cn(errors.category && "border-destructive focus-visible:ring-destructive", "h-10")}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className={cn("flex items-center gap-2", errors.payment_method && "text-destructive")}>
+                <Wallet className="w-4 h-4" />
+                Forma de Pagamento <span className="text-destructive">*</span>
+              </Label>
+              <ToggleGroup
+                type="single"
+                className="justify-start"
+                value={requiresCard ? "credit_card" : (requiresBankAccount ? "bank" : "")}
+                onValueChange={(v) => {
+                  const nextPaymentMethod = v === "credit_card" ? "credit_card" : (v === "bank" ? "bank_transfer" : "");
+                  setFormData({ ...formData, payment_method: nextPaymentMethod, bank_account_id: "", card_id: "" });
+                  setTouched(prev => ({ ...prev, payment_method: true }));
+                }}
+              >
+                <ToggleGroupItem value="bank" aria-label="Pago pelo banco" className="gap-2">
+                  <Landmark className="w-4 h-4" />
+                  Banco
+                </ToggleGroupItem>
+                <ToggleGroupItem value="credit_card" aria-label="Pago no cartão de crédito" className="gap-2">
+                  <CreditCard className="w-4 h-4" />
+                  Cartão
+                </ToggleGroupItem>
+              </ToggleGroup>
+              {errors.payment_method && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  Forma de pagamento é obrigatória
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Repetir lançamento</Label>
+              {subscribed ? (
+                <>
+                  <ToggleGroup
+                    type="single"
+                    variant="outline"
+                    className="justify-start"
+                    value={repeatMode}
+                    onValueChange={(v) => {
+                      if (!v || v === "none") {
+                        setFormData({
+                          ...formData,
+                          is_recurring: false,
+                          is_installment: false,
+                        });
+                        return;
+                      }
+
+                      if (v === "recurring") {
+                        setFormData({
+                          ...formData,
+                          is_recurring: true,
+                          recurring_interval: formData.recurring_interval || "monthly",
+                          is_installment: false,
+                        });
+                        return;
+                      }
+
+                      if (v === "installment") {
+                        setFormData({
+                          ...formData,
+                          is_installment: true,
+                          installment_count: formData.installment_count || "2",
+                          installment_interval: formData.installment_interval || "monthly",
+                          is_recurring: false,
+                        });
+                      }
+                    }}
+                  >
+                    <ToggleGroupItem value="recurring" aria-label="Despesa fixa">Fixo</ToggleGroupItem>
+                    <ToggleGroupItem value="installment" aria-label="Despesa parcelada">Parcelado</ToggleGroupItem>
+                  </ToggleGroup>
+
+                  {repeatMode === "recurring" && (
+                    <div className="pt-1">
+                      <Select
+                        value={formData.recurring_interval}
+                        onValueChange={(v) => setFormData({ ...formData, recurring_interval: v })}
+                      >
+                        <SelectTrigger className="h-10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="weekly">Semanal</SelectItem>
+                          <SelectItem value="biweekly">Quinzenal</SelectItem>
+                          <SelectItem value="monthly">Mensal</SelectItem>
+                          <SelectItem value="yearly">Anual</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {repeatMode === "installment" && (
+                    <div className="grid grid-cols-2 gap-3 pt-1">
+                      <Input
+                        type="number"
+                        min="2"
+                        max="48"
+                        value={installmentCount}
+                        onChange={(e) => setFormData({ ...formData, installment_count: e.target.value })}
+                        className="h-10"
+                      />
+                      <Select
+                        value={installmentInterval}
+                        onValueChange={(v) => setFormData({ ...formData, installment_interval: v })}
+                      >
+                        <SelectTrigger className="h-10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="weekly">Semanal</SelectItem>
+                          <SelectItem value="biweekly">Quinzenal</SelectItem>
+                          <SelectItem value="monthly">Mensal</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="relative p-3 rounded-xl border border-border bg-secondary/20">
+                  <div className="absolute inset-0 bg-background/60 backdrop-blur-sm rounded-xl z-10 flex flex-col items-center justify-center gap-1">
+                    <Lock className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground">Plano Pro</span>
+                  </div>
+                  <div className="flex gap-2 opacity-50">
+                    <Button type="button" variant="outline" size="sm" disabled>
+                      Fixo
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" disabled>
+                      Parcelado
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className={cn("grid gap-4", "grid-cols-2")}>
+            <div className="space-y-2">
+              <Label className={cn(errors.amount && "text-destructive")}>
+                {isInstallment ? "Valor Total" : "Valor"} <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                type="number"
+                value={formData.amount}
+                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                onBlur={() => handleBlur("amount")}
+                placeholder="0,00"
+                autoComplete="off"
+                className={cn(errors.amount && "border-destructive focus-visible:ring-destructive")}
+              />
+              {errors.amount && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  Valor inválido
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label className={cn(errors.category && "text-destructive")}>
+                Categoria <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                onBlur={() => handleBlur("category")}
+                placeholder="Ex: Serviços"
+                autoComplete="off"
+                className={cn(errors.category && "border-destructive focus-visible:ring-destructive")}
+              />
+              {errors.category && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  Categoria é obrigatória
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Tipo</Label>
+              <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v as "income" | "expense" })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="income">Entrada</SelectItem>
+                  <SelectItem value="expense">Saída</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="em_aberto">Em aberto</SelectItem>
+                  <SelectItem value="a_vencer">A vencer</SelectItem>
+                  <SelectItem value="vencido">Vencido</SelectItem>
+                  <SelectItem value="pagamento_concluido">Pagamento concluído</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className={cn("grid gap-4", "grid-cols-2")}>
+            <div className="space-y-2">
+              <Label>{isInstallment ? "Data 1ª Parcela" : "Data de Vencimento"}</Label>
+              <Input
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Data de Pagamento</Label>
+              <Input
+                type="date"
+                value={formData.paid_date}
+                onChange={(e) => setFormData({ ...formData, paid_date: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {/* Payment Method field (full) */}
+          <div className="space-y-2">
+            <Label className={cn("flex items-center gap-2", errors.payment_method && "text-destructive")}>
+              <Wallet className="w-4 h-4" />
+              Forma de Pagamento <span className="text-destructive">*</span>
+            </Label>
+            <Select 
+              value={formData.payment_method || "none"} 
+              onValueChange={(v) => {
+                setFormData({ ...formData, payment_method: v === "none" ? "" : v, bank_account_id: "", card_id: "" });
+                setTouched(prev => ({ ...prev, payment_method: true }));
+              }}
+            >
+              <SelectTrigger className={cn(errors.payment_method && "border-destructive focus:ring-destructive")}>
+                <SelectValue placeholder="Selecione a forma de pagamento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhuma</SelectItem>
+                <SelectItem value="pix">PIX</SelectItem>
+                <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
+                <SelectItem value="debit_card">Cartão de Débito</SelectItem>
+                <SelectItem value="cash">Dinheiro</SelectItem>
+                <SelectItem value="bank_transfer">Transferência Bancária</SelectItem>
+                <SelectItem value="boleto">Boleto</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.payment_method && (
+              <p className="text-xs text-destructive flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                Forma de pagamento é obrigatória
+              </p>
+            )}
+          </div>
+        </>
+      )}
+
 
       {/* Bank Account Selector - shows for PIX, Transfer, Debit */}
       {requiresBankAccount && (
@@ -370,26 +693,28 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
       )}
 
       {/* Tag field */}
-      <div className="space-y-2">
-        <Label className="flex items-center gap-2">
-          <Tag className="w-4 h-4" />
-          Classificação
-        </Label>
-        <Select value={formData.tag || "none"} onValueChange={(v) => setFormData({ ...formData, tag: v === "none" ? "" : v })}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione uma classificação" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">Nenhuma</SelectItem>
-            <SelectItem value="fixa">Fixa</SelectItem>
-            <SelectItem value="variavel">Variável</SelectItem>
-            <SelectItem value="esporadica">Esporádica</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {!isCompact && (
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2">
+            <Tag className="w-4 h-4" />
+            Classificação
+          </Label>
+          <Select value={formData.tag || "none"} onValueChange={(v) => setFormData({ ...formData, tag: v === "none" ? "" : v })}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione uma classificação" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Nenhuma</SelectItem>
+              <SelectItem value="fixa">Fixa</SelectItem>
+              <SelectItem value="variavel">Variável</SelectItem>
+              <SelectItem value="esporadica">Esporádica</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {/* Installment Mode - Pro Feature */}
-      {showInstallment && (
+      {!isCompact && showInstallment && (
         subscribed ? (
           <div className="p-3 rounded-xl border border-blue-500/40 bg-blue-500/5">
             <div className="flex items-center gap-3">
@@ -470,7 +795,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
       )}
       
       {/* Recurring Transaction - Pro Feature */}
-      {!isInstallment && (
+      {!isCompact && !isInstallment && (
         subscribed ? (
           <div className="p-4 rounded-xl border border-primary/40 bg-primary/5">
             <div className="flex items-center gap-3">

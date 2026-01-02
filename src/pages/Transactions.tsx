@@ -14,6 +14,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Search, Plus, Edit2, Trash2, ArrowLeft, Filter, Download, Lock, Crown, RefreshCw, Calendar, Copy, ArrowUpDown, ChevronUp, ChevronDown, ChevronRight, CheckSquare } from "lucide-react";
 import TransactionForm from "@/components/TransactionForm";
+import type { TransactionFormData } from "@/components/TransactionForm";
+import AddTransactionCompactDialog from "@/components/AddTransactionCompactDialog";
 import Sidebar from "@/components/Sidebar";
 import ImportTransactionsDialog from "@/components/ImportTransactionsDialog";
 import TransactionCard from "@/components/TransactionCard";
@@ -21,7 +23,8 @@ import StatusSelector from "@/components/StatusSelector";
 import TransactionPagination from "@/components/TransactionPagination";
 import BulkEditDialog from "@/components/BulkEditDialog";
 import { sortTransactionsByPriority } from "@/utils/transactionSort";
-import { startOfMonth, endOfMonth, subMonths, addMonths, addWeeks, addDays, format } from "date-fns";
+import { startOfMonth, endOfMonth, subMonths, addMonths, format } from "date-fns";
+import { calculateTransactionTotals } from "@/utils/transactionTotals";
 
 interface Transaction {
   id: string;
@@ -36,6 +39,8 @@ interface Transaction {
   paid_date?: string;
   tag?: string;
   payment_method?: string;
+  bank_account_id?: string | null;
+  card_id?: string | null;
 }
 
 interface TransactionRowProps {
@@ -172,7 +177,6 @@ const Transactions = () => {
   const [recurringOnly, setRecurringOnly] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [showProFilters, setShowProFilters] = useState(false);
   const [sortOrder, setSortOrder] = useState<"date_desc" | "date_asc" | "amount_desc" | "amount_asc" | "priority">("priority");
   const [groupBy, setGroupBy] = useState<"none" | "month" | "category">("none");
@@ -183,10 +187,10 @@ const Transactions = () => {
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
   const itemsPerPage = 10;
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<TransactionFormData>({
     description: "",
     amount: "",
-    category: "",
+    category: "Outros",
     type: "expense" as "income" | "expense",
     status: "em_aberto",
     date: new Date().toISOString().split("T")[0],
@@ -198,7 +202,11 @@ const Transactions = () => {
     installment_count: "2",
     installment_interval: "monthly",
     payment_method: "",
+    bank_account_id: "",
+    card_id: "",
   });
+
+  const todayStr = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -400,13 +408,12 @@ const Transactions = () => {
   };
 
   const getGroupStats = (transactions: Transaction[]) => {
-    const income = transactions
-      .filter(t => t.type === "income" && paidStatuses.includes(t.status))
-      .reduce((sum, t) => sum + t.amount, 0);
-    const expense = transactions
-      .filter(t => t.type === "expense" && paidStatuses.includes(t.status))
-      .reduce((sum, t) => sum + t.amount, 0);
-    return { income, expense, balance: income - expense };
+    const groupTotals = calculateTransactionTotals(transactions, { excludeTransfers: true });
+    return {
+      income: groupTotals.incomePaid,
+      expense: groupTotals.expensePaid,
+      balance: groupTotals.balancePaid,
+    };
   };
 
   const toggleGroupCollapse = (key: string) => {
@@ -424,110 +431,32 @@ const Transactions = () => {
     ? filteredTransactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
     : filteredTransactions;
 
-  const getNextInstallmentDate = (baseDate: Date, index: number, interval: string) => {
-    switch (interval) {
-      case "weekly":
-        return addWeeks(baseDate, index);
-      case "biweekly":
-        return addDays(baseDate, index * 15);
-      case "monthly":
-      default:
-        return addMonths(baseDate, index);
-    }
-  };
 
-  const handleAdd = async () => {
-    if (!user || !formData.description || !formData.amount || !formData.category) {
-      toast.error("Preencha todos os campos obrigatórios");
-      return;
-    }
-
-    // Check if trying to add recurring without Pro
-    if (formData.is_recurring && !subscribed) {
-      toast.error("Transações recorrentes são exclusivas do Plano Pro");
-      return;
-    }
-
-    try {
-      if (formData.is_installment && parseInt(formData.installment_count) > 1) {
-        // Create multiple transactions for installments
-        const totalAmount = parseFloat(formData.amount);
-        const numInstallments = parseInt(formData.installment_count);
-        const installmentAmount = Math.round((totalAmount / numInstallments) * 100) / 100;
-        const baseDate = new Date(formData.date);
-        
-        const transactions = [];
-        for (let i = 0; i < numInstallments; i++) {
-          const installmentDate = getNextInstallmentDate(baseDate, i, formData.installment_interval);
-          transactions.push({
-            user_id: user.id,
-            household_id: householdId,
-            description: `${formData.description} ${i + 1}/${numInstallments}`,
-            category: formData.category,
-            type: formData.type,
-            amount: installmentAmount,
-            status: i === 0 ? formData.status : "em_aberto",
-            date: installmentDate.toISOString().split("T")[0],
-            tag: formData.tag || null,
-            is_recurring: false,
-            recurring_interval: null,
-            paid_date: i === 0 ? (formData.paid_date || null) : null,
-            payment_method: formData.payment_method || null,
-          });
-        }
-
-        const { error } = await supabase.from("transactions").insert(transactions);
-        if (error) throw error;
-
-        toast.success(`${numInstallments} parcelas criadas com sucesso!`);
-      } else {
-        const { error } = await supabase.from("transactions").insert({
-          user_id: user.id,
-          household_id: householdId,
-          description: formData.description,
-          amount: parseFloat(formData.amount),
-          category: formData.category,
-          type: formData.type,
-          status: formData.status,
-          date: formData.date,
-          is_recurring: subscribed ? formData.is_recurring : false,
-          recurring_interval: formData.is_recurring ? formData.recurring_interval : null,
-          tag: formData.tag || null,
-          paid_date: formData.paid_date || null,
-          payment_method: formData.payment_method || null,
-        });
-
-        if (error) throw error;
-        toast.success("Transação adicionada com sucesso!");
-      }
-
-      setIsAddDialogOpen(false);
-      resetForm();
-      fetchTransactions();
-    } catch (error) {
-      console.error("Error adding transaction:", error);
-      toast.error("Erro ao adicionar transação");
-    }
-  };
 
   const handleEdit = async () => {
     if (!editingTransaction || !user) return;
 
     try {
+      const normalizedCategory = (formData.category || "").trim() || "Outros";
+      const isPaid = formData.status === "pagamento_concluido";
+      const normalizedPaidDate = isPaid ? (formData.paid_date || todayStr) : null;
+
       const { error } = await supabase
         .from("transactions")
         .update({
           description: formData.description,
           amount: parseFloat(formData.amount),
-          category: formData.category,
+          category: normalizedCategory,
           type: formData.type,
           status: formData.status,
           date: formData.date,
           is_recurring: subscribed ? formData.is_recurring : false,
           recurring_interval: formData.is_recurring ? formData.recurring_interval : null,
-          paid_date: formData.paid_date || null,
+          paid_date: normalizedPaidDate,
           tag: formData.tag || null,
           payment_method: formData.payment_method || null,
+          bank_account_id: formData.bank_account_id || null,
+          card_id: formData.card_id || null,
         })
         .eq("id", editingTransaction.id)
         .eq("user_id", user.id);
@@ -617,6 +546,8 @@ const Transactions = () => {
       installment_count: "2",
       installment_interval: "monthly",
       payment_method: transaction.payment_method || "",
+      bank_account_id: transaction.bank_account_id || "",
+      card_id: transaction.card_id || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -637,6 +568,8 @@ const Transactions = () => {
       installment_count: "2",
       installment_interval: "monthly",
       payment_method: "",
+      bank_account_id: "",
+      card_id: "",
     });
   };
 
@@ -734,23 +667,7 @@ const Transactions = () => {
     fetchTransactions();
   };
 
-  const pendingStatuses = ["em_aberto", "a_vencer", "vencido", "pending"];
-  const paidStatuses = ["pagamento_concluido", "paid", "confirmed"];
-
-  const totals = {
-    income: filteredTransactions
-      .filter((t) => t.type === "income" && paidStatuses.includes(t.status))
-      .reduce((acc, t) => acc + t.amount, 0),
-    expense: filteredTransactions
-      .filter((t) => t.type === "expense" && paidStatuses.includes(t.status))
-      .reduce((acc, t) => acc + t.amount, 0),
-    pendingExpense: filteredTransactions
-      .filter((t) => t.type === "expense" && pendingStatuses.includes(t.status))
-      .reduce((acc, t) => acc + t.amount, 0),
-    pendingIncome: filteredTransactions
-      .filter((t) => t.type === "income" && pendingStatuses.includes(t.status))
-      .reduce((acc, t) => acc + t.amount, 0),
-  };
+  const totals = calculateTransactionTotals(filteredTransactions, { excludeTransfers: true });
 
   if (authLoading || subLoading) {
     return (
@@ -783,27 +700,16 @@ const Transactions = () => {
                 </p>
               </div>
               {/* Mobile: only add button */}
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90 sm:hidden" onClick={resetForm}>
+              <AddTransactionCompactDialog
+                onSuccess={fetchTransactions}
+                contentClassName="max-w-[95vw] sm:max-w-lg"
+                trigger={
+                  <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90 sm:hidden">
                     <Plus className="w-4 h-4" />
                     <span className="sr-only sm:not-sr-only">Nova</span>
                   </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-[95vw] sm:max-w-lg">
-                  <DialogHeader>
-                    <DialogTitle>Adicionar Transação</DialogTitle>
-                    <DialogDescription>Preencha os campos para adicionar uma nova transação.</DialogDescription>
-                  </DialogHeader>
-                  <TransactionForm 
-                    formData={formData} 
-                    setFormData={setFormData} 
-                    onSubmit={handleAdd} 
-                    submitLabel="Adicionar" 
-                    subscribed={subscribed} 
-                  />
-                </DialogContent>
-              </Dialog>
+                }
+              />
             </div>
             {/* Desktop actions */}
             <div className="hidden sm:flex gap-2 flex-wrap">
@@ -830,27 +736,15 @@ const Transactions = () => {
                 <Download className="w-4 h-4" />
                 Exportar CSV
               </Button>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="gap-2 bg-primary hover:bg-primary/90" onClick={resetForm}>
+              <AddTransactionCompactDialog
+                onSuccess={fetchTransactions}
+                trigger={
+                  <Button className="gap-2 bg-primary hover:bg-primary/90">
                     <Plus className="w-4 h-4" />
                     Nova Transação
                   </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Adicionar Transação</DialogTitle>
-                    <DialogDescription>Preencha os campos para adicionar uma nova transação.</DialogDescription>
-                  </DialogHeader>
-                  <TransactionForm 
-                    formData={formData} 
-                    setFormData={setFormData} 
-                    onSubmit={handleAdd} 
-                    submitLabel="Adicionar" 
-                    subscribed={subscribed} 
-                  />
-                </DialogContent>
-              </Dialog>
+                }
+              />
             </div>
           </div>
 
@@ -858,16 +752,16 @@ const Transactions = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Entradas</p>
-              <p className="text-lg sm:text-2xl font-bold text-primary">{formatCurrency(totals.income)}</p>
+              <p className="text-lg sm:text-2xl font-bold text-primary">{formatCurrency(totals.incomePaid)}</p>
             </div>
             <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Saídas</p>
-              <p className="text-lg sm:text-2xl font-bold text-destructive">{formatCurrency(totals.expense)}</p>
+              <p className="text-lg sm:text-2xl font-bold text-destructive">{formatCurrency(totals.expensePaid)}</p>
             </div>
             <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">Saldo</p>
-              <p className={`text-lg sm:text-2xl font-bold ${totals.income - totals.expense >= 0 ? "text-primary" : "text-destructive"}`}>
-                {formatCurrency(totals.income - totals.expense)}
+              <p className={`text-lg sm:text-2xl font-bold ${totals.balancePaid >= 0 ? "text-primary" : "text-destructive"}`}>
+                {formatCurrency(totals.balancePaid)}
               </p>
             </div>
             <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-blue-500/20 p-3 sm:p-4">
@@ -1355,7 +1249,7 @@ const Transactions = () => {
               </DialogHeader>
               <TransactionForm 
                 formData={formData} 
-                setFormData={setFormData} 
+                setFormData={(data) => setFormData(data)} 
                 onSubmit={handleEdit} 
                 submitLabel="Salvar Alterações" 
                 subscribed={subscribed}

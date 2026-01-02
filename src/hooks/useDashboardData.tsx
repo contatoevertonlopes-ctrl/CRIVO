@@ -1,5 +1,11 @@
 import { useMemo } from "react";
 import { useTransactions, Transaction } from "@/hooks/useTransactions";
+import {
+  calculateTransactionTotals,
+  isTransferTransaction,
+  PAID_STATUSES,
+  PENDING_STATUSES,
+} from "@/utils/transactionTotals";
 
 interface DashboardMetrics {
   currentBalance: number;
@@ -23,10 +29,8 @@ interface CategoryData {
   value: number;
 }
 
-const COMPLETED_STATUSES = ["pagamento_concluido", "paid", "confirmed"];
-const PENDING_STATUSES = ["em_aberto", "a_vencer", "pending"];
 // Exclude transfers from expense/income calculations to avoid double counting
-const isTransfer = (t: Transaction) => t.category === "Transferência" || t.tag === "transferencia";
+const isTransfer = (t: Transaction) => isTransferTransaction(t);
 
 export const useDashboardData = (period: number = 30, customDateFrom?: Date, customDateTo?: Date) => {
   const { transactions, isLoading, refetch } = useTransactions();
@@ -80,34 +84,21 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
       return tDate >= previousPeriodStart && tDate < previousPeriodEnd;
     });
 
-    // Current period income/expenses (excluding transfers)
-    const periodIncome = currentPeriodTransactions
-      .filter((t) => t.type === "income" && COMPLETED_STATUSES.includes(t.status) && !isTransfer(t))
-      .reduce((sum, t) => sum + Number(t.amount), 0);
+    const currentPeriodTotals = calculateTransactionTotals(currentPeriodTransactions, {
+      excludeTransfers: true,
+    });
+    const previousPeriodTotals = calculateTransactionTotals(previousPeriodTransactions, {
+      excludeTransfers: true,
+    });
 
-    const periodExpenses = currentPeriodTransactions
-      .filter((t) => t.type === "expense" && COMPLETED_STATUSES.includes(t.status) && !isTransfer(t))
-      .reduce((sum, t) => sum + Number(t.amount), 0);
+    const periodIncome = currentPeriodTotals.incomePaid;
+    const periodExpenses = currentPeriodTotals.expensePaid;
 
-    // Previous period for comparison (excluding transfers)
-    const previousPeriodIncome = previousPeriodTransactions
-      .filter((t) => t.type === "income" && COMPLETED_STATUSES.includes(t.status) && !isTransfer(t))
-      .reduce((sum, t) => sum + Number(t.amount), 0);
+    const previousPeriodIncome = previousPeriodTotals.incomePaid;
+    const previousPeriodExpenses = previousPeriodTotals.expensePaid;
 
-    const previousPeriodExpenses = previousPeriodTransactions
-      .filter((t) => t.type === "expense" && COMPLETED_STATUSES.includes(t.status) && !isTransfer(t))
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-
-    // Total balance (all time income - expenses)
-    const totalIncome = transactions
-      .filter((t) => t.type === "income" && COMPLETED_STATUSES.includes(t.status))
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-
-    const totalExpenses = transactions
-      .filter((t) => t.type === "expense" && COMPLETED_STATUSES.includes(t.status))
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-
-    const currentBalance = totalIncome - totalExpenses;
+    // Saldo do período selecionado (entradas - saídas) — base para "Saldo total"
+    const currentBalance = currentPeriodTotals.balancePaid;
 
     // Future commitments (pending/upcoming transactions in next X days)
     const futureCommitments = transactions
@@ -115,7 +106,7 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
         const tDate = new Date(t.date + "T00:00:00");
         return (
           t.type === "expense" &&
-          PENDING_STATUSES.includes(t.status) &&
+          PENDING_STATUSES.includes(t.status as (typeof PENDING_STATUSES)[number]) &&
           tDate >= now &&
           tDate <= futureDate
         );
@@ -123,12 +114,14 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const pendingCount = transactions.filter(
-      (t) => t.type === "expense" && PENDING_STATUSES.includes(t.status)
+      (t) =>
+        t.type === "expense" &&
+        PENDING_STATUSES.includes(t.status as (typeof PENDING_STATUSES)[number])
     ).length;
 
     // Calculate changes compared to previous period
-    const previousBalance = previousPeriodIncome - previousPeriodExpenses;
-    const currentPeriodBalance = periodIncome - periodExpenses;
+    const previousBalance = previousPeriodTotals.balancePaid;
+    const currentPeriodBalance = currentPeriodTotals.balancePaid;
     const balanceChange =
       previousBalance !== 0
         ? ((currentPeriodBalance - previousBalance) / Math.abs(previousBalance)) * 100
@@ -168,11 +161,11 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
 
       // Exclude transfers from cashflow calculations to avoid double counting
       const receitas = monthTransactions
-        .filter((t) => t.type === "income" && COMPLETED_STATUSES.includes(t.status) && !isTransfer(t))
+        .filter((t) => t.type === "income" && PAID_STATUSES.includes(t.status as (typeof PAID_STATUSES)[number]) && !isTransfer(t))
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
       const despesas = monthTransactions
-        .filter((t) => t.type === "expense" && COMPLETED_STATUSES.includes(t.status) && !isTransfer(t))
+        .filter((t) => t.type === "expense" && PAID_STATUSES.includes(t.status as (typeof PAID_STATUSES)[number]) && !isTransfer(t))
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
       last6Months.push({

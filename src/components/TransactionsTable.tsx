@@ -6,7 +6,7 @@ import { useSharedHousehold } from "@/hooks/useSharedHousehold";
 import { useAppMode } from "@/contexts/AppModeContext";
 import { useTransactions, Transaction } from "@/hooks/useTransactions";
 import { supabase } from "@/integrations/supabase/client";
-import AddTransactionDialog from "./AddTransactionDialog";
+import AddTransactionCompactDialog from "./AddTransactionCompactDialog";
 import StatusSelector from "./StatusSelector";
 import TransactionCard from "./TransactionCard";
 import TransactionTimeline from "./TransactionTimeline";
@@ -14,8 +14,9 @@ import TransactionPagination from "./TransactionPagination";
 
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Tag, LayoutList, Clock } from "lucide-react";
+import { Tag, LayoutList, Clock, Plus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -184,7 +185,16 @@ const TransactionsTable = ({ onRefresh }: TransactionsTableProps) => {
               <LayoutList className="w-4 h-4" />
             </button>
           </div>
-          <AddTransactionDialog onSuccess={handleSuccess} />
+          <AddTransactionCompactDialog
+            onSuccess={handleSuccess}
+            contentClassName="max-w-[95vw] sm:max-w-lg"
+            trigger={
+              <Button size="sm" className="gap-2 bg-primary hover:bg-primary/90">
+                <Plus className="w-4 h-4" />
+                Nova Transação
+              </Button>
+            }
+          />
         </div>
       </div>
 

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppMode } from "@/contexts/AppModeContext";
 import { useModulePreferences } from "@/hooks/useModulePreferences";
-import { useBankAccounts } from "@/hooks/useBankAccounts";
 import Sidebar from "@/components/Sidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 import MetricCard from "@/components/MetricCard";
@@ -17,20 +16,19 @@ import GoalWidget from "@/components/goals/GoalWidget";
 import { QuickAddInput } from "@/components/QuickAddInput";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdaptiveModeData } from "@/hooks/useAdaptiveModeData";
-import { differenceInDays } from "date-fns";
-import { Landmark } from "lucide-react";
+import { differenceInDays, endOfMonth, startOfMonth } from "date-fns";
 
 import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const today = new Date();
   const [period, setPeriod] = useState(30);
-  const [customDateFrom, setCustomDateFrom] = useState<Date | undefined>();
-  const [customDateTo, setCustomDateTo] = useState<Date | undefined>();
+  const [customDateFrom, setCustomDateFrom] = useState<Date | undefined>(startOfMonth(today));
+  const [customDateTo, setCustomDateTo] = useState<Date | undefined>(endOfMonth(today));
   const { mode, setMode } = useAppMode();
   const { modules } = useModulePreferences();
-  const { totalPatrimony, accounts } = useBankAccounts();
   
   // Calculate actual period for custom dates
   const effectivePeriod = customDateFrom && customDateTo 
@@ -41,7 +39,6 @@ const Index = () => {
   const adaptiveData = useAdaptiveModeData(effectivePeriod, customDateFrom, customDateTo);
 
   // Check if any widget-related module is active
-  const showBalanceWidget = modules.bankAccounts;
   const showGoalsWidget = modules.budgets;
 
   useEffect(() => {
@@ -173,20 +170,10 @@ const Index = () => {
             
             {/* Metrics Grid - 2x2 */}
             <div className="grid grid-cols-2 gap-3">
-              {showBalanceWidget && accounts.length > 0 && (
-                <MetricCard
-                  title="Patrimônio"
-                  value={formatCurrency(totalPatrimony)}
-                  pill={`${accounts.length} conta${accounts.length > 1 ? 's' : ''}`}
-                  trend="Saldo total das contas"
-                  trendUp={totalPatrimony >= 0}
-                  icon={Landmark}
-                />
-              )}
               <MetricCard
-                title="Saldo atual"
+                title="Saldo total"
                 value={formatCurrency(metrics.currentBalance)}
-                pill="Consolidado"
+                pill={getPeriodLabel()}
                 trend={`${formatPercent(metrics.balanceChange)} ${getPreviousPeriodLabel()}`}
                 trendUp={metrics.balanceChange >= 0}
               />
@@ -207,7 +194,7 @@ const Index = () => {
               <MetricCard
                 title="Compromissos"
                 value={formatCurrency(metrics.futureCommitments)}
-                pill={`Próx. ${period}d`}
+                pill={`Próx. ${effectivePeriod}d`}
                 trend={`${metrics.pendingCount} pendentes`}
                 trendUp={false}
               />
@@ -220,7 +207,7 @@ const Index = () => {
             
             <div className="flex flex-col gap-4">
               {showGoalsWidget && <GoalWidget />}
-              <ExpenseChart data={expensesByCategory} period={period} />
+              <ExpenseChart data={expensesByCategory} period={effectivePeriod} />
               <PlansCard />
             </div>
           </section>
