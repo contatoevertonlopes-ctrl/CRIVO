@@ -9,9 +9,10 @@ interface MetricCardProps {
   trend: string;
   trendUp?: boolean;
   icon?: LucideIcon;
+  valueClassName?: string;
 }
 
-const MetricCard = ({ title, value, pill, trend, trendUp = true, icon: Icon }: MetricCardProps) => {
+const MetricCard = ({ title, value, pill, trend, trendUp = true, icon: Icon, valueClassName }: MetricCardProps) => {
   const { mode } = useAppMode();
   const isSurvival = mode === "survival";
 
@@ -70,10 +71,10 @@ const MetricCard = ({ title, value, pill, trend, trendUp = true, icon: Icon }: M
         </div>
         
         {/* Value */}
-        <div 
+        <div
           className={cn(
-            "text-xl lg:text-2xl font-bold tracking-tight mb-2",
-            isSurvival ? "text-foreground" : "text-foreground"
+            "text-xl lg:text-2xl font-bold tracking-tight mb-2 text-foreground",
+            valueClassName
           )}
         >
           {value}

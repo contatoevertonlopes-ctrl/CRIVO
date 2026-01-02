@@ -190,6 +190,7 @@ const Index = () => {
                 pill={getPeriodLabel()}
                 trend={`${formatPercent(metrics.expenseChange)} ${getPreviousPeriodLabel()}`}
                 trendUp={metrics.expenseChange <= 0}
+                valueClassName="text-destructive"
               />
               <MetricCard
                 title="Compromissos"

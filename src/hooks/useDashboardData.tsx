@@ -100,24 +100,16 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
     // Saldo do período selecionado (entradas - saídas) — base para "Saldo total"
     const currentBalance = currentPeriodTotals.balancePaid;
 
-    // Future commitments (pending/upcoming transactions in next X days)
-    const futureCommitments = transactions
-      .filter((t) => {
-        const tDate = new Date(t.date + "T00:00:00");
-        return (
-          t.type === "expense" &&
-          PENDING_STATUSES.includes(t.status as (typeof PENDING_STATUSES)[number]) &&
-          tDate >= now &&
-          tDate <= futureDate
-        );
-      })
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-
-    const pendingCount = transactions.filter(
+    // Commitments (pending expenses within the selected period)
+    const commitmentTransactions = currentPeriodTransactions.filter(
       (t) =>
         t.type === "expense" &&
-        PENDING_STATUSES.includes(t.status as (typeof PENDING_STATUSES)[number])
-    ).length;
+        PENDING_STATUSES.includes(t.status as (typeof PENDING_STATUSES)[number]) &&
+        !isTransfer(t)
+    );
+
+    const futureCommitments = commitmentTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+    const pendingCount = commitmentTransactions.length;
 
     // Calculate changes compared to previous period
     const previousBalance = previousPeriodTotals.balancePaid;
