@@ -26,6 +26,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Plus, RefreshCw, Lock, ListOrdered, CreditCard, Landmark, Wallet, AlertCircle } from "lucide-react";
 import { addMonths, addWeeks, addDays, format } from "date-fns";
+import { getNextRecurringDate, getRecurringGenerationCount } from "@/utils/recurringGeneration";
 import GoalItemLinkDialog from "./GoalItemLinkDialog";
 import { cn } from "@/lib/utils";
 
@@ -100,6 +101,94 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
       case "monthly":
       default:
         return addMonths(baseDate, index);
+    }
+  };
+
+  const computeUnpaidStatus = (dateStr: string) => {
+    const todayStr = new Date().toISOString().split("T")[0];
+    if (dateStr > todayStr) return "a_vencer";
+    if (dateStr < todayStr) return "vencido";
+    return "em_aberto";
+  };
+
+  const createRecurringSeries = async (root: {
+    description: string;
+    amount: number;
+    category: string;
+    type: "income" | "expense";
+    status: string;
+    date: string;
+    recurring_interval: string;
+    tag: string | null;
+    paid_date: string | null;
+    payment_method: string | null;
+    bank_account_id: string | null;
+    card_id: string | null;
+  }) => {
+    if (!user) throw new Error("Missing user");
+
+    const { data: inserted, error: insertError } = await supabase
+      .from("transactions")
+      .insert({
+        user_id: user.id,
+        household_id: householdId,
+        description: root.description,
+        category: root.category,
+        type: root.type,
+        amount: root.amount,
+        status: root.status,
+        date: root.date,
+        paid_date: root.paid_date,
+        tag: root.tag,
+        payment_method: root.payment_method,
+        is_recurring: true,
+        recurring_interval: root.recurring_interval,
+        bank_account_id: root.bank_account_id,
+        card_id: root.card_id,
+      })
+      .select("id")
+      .single();
+
+    if (insertError) throw insertError;
+    const rootId = inserted?.id as string | undefined;
+    if (!rootId) throw new Error("Failed to create recurring transaction");
+
+    const { error: parentError } = await supabase
+      .from("transactions")
+      .update({ parent_transaction_id: rootId })
+      .eq("id", rootId);
+    if (parentError) throw parentError;
+
+    const generationCount = getRecurringGenerationCount(root.recurring_interval);
+    const baseDate = new Date(root.date + "T00:00:00");
+
+    const future: any[] = [];
+    for (let i = 1; i < generationCount; i++) {
+      const nextDate = getNextRecurringDate(baseDate, i, root.recurring_interval);
+      const nextDateStr = nextDate.toISOString().split("T")[0];
+      future.push({
+        user_id: user.id,
+        household_id: householdId,
+        description: root.description,
+        category: root.category,
+        type: root.type,
+        amount: root.amount,
+        status: computeUnpaidStatus(nextDateStr),
+        date: nextDateStr,
+        paid_date: null,
+        tag: root.tag,
+        payment_method: root.payment_method,
+        is_recurring: true,
+        recurring_interval: root.recurring_interval,
+        parent_transaction_id: rootId,
+        bank_account_id: root.bank_account_id,
+        card_id: root.card_id,
+      });
+    }
+
+    if (future.length > 0) {
+      const { error: futureError } = await supabase.from("transactions").insert(future);
+      if (futureError) throw futureError;
     }
   };
 
@@ -189,25 +278,42 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
         });
       } else {
         // Single transaction
-        const { error } = await supabase.from("transactions").insert({
-          user_id: user.id,
-          household_id: householdId,
-          description,
-          category,
-          type,
-          amount: parseFloat(amount),
-          status,
-          date,
-          paid_date: paidDate || null,
-          tag: tag || null,
-          payment_method: paymentMethod || null,
-          is_recurring: subscribed ? isRecurring : false,
-          recurring_interval: isRecurring ? recurringInterval : null,
-          bank_account_id: requiresBankAccount ? (selectedBankAccountId || null) : null,
-          card_id: requiresCard ? (selectedCardId || null) : null,
-        });
+        if (subscribed && isRecurring) {
+          await createRecurringSeries({
+            description,
+            category,
+            type,
+            amount: parseFloat(amount),
+            status,
+            date,
+            paid_date: paidDate || null,
+            tag: tag || null,
+            payment_method: paymentMethod || null,
+            recurring_interval: recurringInterval,
+            bank_account_id: requiresBankAccount ? (selectedBankAccountId || null) : null,
+            card_id: requiresCard ? (selectedCardId || null) : null,
+          });
+        } else {
+          const { error } = await supabase.from("transactions").insert({
+            user_id: user.id,
+            household_id: householdId,
+            description,
+            category,
+            type,
+            amount: parseFloat(amount),
+            status,
+            date,
+            paid_date: paidDate || null,
+            tag: tag || null,
+            payment_method: paymentMethod || null,
+            is_recurring: false,
+            recurring_interval: null,
+            bank_account_id: requiresBankAccount ? (selectedBankAccountId || null) : null,
+            card_id: requiresCard ? (selectedCardId || null) : null,
+          });
 
-        if (error) throw error;
+          if (error) throw error;
+        }
 
         // If it's an expense, show goal item link dialog
         if (type === "expense") {

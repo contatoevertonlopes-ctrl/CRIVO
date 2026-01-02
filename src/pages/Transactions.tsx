@@ -167,7 +167,7 @@ const Transactions = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [tagFilter, setTagFilter] = useState<string>("all");
-  const [periodFilter, setPeriodFilter] = useState<string>("all");
+  const [periodFilter, setPeriodFilter] = useState<string>("this_month");
   const [customDateFrom, setCustomDateFrom] = useState("");
   const [customDateTo, setCustomDateTo] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -639,6 +639,9 @@ const Transactions = () => {
     setMinAmount("");
     setMaxAmount("");
     setRecurringOnly(false);
+    setCustomDateFrom("");
+    setCustomDateTo("");
+    setPeriodFilter("this_month");
   };
 
   const toggleTransactionSelect = (id: string) => {

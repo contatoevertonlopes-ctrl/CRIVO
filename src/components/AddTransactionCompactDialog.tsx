@@ -14,6 +14,7 @@ import {
 import TransactionForm, { type TransactionFormData } from "@/components/TransactionForm";
 import { toast } from "sonner";
 import { addDays, addMonths, addWeeks } from "date-fns";
+import { getNextRecurringDate, getRecurringGenerationCount } from "@/utils/recurringGeneration";
 
 interface AddTransactionCompactDialogProps {
   trigger: React.ReactElement;
@@ -92,6 +93,89 @@ const AddTransactionCompactDialog = ({
     }
   };
 
+  const createRecurringSeries = async (root: {
+    description: string;
+    amount: number;
+    category: string;
+    type: "income" | "expense";
+    status: string;
+    date: string;
+    recurring_interval: string;
+    tag: string | null;
+    paid_date: string | null;
+    payment_method: string | null;
+    bank_account_id: string | null;
+    card_id: string | null;
+  }) => {
+    if (!user) throw new Error("Missing user");
+
+    const { data: inserted, error: insertError } = await supabase
+      .from("transactions")
+      .insert({
+        user_id: user.id,
+        household_id: householdId,
+        description: root.description,
+        amount: root.amount,
+        category: root.category,
+        type: root.type,
+        status: root.status,
+        date: root.date,
+        is_recurring: true,
+        recurring_interval: root.recurring_interval,
+        tag: root.tag,
+        paid_date: root.paid_date,
+        payment_method: root.payment_method,
+        bank_account_id: root.bank_account_id,
+        card_id: root.card_id,
+      })
+      .select("id")
+      .single();
+
+    if (insertError) throw insertError;
+    const rootId = inserted?.id as string | undefined;
+    if (!rootId) throw new Error("Failed to create recurring transaction");
+
+    // Set parent_transaction_id = root id for easier dedupe/grouping
+    const { error: parentError } = await supabase
+      .from("transactions")
+      .update({ parent_transaction_id: rootId })
+      .eq("id", rootId);
+    if (parentError) throw parentError;
+
+    const generationCount = getRecurringGenerationCount(root.recurring_interval);
+    const baseDate = new Date(root.date + "T00:00:00");
+
+    const future = [] as any[];
+    for (let i = 1; i < generationCount; i++) {
+      const nextDate = getNextRecurringDate(baseDate, i, root.recurring_interval);
+      const nextDateStr = nextDate.toISOString().split("T")[0];
+      const nextStatus = computeUnpaidStatus(nextDateStr);
+      future.push({
+        user_id: user.id,
+        household_id: householdId,
+        description: root.description,
+        amount: root.amount,
+        category: root.category,
+        type: root.type,
+        status: nextStatus,
+        date: nextDateStr,
+        is_recurring: true,
+        recurring_interval: root.recurring_interval,
+        parent_transaction_id: rootId,
+        tag: root.tag,
+        paid_date: null,
+        payment_method: root.payment_method,
+        bank_account_id: root.bank_account_id,
+        card_id: root.card_id,
+      });
+    }
+
+    if (future.length > 0) {
+      const { error: futureError } = await supabase.from("transactions").insert(future);
+      if (futureError) throw futureError;
+    }
+  };
+
   const handleAdd = async () => {
     if (!user || !formData.description || !formData.amount) {
       toast.error("Preencha todos os campos obrigatórios");
@@ -149,26 +233,44 @@ const AddTransactionCompactDialog = ({
 
         toast.success(`${numInstallments} parcelas criadas com sucesso!`);
       } else {
-        const { error } = await supabase.from("transactions").insert({
-          user_id: user.id,
-          household_id: householdId,
-          description: formData.description,
-          amount: parseFloat(formData.amount),
-          category: normalizedCategory,
-          type: formData.type,
-          status: normalizedStatus,
-          date: formData.date,
-          is_recurring: subscribed ? formData.is_recurring : false,
-          recurring_interval: formData.is_recurring ? formData.recurring_interval : null,
-          tag: formData.tag || null,
-          paid_date: normalizedPaidDate,
-          payment_method: formData.payment_method || null,
-          bank_account_id: formData.bank_account_id || null,
-          card_id: formData.card_id || null,
-        });
+        if (subscribed && formData.is_recurring) {
+          await createRecurringSeries({
+            description: formData.description,
+            amount: parseFloat(formData.amount),
+            category: normalizedCategory,
+            type: formData.type,
+            status: normalizedStatus,
+            date: formData.date,
+            recurring_interval: formData.recurring_interval,
+            tag: formData.tag || null,
+            paid_date: normalizedPaidDate,
+            payment_method: formData.payment_method || null,
+            bank_account_id: formData.bank_account_id || null,
+            card_id: formData.card_id || null,
+          });
+          toast.success("Transação fixa criada com lançamentos futuros!");
+        } else {
+          const { error } = await supabase.from("transactions").insert({
+            user_id: user.id,
+            household_id: householdId,
+            description: formData.description,
+            amount: parseFloat(formData.amount),
+            category: normalizedCategory,
+            type: formData.type,
+            status: normalizedStatus,
+            date: formData.date,
+            is_recurring: false,
+            recurring_interval: null,
+            tag: formData.tag || null,
+            paid_date: normalizedPaidDate,
+            payment_method: formData.payment_method || null,
+            bank_account_id: formData.bank_account_id || null,
+            card_id: formData.card_id || null,
+          });
 
-        if (error) throw error;
-        toast.success("Transação adicionada com sucesso!");
+          if (error) throw error;
+          toast.success("Transação adicionada com sucesso!");
+        }
       }
 
       setOpen(false);
