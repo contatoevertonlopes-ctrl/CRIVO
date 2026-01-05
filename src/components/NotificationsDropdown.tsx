@@ -1,5 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useSharedHousehold } from "@/hooks/useSharedHousehold";
+import { transactionKeys } from "@/hooks/useTransactions";
+import { bankAccountKeys } from "@/hooks/useBankAccounts";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,26 +25,33 @@ interface UpcomingBill {
 
 const NotificationsDropdown = () => {
   const { user } = useAuth();
+  const { isShared, householdId, loading: householdLoading } = useSharedHousehold();
+  const queryClient = useQueryClient();
   const [upcomingBills, setUpcomingBills] = useState<UpcomingBill[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const fetchUpcomingBills = async () => {
+  const fetchUpcomingBills = useCallback(async () => {
     if (!user) return;
+    if (householdLoading) return;
+    if (isShared && !householdId) return;
 
     try {
       const today = new Date();
       const nextWeek = new Date();
       nextWeek.setDate(today.getDate() + 7);
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("transactions")
         .select("id, description, amount, date, type, status")
-        .eq("user_id", user.id)
         .in("status", ["pending", "em_aberto", "a_vencer"])
         .gte("date", today.toISOString().split("T")[0])
         .lte("date", nextWeek.toISOString().split("T")[0])
         .order("date", { ascending: true });
+
+      query = isShared && householdId ? query.eq("household_id", householdId) : query.eq("user_id", user.id);
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -65,7 +76,7 @@ const NotificationsDropdown = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, isShared, householdId, householdLoading]);
 
   useEffect(() => {
     fetchUpcomingBills();
@@ -73,7 +84,7 @@ const NotificationsDropdown = () => {
     // Refresh every 5 minutes
     const interval = setInterval(fetchUpcomingBills, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [user]);
+  }, [fetchUpcomingBills]);
 
   // Request notification permission
   useEffect(() => {
@@ -121,15 +132,31 @@ const NotificationsDropdown = () => {
       if (error) throw error;
 
       toast.success("Conta marcada como paga!");
+
+      // Update dashboard immediately: the Dashboard derives its numbers from `useTransactions`
+      // (React Query cache). Without this, it may stay stale until a refetch (or F5).
+      queryClient.setQueriesData({ queryKey: transactionKeys.all }, (oldData) => {
+        if (!Array.isArray(oldData)) return oldData;
+        return oldData.map((t) => (t && typeof t === "object" && "id" in t && (t as { id: string }).id === id
+          ? { ...t, status: "pagamento_concluido" }
+          : t
+        ));
+      });
+      queryClient.invalidateQueries({ queryKey: transactionKeys.all });
+
+      // bank_accounts balances are updated by DB trigger; invalidate so UI picks it up immediately.
+      queryClient.invalidateQueries({ queryKey: bankAccountKeys.all });
+
       fetchUpcomingBills();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error marking as paid:", error);
-      // show more info when available
-      if (error && typeof error === "object" && "message" in (error as any)) {
-        toast.error(`Erro: ${(error as any).message}`);
-      } else {
-        toast.error("Erro ao atualizar status");
-      }
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === "object" && error !== null && "message" in error
+            ? String((error as { message: unknown }).message)
+            : null;
+      toast.error(message ? `Erro: ${message}` : "Erro ao atualizar status");
     } finally {
       setProcessingId((cur) => (cur === id ? null : cur));
     }
@@ -148,9 +175,21 @@ const NotificationsDropdown = () => {
   };
 
   const getDueBadge = (days: number) => {
-    if (days === 0) return { text: "🔴 Vence Hoje!", class: "bg-destructive text-destructive-foreground font-bold animate-pulse" };
-    if (days === 1) return { text: "⚠️ Amanhã", class: "bg-yellow-500/20 text-yellow-500 font-medium" };
-    if (days <= 3) return { text: `${days} dias`, class: "bg-orange-500/20 text-orange-500" };
+    if (days === 0)
+      return {
+        text: "Vence hoje",
+        class: "bg-destructive/15 text-destructive font-semibold",
+      };
+    if (days === 1)
+      return {
+        text: "Amanhã",
+        class: "bg-[hsl(var(--warning)_/_0.15)] text-[hsl(var(--warning))] font-medium",
+      };
+    if (days <= 3)
+      return {
+        text: `${days} dias`,
+        class: "bg-[hsl(var(--warning)_/_0.1)] text-[hsl(var(--warning))]",
+      };
     return { text: `${days} dias`, class: "bg-secondary text-muted-foreground" };
   };
 
@@ -170,13 +209,13 @@ const NotificationsDropdown = () => {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 p-0 bg-background border-border z-50">
+      <DropdownMenuContent align="end" className="w-80 p-0">
         <div className="p-3 border-b border-border">
           <h3 className="font-semibold text-sm">Compromissos Pendentes</h3>
           <p className="text-xs text-muted-foreground">Próximos 7 dias • Contas a pagar e receber</p>
         </div>
         
-        <div className="max-h-[300px] overflow-y-auto">
+        <div className="max-h-[300px] overflow-y-auto pr-1">
           {loading ? (
             <div className="p-4 text-center text-sm text-muted-foreground">
               Carregando...
@@ -202,7 +241,7 @@ const NotificationsDropdown = () => {
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 overflow-hidden">
                         <div className="flex items-center gap-2 mb-1">
                           <AlertCircle className={`w-4 h-4 flex-shrink-0 ${
                             isDueToday ? "text-destructive animate-pulse" : bill.daysUntilDue <= 1 ? "text-destructive" : "text-muted-foreground"
@@ -211,11 +250,15 @@ const NotificationsDropdown = () => {
                             {bill.description}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground ml-6">
+                        <div className="ml-6 flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
                           <span className={`${typeInfo.class} font-medium`}>{typeInfo.text}</span>
-                          <span>•</span>
+                          <span aria-hidden>•</span>
                           <span>{formatDate(bill.date)}</span>
-                          <span className={`px-1.5 py-0.5 rounded text-[10px] ${badge.class}`}>
+                        </div>
+                        <div className="ml-6 mt-1">
+                          <span
+                            className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap ${badge.class}`}
+                          >
                             {badge.text}
                           </span>
                         </div>
@@ -230,9 +273,7 @@ const NotificationsDropdown = () => {
                             onClick={() => markAsPaid(bill.id)}
                             disabled={processingId === bill.id}
                             aria-label={`Marcar ${bill.type === "income" ? "recebido" : "pago"}`}
-                            className={`h-7 px-3 text-xs ${processingId === bill.id ? "opacity-70 cursor-wait" : ""} ${
-                              bill.type === "income" ? "" : "bg-emerald-600 text-white hover:bg-emerald-700"
-                            }`}
+                            className={`h-7 px-3 text-xs whitespace-nowrap ${processingId === bill.id ? "opacity-70 cursor-wait" : ""}`}
                           >
                             {processingId === bill.id ? (
                               <Loader2 className="h-4 w-4 animate-spin mr-2" />

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useHouseholdId } from "@/hooks/useHouseholdId";
-import { useSharedHousehold } from "@/hooks/useSharedHousehold";
+import { useTransactions } from "@/hooks/useTransactions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -157,11 +157,9 @@ const Transactions = () => {
   const { user, loading: authLoading } = useAuth();
   const { subscribed, loading: subLoading } = useSubscription();
   const { householdId } = useHouseholdId();
-  const { isShared, loading: householdLoading } = useSharedHousehold();
   const navigate = useNavigate();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const { transactions, isLoading: transactionsLoading, refetch: refetchTransactions } = useTransactions();
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -207,6 +205,7 @@ const Transactions = () => {
   });
 
   const todayStr = new Date().toISOString().split("T")[0];
+  const loading = authLoading || subLoading || transactionsLoading;
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -215,40 +214,8 @@ const Transactions = () => {
   }, [user, authLoading, navigate]);
 
   const fetchTransactions = async () => {
-    if (!user || householdLoading) return;
-
-    setLoading(true);
-    try {
-      let query = supabase
-        .from("transactions")
-        .select("*")
-        .order("date", { ascending: false });
-
-      // If NOT in a shared household, only fetch user's own transactions
-      if (!isShared) {
-        query = query.eq("user_id", user.id);
-      } else if (householdId) {
-        // If in a shared household, fetch all household transactions
-        query = query.eq("household_id", householdId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setTransactions((data as Transaction[]) || []);
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-      toast.error("Erro ao carregar transações");
-    } finally {
-      setLoading(false);
-    }
+    await refetchTransactions();
   };
-
-  useEffect(() => {
-    if (user && !householdLoading) {
-      fetchTransactions();
-    }
-  }, [user, isShared, householdId, householdLoading]);
 
   useEffect(() => {
     let filtered = transactions;

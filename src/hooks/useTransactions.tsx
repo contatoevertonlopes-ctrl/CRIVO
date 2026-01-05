@@ -3,6 +3,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSharedHousehold } from "@/hooks/useSharedHousehold";
 import { supabase } from "@/integrations/supabase/client";
 
+const EMPTY_TRANSACTIONS: Transaction[] = [];
+
 export interface Transaction {
   id: string;
   date: string;
@@ -13,6 +15,8 @@ export interface Transaction {
   status: string;
   user_id: string;
   household_id: string | null;
+  bank_account_id?: string | null;
+  card_id?: string | null;
   is_recurring?: boolean;
   recurring_interval?: string | null;
   parent_transaction_id?: string | null;
@@ -52,7 +56,7 @@ export const useTransactions = (options: UseTransactionsOptions = {}) => {
   const query = useQuery({
     queryKey,
     queryFn: async (): Promise<Transaction[]> => {
-      if (!user) return [];
+      if (!user) return EMPTY_TRANSACTIONS;
 
       let supabaseQuery = supabase
         .from("transactions")
@@ -71,7 +75,7 @@ export const useTransactions = (options: UseTransactionsOptions = {}) => {
 
       if (error) throw error;
 
-      return (data as Transaction[]) || [];
+      return (data as Transaction[]) || EMPTY_TRANSACTIONS;
     },
     enabled: !!user && !householdLoading && options.enabled !== false,
     staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
@@ -111,7 +115,7 @@ export const useTransactions = (options: UseTransactionsOptions = {}) => {
   };
 
   return {
-    transactions: query.data || [],
+    transactions: query.data ?? EMPTY_TRANSACTIONS,
     isLoading: query.isLoading || householdLoading,
     isFetching: query.isFetching,
     error: query.error,

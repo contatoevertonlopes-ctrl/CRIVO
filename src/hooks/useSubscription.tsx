@@ -2,6 +2,44 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "./useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
+type SubscriptionRow = {
+  plan: string;
+  status: string;
+  expires_at: string | null;
+};
+
+let sharedUserId: string | null = null;
+let sharedChannel: ReturnType<typeof supabase.channel> | null = null;
+let sharedRefCount = 0;
+const sharedHandlers = new Set<(newData: SubscriptionRow) => void>();
+
+const ensureSharedChannel = (userId: string) => {
+  if (sharedChannel && sharedUserId === userId) return;
+
+  if (sharedChannel) {
+    supabase.removeChannel(sharedChannel);
+    sharedChannel = null;
+  }
+
+  sharedUserId = userId;
+  sharedChannel = supabase
+    .channel(`subscription-changes:${userId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "subscriptions",
+        filter: `user_id=eq.${userId}`,
+      },
+      (payload) => {
+        const newData = payload.new as SubscriptionRow;
+        sharedHandlers.forEach((handler) => handler(newData));
+      },
+    )
+    .subscribe();
+};
+
 interface SubscriptionState {
   subscribed: boolean;
   planType: "monthly" | "annual" | null;
@@ -44,8 +82,7 @@ export const useSubscription = () => {
         subscriptionEnd: data.subscription_end || null,
         loading: false,
       });
-    } catch (error) {
-      console.error("Error checking subscription:", error);
+    } catch {
       setSubscription(prev => ({ ...prev, loading: false }));
     }
   }, [user, session]);
@@ -59,48 +96,29 @@ export const useSubscription = () => {
   useEffect(() => {
     if (!user) return;
 
-    console.log("[useSubscription] Setting up realtime listener for user:", user.id);
+    ensureSharedChannel(user.id);
+    sharedRefCount += 1;
 
-    const channel = supabase
-      .channel('subscription-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'subscriptions',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log("[useSubscription] Realtime update received:", payload);
-          
-          const newData = payload.new as {
-            plan: string;
-            status: string;
-            expires_at: string | null;
-          };
-
-          // Update subscription state immediately
-          setSubscription({
-            subscribed: newData.status === "active" && newData.plan === "pro",
-            planType: newData.plan === "pro" ? "monthly" : null, // Default to monthly for admin-granted
-            subscriptionEnd: newData.expires_at,
-            loading: false,
-          });
-
-          console.log("[useSubscription] Subscription updated via realtime:", {
-            plan: newData.plan,
-            status: newData.status,
-          });
-        }
-      )
-      .subscribe((status) => {
-        console.log("[useSubscription] Realtime subscription status:", status);
+    const handler = (newData: SubscriptionRow) => {
+      setSubscription({
+        subscribed: newData.status === "active" && newData.plan === "pro",
+        planType: newData.plan === "pro" ? "monthly" : null,
+        subscriptionEnd: newData.expires_at,
+        loading: false,
       });
+    };
+
+    sharedHandlers.add(handler);
 
     return () => {
-      console.log("[useSubscription] Removing realtime channel");
-      supabase.removeChannel(channel);
+      sharedHandlers.delete(handler);
+      sharedRefCount = Math.max(0, sharedRefCount - 1);
+
+      if (sharedRefCount === 0 && sharedChannel) {
+        supabase.removeChannel(sharedChannel);
+        sharedChannel = null;
+        sharedUserId = null;
+      }
     };
   }, [user]);
 
@@ -117,8 +135,7 @@ export const useSubscription = () => {
 
       if (error) throw error;
       return data.url;
-    } catch (error) {
-      console.error("Error creating checkout:", error);
+    } catch {
       return null;
     }
   };
@@ -135,8 +152,7 @@ export const useSubscription = () => {
 
       if (error) throw error;
       return data.url;
-    } catch (error) {
-      console.error("Error opening customer portal:", error);
+    } catch {
       return null;
     }
   };

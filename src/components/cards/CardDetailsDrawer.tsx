@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Sheet,
   SheetContent,
@@ -8,8 +9,30 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CardWithBill, CardTransaction } from "@/hooks/useCards";
+import { CardWithBill, CardTransaction, cardKeys } from "@/hooks/useCards";
+import { useAuth } from "@/hooks/useAuth";
+import { useHouseholdId } from "@/hooks/useHouseholdId";
+import { useBankAccounts, bankAccountKeys } from "@/hooks/useBankAccounts";
+import { transactionKeys } from "@/hooks/useTransactions";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   CreditCard, 
   Calendar, 
@@ -23,9 +46,10 @@ import {
   Pencil
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format, parseISO, isSameMonth } from "date-fns";
+import { addMonths, format, parseISO, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import EditCardTransactionDialog from "./EditCardTransactionDialog";
+import { toast } from "sonner";
 
 interface CardDetailsDrawerProps {
   open: boolean;
@@ -58,8 +82,19 @@ const CardDetailsDrawer = ({
   onEdit,
   onDelete
 }: CardDetailsDrawerProps) => {
+  const { user } = useAuth();
+  const { householdId } = useHouseholdId();
+  const { accounts } = useBankAccounts();
   const [activeTab, setActiveTab] = useState("installments");
   const [editingTransaction, setEditingTransaction] = useState<CardTransaction | null>(null);
+  const [payingMonth, setPayingMonth] = useState<string | null>(null);
+  const [payDialogOpen, setPayDialogOpen] = useState(false);
+  const [payDialogMonth, setPayDialogMonth] = useState<string | null>(null);
+  const [payDialogAmount, setPayDialogAmount] = useState<number>(0);
+  const [payDialogLabel, setPayDialogLabel] = useState<string>("");
+  const [payDialogTransactionIds, setPayDialogTransactionIds] = useState<string[]>([]);
+  const [selectedBankAccountId, setSelectedBankAccountId] = useState<string>("");
+  const queryClient = useQueryClient();
 
   // Filter and group transactions for this card
   const cardTransactions = useMemo(() => {
@@ -134,6 +169,124 @@ const CardDetailsDrawer = ({
       .sort((a, b) => b.month.localeCompare(a.month));
   }, [cardTransactions]);
 
+  const getErrorMessage = (err: unknown) => {
+    if (!err) return "Erro desconhecido";
+    if (typeof err === "string") return err;
+    if (err instanceof Error) return err.message || "Erro";
+
+    const maybe = err as { message?: unknown; details?: unknown; hint?: unknown; code?: unknown };
+    if (typeof maybe.message === "string" && maybe.message.trim()) return maybe.message;
+    if (typeof maybe.details === "string" && maybe.details.trim()) return maybe.details;
+    if (typeof maybe.hint === "string" && maybe.hint.trim()) return maybe.hint;
+    if (typeof maybe.code === "string" && maybe.code.trim()) return maybe.code;
+
+    try {
+      return JSON.stringify(err);
+    } catch {
+      return "Erro";
+    }
+  };
+
+  const getBillingMonthRange = (monthKey: string) => {
+    const start = `${monthKey}-01`; // yyyy-MM-dd
+    const endExclusive = format(addMonths(parseISO(start), 1), "yyyy-MM-dd");
+    return { start, endExclusive };
+  };
+
+  const payBillMonth = async (params: {
+    month: string;
+    amount: number;
+    label: string;
+    bankAccountId: string | null;
+    linkedTransactionIds: string[];
+  }) => {
+    if (!card) return;
+    if (!user) {
+      toast.error("Você precisa estar logado para pagar a fatura");
+      return;
+    }
+
+    setPayingMonth(params.month);
+    try {
+      const { start, endExclusive } = getBillingMonthRange(params.month);
+
+      const { error } = await supabase
+        .from("card_transactions")
+        .update({ is_paid: true })
+        .eq("card_id", card.id)
+        .gte("billing_month", start)
+        .lt("billing_month", endExclusive);
+
+      if (error) throw error;
+
+      // Mark linked purchase transactions as paid so they stop counting as pending in the dashboard.
+      if (params.linkedTransactionIds.length > 0) {
+        const { error: txError } = await supabase
+          .from("transactions")
+          .update({
+            status: "pagamento_concluido",
+            paid_date: new Date().toISOString().split("T")[0],
+          })
+          .in("id", params.linkedTransactionIds);
+        if (txError) throw txError;
+      }
+
+      // Create a single bank debit transaction (if user selected an account)
+      let billPaymentTransactionId: string | null = null;
+      if (params.bankAccountId) {
+        const todayStr = new Date().toISOString().split("T")[0];
+        const { data: created, error: createError } = await supabase
+          .from("transactions")
+          .insert({
+            user_id: user.id,
+            household_id: householdId,
+            description: `Pagamento fatura ${card.name} • ${params.label}`,
+            category: "Fatura Cartão",
+            type: "expense",
+            amount: params.amount,
+            status: "pagamento_concluido",
+            date: todayStr,
+            paid_date: todayStr,
+            payment_method: "bank_transfer",
+            bank_account_id: params.bankAccountId,
+          })
+          .select("id")
+          .single();
+
+        if (createError) throw createError;
+        billPaymentTransactionId = (created?.id as string | undefined) ?? null;
+      }
+
+      // Best-effort: update consolidated bill row, if it exists.
+      await supabase
+        .from("card_bills")
+        .update({
+          status: "paid",
+          paid_at: new Date().toISOString(),
+          transaction_id: billPaymentTransactionId,
+        })
+        .eq("card_id", card.id)
+        .gte("billing_month", start)
+        .lt("billing_month", endExclusive);
+
+      toast.success("Fatura marcada como paga!");
+      queryClient.invalidateQueries({ queryKey: cardKeys.all });
+      queryClient.invalidateQueries({ queryKey: transactionKeys.all });
+      queryClient.invalidateQueries({ queryKey: bankAccountKeys.all });
+    } catch (err) {
+      console.error("Error paying bill month:", {
+        err,
+        month: params.month,
+        cardId: card.id,
+        linkedTransactionIdsCount: params.linkedTransactionIds.length,
+        bankAccountId: params.bankAccountId,
+      });
+      toast.error(`Erro ao pagar fatura: ${getErrorMessage(err)}`);
+    } finally {
+      setPayingMonth((cur) => (cur === params.month ? null : cur));
+    }
+  };
+
   if (!card) return null;
 
   const usagePercent = card.credit_limit > 0 
@@ -185,12 +338,12 @@ const CardDetailsDrawer = ({
                   style={{ width: `${Math.min(usagePercent, 100)}%` }}
                 />
               </div>
-              <div className="flex justify-between text-xs pt-1">
-                <span>
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs pt-1">
+                <span className="whitespace-nowrap">
                   <span className="opacity-70">Fatura: </span>
                   <span className="font-bold">{formatCurrency(card.currentBill)}</span>
                 </span>
-                <span>
+                <span className="whitespace-nowrap">
                   <span className="opacity-70">Disponível: </span>
                   <span className="font-bold">{formatCurrency(card.availableLimit)}</span>
                 </span>
@@ -317,6 +470,10 @@ const CardDetailsDrawer = ({
                 billsHistory.map(bill => {
                   const isCurrent = isSameMonth(parseISO(`${bill.month}-01`), new Date());
                   const allPaid = bill.paidCount === bill.transactions.length;
+                  const canPay = !allPaid && bill.transactions.length > 0;
+                  const linkedTransactionIds = bill.transactions
+                    .map((t) => t.transaction_id)
+                    .filter((id): id is string => !!id);
                   
                   return (
                     <div 
@@ -364,6 +521,38 @@ const CardDetailsDrawer = ({
                           )}>
                             {formatCurrency(bill.total)}
                           </p>
+                          {canPay && (
+                            <div className="mt-2 flex justify-end">
+                              <Button
+                                size="sm"
+                                className="h-7 px-3 text-[11px]"
+                                disabled={payingMonth === bill.month}
+                                onClick={() => {
+                                  if (!card) return;
+                                  if (accounts.length > 1) {
+                                    setPayDialogMonth(bill.month);
+                                    setPayDialogAmount(bill.total);
+                                    setPayDialogLabel(bill.label);
+                                    setPayDialogTransactionIds(linkedTransactionIds);
+                                    setSelectedBankAccountId(accounts[0]?.id ?? "");
+                                    setPayDialogOpen(true);
+                                    return;
+                                  }
+
+                                  const bankAccountId = accounts.length === 1 ? accounts[0].id : null;
+                                  payBillMonth({
+                                    month: bill.month,
+                                    amount: bill.total,
+                                    label: bill.label,
+                                    bankAccountId,
+                                    linkedTransactionIds,
+                                  });
+                                }}
+                              >
+                                {payingMonth === bill.month ? "Pagando..." : "Pagar fatura"}
+                              </Button>
+                            </div>
+                          )}
                           {isCurrent && (
                             <Badge variant="outline" className="text-[10px] mt-1">
                               Atual
@@ -455,6 +644,51 @@ const CardDetailsDrawer = ({
         onOpenChange={(open) => !open && setEditingTransaction(null)}
         transaction={editingTransaction}
       />
+
+      <AlertDialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Pagar fatura</AlertDialogTitle>
+            <AlertDialogDescription>
+              Selecione em qual conta bancária debitar o pagamento.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-2">
+            <Select value={selectedBankAccountId} onValueChange={setSelectedBankAccountId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma conta" />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.name} • {a.bank_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!payDialogMonth || !selectedBankAccountId}
+              onClick={() => {
+                if (!payDialogMonth) return;
+                payBillMonth({
+                  month: payDialogMonth,
+                  amount: payDialogAmount,
+                  label: payDialogLabel,
+                  bankAccountId: selectedBankAccountId,
+                  linkedTransactionIds: payDialogTransactionIds,
+                });
+              }}
+            >
+              Pagar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
   );
 };
