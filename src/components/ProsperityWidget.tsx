@@ -5,12 +5,14 @@ interface ProsperityWidgetProps {
   monthlyIncome: number;
   monthlyExpenses: number;
   loading?: boolean;
+  variant?: "full" | "compact";
 }
 
 const ProsperityWidget = ({ 
   monthlyIncome, 
   monthlyExpenses, 
-  loading = false 
+  loading = false,
+  variant = "full",
 }: ProsperityWidgetProps) => {
   // Calculate financial freedom rate
   const surplus = monthlyIncome - monthlyExpenses;
@@ -60,12 +62,65 @@ const ProsperityWidget = ({
     );
   }
 
+  if (variant === "compact") {
+    return (
+      <div className="bg-prosperity-card border border-prosperity-border/50 rounded-2xl p-4 transition-all duration-300 card-shadow-soft">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-prosperity-emerald/15">
+              <TrendingUp className="w-4 h-4 text-prosperity-emerald" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Taxa de Liberdade</h3>
+              <p className="text-[11px] text-muted-foreground">Quanto você está guardando</p>
+            </div>
+          </div>
+          <span className={`px-2.5 py-1 rounded-full text-[11px] font-medium ${status.bgColor} ${status.color}`}>
+            {status.label}
+          </span>
+        </div>
+
+        <div className="mt-3 flex items-end justify-between gap-3">
+          <div>
+            <p className="text-3xl font-bold text-prosperity-emerald leading-none">{freedomRate}%</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Meta: {targetRate}%</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[11px] text-muted-foreground">Sobra do mês</p>
+            <p className={`text-base font-semibold ${surplus >= 0 ? "text-prosperity-gold" : "text-destructive"}`}>
+              {surplus >= 0 ? "+" : ""}{formatCurrency(surplus)}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <div className="p-3 rounded-xl bg-prosperity-secondary/50">
+            <p className="text-[10px] text-muted-foreground mb-1">Receita</p>
+            <p className="text-sm font-semibold text-prosperity-emerald">{formatCurrency(monthlyIncome)}</p>
+          </div>
+          <div className="p-3 rounded-xl bg-prosperity-secondary/50">
+            <p className="text-[10px] text-muted-foreground mb-1">Despesas</p>
+            <p className="text-sm font-semibold text-destructive">{formatCurrency(monthlyExpenses)}</p>
+          </div>
+        </div>
+
+        {freedomRate < 0 && (
+          <div className="mt-3 p-3 rounded-xl bg-destructive/10 border border-destructive/20">
+            <p className="text-xs text-destructive">
+              Este mês você gastou mais do que ganhou.
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-prosperity-card border border-prosperity-border/50 rounded-2xl p-5 md:p-6 transition-all duration-300 card-shadow-soft">
+    <div className="bg-prosperity-card border border-prosperity-border/50 rounded-2xl p-4 md:p-5 transition-all duration-300 card-shadow-soft">
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-prosperity-emerald/15">
+          <div className="p-2 rounded-xl bg-prosperity-emerald/15">
             <TrendingUp className="w-5 h-5 text-prosperity-emerald" />
           </div>
           <div>
@@ -73,21 +128,21 @@ const ProsperityWidget = ({
             <p className="text-[11px] text-muted-foreground">Quanto você está guardando</p>
           </div>
         </div>
-        <span className={`px-3 py-1 rounded-full text-xs font-medium ${status.bgColor} ${status.color}`}>
+        <span className={`px-2.5 py-1 rounded-full text-[11px] font-medium ${status.bgColor} ${status.color}`}>
           {status.label}
         </span>
       </div>
 
       {/* Circular Chart */}
-      <div className="relative mx-auto w-36 h-36 mb-5">
+      <div className="relative mx-auto w-28 h-28 mb-3">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={chartData}
               cx="50%"
               cy="50%"
-              innerRadius={45}
-              outerRadius={62}
+              innerRadius={34}
+              outerRadius={48}
               paddingAngle={2}
               dataKey="value"
               startAngle={90}
@@ -102,7 +157,7 @@ const ProsperityWidget = ({
         </ResponsiveContainer>
         {/* Center Content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-bold text-prosperity-emerald">
+          <span className="text-2xl font-bold text-prosperity-emerald">
             {freedomRate}%
           </span>
           <span className="text-[10px] text-muted-foreground">de sobra</span>
@@ -110,7 +165,7 @@ const ProsperityWidget = ({
       </div>
 
       {/* Target Progress */}
-      <div className="mb-5">
+      <div className="mb-3">
         <div className="flex justify-between items-center text-xs mb-1.5">
           <span className="text-muted-foreground">Meta: {targetRate}% de economia</span>
           <span className="text-prosperity-emerald font-medium">
@@ -127,7 +182,7 @@ const ProsperityWidget = ({
 
       {/* Freedom Days Card */}
       {daysOfFreedomEarned > 0 && (
-        <div className="p-3.5 rounded-xl bg-prosperity-gold/10 border border-prosperity-gold/20 mb-5">
+        <div className="p-3 rounded-xl bg-prosperity-gold/10 border border-prosperity-gold/20 mb-3">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-prosperity-gold/15">
               <Sparkles className="w-4 h-4 text-prosperity-gold" />
@@ -145,7 +200,7 @@ const ProsperityWidget = ({
       )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3 pt-4 border-t border-prosperity-border/50">
+      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-prosperity-border/50">
         <div className="p-3 rounded-xl bg-prosperity-secondary/50">
           <p className="text-[10px] text-muted-foreground mb-1">Receita mensal</p>
           <p className="text-base font-semibold text-prosperity-emerald">

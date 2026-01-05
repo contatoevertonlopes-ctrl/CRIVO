@@ -63,6 +63,10 @@ export interface CardWithBill extends Card {
   isBestDayToBuy: boolean;
 }
 
+interface UseCardsOptions {
+  enabled?: boolean;
+}
+
 // Query key factory for consistent cache keys
 export const cardKeys = {
   all: ["cards"] as const,
@@ -79,7 +83,7 @@ export const cardKeys = {
  * - Automatically refetches when user/household changes
  * - Provides invalidation method for mutations
  */
-export const useCards = () => {
+export const useCards = (options: UseCardsOptions = {}) => {
   const { user } = useAuth();
   const { householdId } = useHouseholdId();
   const { isShared, loading: householdLoading } = useSharedHousehold();
@@ -103,7 +107,7 @@ export const useCards = () => {
       if (error) throw error;
       return (data as Card[]) || [];
     },
-    enabled: !!user && !householdLoading,
+    enabled: !!user && !householdLoading && options.enabled !== false,
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: true,
@@ -128,7 +132,7 @@ export const useCards = () => {
       if (error) throw error;
       return (data as CardTransaction[]) || [];
     },
-    enabled: !!user && !householdLoading,
+    enabled: !!user && !householdLoading && options.enabled !== false,
     staleTime: 0,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: true,

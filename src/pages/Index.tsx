@@ -5,18 +5,20 @@ import { useAppMode } from "@/contexts/AppModeContext";
 import { useModulePreferences } from "@/hooks/useModulePreferences";
 import Sidebar from "@/components/Sidebar";
 import DashboardHeader from "@/components/DashboardHeader";
-import MetricCard from "@/components/MetricCard";
 import CashflowChart from "@/components/CashflowChart";
 import ExpenseChart from "@/components/ExpenseChart";
 import PlansCard from "@/components/PlansCard";
 import TransactionsTable from "@/components/TransactionsTable";
-import SurvivalWidget from "@/components/SurvivalWidget";
-import ProsperityWidget from "@/components/ProsperityWidget";
 import GoalWidget from "@/components/goals/GoalWidget";
 import { QuickAddInput } from "@/components/QuickAddInput";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { useAdaptiveModeData } from "@/hooks/useAdaptiveModeData";
-import { differenceInDays, endOfMonth, startOfMonth } from "date-fns";
+import { useCards } from "@/hooks/useCards";
+import { useBankAccounts } from "@/hooks/useBankAccounts";
+import { differenceInDays, endOfMonth, format, startOfMonth } from "date-fns";
+import { Receipt, TrendingUp } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -27,7 +29,7 @@ const Index = () => {
   const [period, setPeriod] = useState(30);
   const [customDateFrom, setCustomDateFrom] = useState<Date | undefined>(startOfMonth(today));
   const [customDateTo, setCustomDateTo] = useState<Date | undefined>(endOfMonth(today));
-  const { mode, setMode } = useAppMode();
+  const { setMode } = useAppMode();
   const { modules } = useModulePreferences();
   
   // Calculate actual period for custom dates
@@ -35,8 +37,14 @@ const Index = () => {
     ? Math.max(1, differenceInDays(customDateTo, customDateFrom) + 1)
     : period;
     
-  const { metrics, cashflowData, expensesByCategory, refetch } = useDashboardData(effectivePeriod, customDateFrom, customDateTo);
-  const adaptiveData = useAdaptiveModeData(effectivePeriod, customDateFrom, customDateTo);
+  const { metrics, cashflowData, expensesByCategory, pendingExpenses, pendingIncomes, refetch } = useDashboardData(effectivePeriod, customDateFrom, customDateTo);
+
+  const { cards } = useCards({ enabled: modules.creditCards });
+  const totalCurrentCardBill = cards.reduce((sum, c) => sum + Number(c.currentBill || 0), 0);
+  const totalAvailableCardLimit = cards.reduce((sum, c) => sum + Number(c.availableLimit || 0), 0);
+
+  const { accounts } = useBankAccounts();
+  const topAccounts = accounts.slice(0, 3);
 
   // Check if any widget-related module is active
   const showGoalsWidget = modules.budgets;
@@ -151,55 +159,164 @@ const Index = () => {
             <QuickAddInput onTransactionAdded={refetch} />
           </div>
           
-          {/* Adaptive Widget + Metrics Grid */}
-          <section className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4">
-            {mode === "survival" ? (
-              <SurvivalWidget
-                currentBalance={adaptiveData.currentBalance}
-                dailyExpenseAverage={adaptiveData.dailyExpenseAverage}
-                essentialExpenseAverage={adaptiveData.essentialExpenseAverage}
-                loading={adaptiveData.loading}
-              />
-            ) : (
-              <ProsperityWidget
-                monthlyIncome={adaptiveData.monthlyIncome}
-                monthlyExpenses={adaptiveData.monthlyExpenses}
-                loading={adaptiveData.loading}
-              />
-            )}
-            
-            {/* Metrics Grid - 2x2 */}
-            <div className="grid grid-cols-2 gap-3">
-              <MetricCard
-                title="Saldo total"
-                value={formatCurrency(metrics.currentBalance)}
-                pill={getPeriodLabel()}
-                trend={`${formatPercent(metrics.balanceChange)} ${getPreviousPeriodLabel()}`}
-                trendUp={metrics.balanceChange >= 0}
-              />
-              <MetricCard
-                title="Entradas"
-                value={formatCurrency(metrics.monthlyIncome)}
-                pill={getPeriodLabel()}
-                trend={`${formatPercent(metrics.incomeChange)} ${getPreviousPeriodLabel()}`}
-                trendUp={metrics.incomeChange >= 0}
-              />
-              <MetricCard
-                title="Saídas"
-                value={formatCurrency(metrics.monthlyExpenses)}
-                pill={getPeriodLabel()}
-                trend={`${formatPercent(metrics.expenseChange)} ${getPreviousPeriodLabel()}`}
-                trendUp={metrics.expenseChange <= 0}
-                valueClassName="text-destructive"
-              />
-              <MetricCard
-                title="Compromissos"
-                value={formatCurrency(metrics.futureCommitments)}
-                pill={`Próx. ${effectivePeriod}d`}
-                trend={`${metrics.pendingCount} pendentes`}
-                trendUp={false}
-              />
-            </div>
+          {/* Visão geral */}
+          <section className="grid grid-cols-1 gap-4">
+            <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Visão geral</p>
+                    <p className="text-lg font-semibold text-foreground">Saldo geral</p>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap bg-secondary text-muted-foreground border border-border/50">
+                    {getPeriodLabel()}
+                  </span>
+                </div>
+
+                <div className="mt-3">
+                  <div className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
+                    {formatCurrency(metrics.currentBalance)}
+                  </div>
+                  <div className="mt-1 text-[11px] text-muted-foreground">
+                    Previsto: <span className="font-semibold text-foreground">{formatCurrency(metrics.projectedBalance)}</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-border/50 bg-background/40 p-3">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-prosperity-emerald" />
+                      <p className="text-[11px] text-muted-foreground">Entradas</p>
+                    </div>
+                    <p className="mt-1 text-base font-semibold text-prosperity-emerald">{formatCurrency(metrics.monthlyIncome)}</p>
+                    <p className="text-[10px] text-muted-foreground">Previsto: {formatCurrency(metrics.monthlyIncomePending)}</p>
+                  </div>
+                  <div className="rounded-xl border border-border/50 bg-background/40 p-3">
+                    <div className="flex items-center gap-2">
+                      <Receipt className="w-4 h-4 text-destructive" />
+                      <p className="text-[11px] text-muted-foreground">Saídas</p>
+                    </div>
+                    <p className="mt-1 text-base font-semibold text-destructive">{formatCurrency(metrics.monthlyExpenses)}</p>
+                    <p className="text-[10px] text-muted-foreground">Previsto: {formatCurrency(metrics.monthlyExpensesPending)}</p>
+                  </div>
+                </div>
+
+                {modules.bankAccounts && (
+                  <>
+                    <Separator className="my-4" />
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-foreground">Minhas contas</p>
+                      <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => navigate("/accounts")}>Ver</Button>
+                    </div>
+                    <div className="mt-2 space-y-2">
+                      {topAccounts.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">Nenhuma conta cadastrada</p>
+                      ) : (
+                        topAccounts.map((a) => (
+                          <div key={a.id} className="flex items-center justify-between">
+                            <div className="min-w-0">
+                              <p className="text-[12px] font-medium text-foreground truncate">{a.name}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{a.bank_name}</p>
+                            </div>
+                            <p className={`text-[12px] font-semibold tabular-nums ${a.balance >= 0 ? "text-prosperity-emerald" : "text-destructive"}`}>
+                              {formatCurrency(a.balance)}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {modules.creditCards && (
+                  <>
+                    <Separator className="my-4" />
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-foreground">Meus cartões</p>
+                      <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => navigate("/cards")}>Ver</Button>
+                    </div>
+                    <div className="mt-2 space-y-2">
+                      {cards.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">Nenhum cartão cadastrado</p>
+                      ) : (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <p className="text-[11px] text-muted-foreground">Fatura do mês</p>
+                            <p className="text-[12px] font-semibold tabular-nums text-foreground">{formatCurrency(totalCurrentCardBill)}</p>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <p className="text-[11px] text-muted-foreground">Limite disponível</p>
+                            <p className="text-[12px] font-semibold tabular-nums text-foreground">{formatCurrency(totalAvailableCardLimit)}</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+
+          <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Próx. {effectivePeriod}d</p>
+                    <p className="text-sm font-semibold text-foreground">A pagar</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{metrics.pendingCount} pendentes</p>
+                </div>
+                <div className="mt-3 space-y-2">
+                  {pendingExpenses.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Nada pendente no período</p>
+                  ) : (
+                    pendingExpenses.map((t) => (
+                      <div key={t.id} className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-medium text-foreground truncate">{t.description}</p>
+                          <p className="text-[10px] text-muted-foreground">{format(new Date(t.date + "T00:00:00"), "dd/MM")}</p>
+                        </div>
+                        <p className="text-[12px] font-semibold tabular-nums text-destructive">{formatCurrency(Number(t.amount))}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <div className="mt-4">
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => navigate("/transactions")}>Ver lançamentos</Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Próx. {effectivePeriod}d</p>
+                    <p className="text-sm font-semibold text-foreground">A receber</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{pendingIncomes.length} itens</p>
+                </div>
+                <div className="mt-3 space-y-2">
+                  {pendingIncomes.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Nada pendente no período</p>
+                  ) : (
+                    pendingIncomes.map((t) => (
+                      <div key={t.id} className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-medium text-foreground truncate">{t.description}</p>
+                          <p className="text-[10px] text-muted-foreground">{format(new Date(t.date + "T00:00:00"), "dd/MM")}</p>
+                        </div>
+                        <p className="text-[12px] font-semibold tabular-nums text-prosperity-emerald">{formatCurrency(Number(t.amount))}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <div className="mt-4">
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => navigate("/transactions")}>Ver lançamentos</Button>
+                </div>
+              </CardContent>
+            </Card>
           </section>
 
           {/* Charts Row */}

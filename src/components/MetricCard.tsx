@@ -2,6 +2,12 @@ import { LucideIcon } from "lucide-react";
 import { useAppMode } from "@/contexts/AppModeContext";
 import { cn } from "@/lib/utils";
 
+type MetricCardBreakdownItem = {
+  label: string;
+  value: string;
+  valueClassName?: string;
+};
+
 interface MetricCardProps {
   title: string;
   value: string;
@@ -10,9 +16,10 @@ interface MetricCardProps {
   trendUp?: boolean;
   icon?: LucideIcon;
   valueClassName?: string;
+  breakdown?: MetricCardBreakdownItem[];
 }
 
-const MetricCard = ({ title, value, pill, trend, trendUp = true, icon: Icon, valueClassName }: MetricCardProps) => {
+const MetricCard = ({ title, value, pill, trend, trendUp = true, icon: Icon, valueClassName, breakdown }: MetricCardProps) => {
   const { mode } = useAppMode();
   const isSurvival = mode === "survival";
 
@@ -79,6 +86,17 @@ const MetricCard = ({ title, value, pill, trend, trendUp = true, icon: Icon, val
         >
           {value}
         </div>
+
+        {breakdown && breakdown.length > 0 && (
+          <div className="mb-2 space-y-1">
+            {breakdown.map((item) => (
+              <div key={item.label} className="flex items-center justify-between text-[11px]">
+                <span className="text-muted-foreground font-medium">{item.label}</span>
+                <span className={cn("font-semibold tabular-nums", item.valueClassName)}>{item.value}</span>
+              </div>
+            ))}
+          </div>
+        )}
         
         {/* Trend */}
         <div

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useTransactions, Transaction } from "@/hooks/useTransactions";
+import { useBankAccounts } from "@/hooks/useBankAccounts";
 import {
   calculateTransactionTotals,
   isTransferTransaction,
@@ -9,8 +10,11 @@ import {
 
 interface DashboardMetrics {
   currentBalance: number;
+  projectedBalance: number;
   monthlyIncome: number;
+  monthlyIncomePending: number;
   monthlyExpenses: number;
+  monthlyExpensesPending: number;
   futureCommitments: number;
   pendingCount: number;
   balanceChange: number;
@@ -29,19 +33,25 @@ interface CategoryData {
   value: number;
 }
 
+type DashboardPendingItem = Pick<Transaction, "id" | "date" | "description" | "amount" | "status" | "type">;
+
 // Exclude transfers from expense/income calculations to avoid double counting
 const isTransfer = (t: Transaction) => isTransferTransaction(t);
 
 export const useDashboardData = (period: number = 30, customDateFrom?: Date, customDateTo?: Date) => {
-  const { transactions, isLoading, refetch } = useTransactions();
+  const { transactions, isLoading: transactionsLoading, refetch } = useTransactions();
+  const { accounts, isLoading: accountsLoading, totalPatrimony } = useBankAccounts();
 
   const result = useMemo(() => {
     if (transactions.length === 0) {
       return {
         metrics: {
           currentBalance: 0,
+          projectedBalance: 0,
           monthlyIncome: 0,
+          monthlyIncomePending: 0,
           monthlyExpenses: 0,
+          monthlyExpensesPending: 0,
           futureCommitments: 0,
           pendingCount: 0,
           balanceChange: 0,
@@ -50,6 +60,8 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
         },
         cashflowData: [],
         expensesByCategory: [{ name: "Sem dados", value: 100 }],
+        pendingExpenses: [] as DashboardPendingItem[],
+        pendingIncomes: [] as DashboardPendingItem[],
       };
     }
 
@@ -94,11 +106,20 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
     const periodIncome = currentPeriodTotals.incomePaid;
     const periodExpenses = currentPeriodTotals.expensePaid;
 
+    const periodIncomePending = currentPeriodTotals.pendingIncome;
+    const periodExpensesPending = currentPeriodTotals.pendingExpense;
+
     const previousPeriodIncome = previousPeriodTotals.incomePaid;
     const previousPeriodExpenses = previousPeriodTotals.expensePaid;
 
-    // Saldo do período selecionado (entradas - saídas) — base para "Saldo total"
-    const currentBalance = currentPeriodTotals.balancePaid;
+    // Saldo total: se houver contas bancárias, usa o patrimônio (saldo real do banco).
+    // Caso contrário, faz fallback para o saldo do período (entradas pagas - saídas pagas).
+    const hasBankAccounts = (accounts?.length ?? 0) > 0;
+    const balanceFromPeriod = currentPeriodTotals.balancePaid;
+    const currentBalance = hasBankAccounts ? totalPatrimony : balanceFromPeriod;
+
+    // Saldo previsto: saldo atual + (entradas pendentes - saídas pendentes) no período selecionado.
+    const projectedBalance = currentBalance + periodIncomePending - periodExpensesPending;
 
     // Commitments (pending expenses within the selected period)
     const commitmentTransactions = currentPeriodTransactions.filter(
@@ -107,6 +128,38 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
         PENDING_STATUSES.includes(t.status as (typeof PENDING_STATUSES)[number]) &&
         !isTransfer(t)
     );
+
+    const pendingExpenses = commitmentTransactions
+      .slice()
+      .sort((a, b) => new Date(a.date + "T00:00:00").getTime() - new Date(b.date + "T00:00:00").getTime())
+      .slice(0, 4)
+      .map((t) => ({
+        id: t.id,
+        date: t.date,
+        description: t.description,
+        amount: Number(t.amount),
+        status: t.status,
+        type: t.type,
+      }));
+
+    const pendingIncomes = currentPeriodTransactions
+      .filter(
+        (t) =>
+          t.type === "income" &&
+          PENDING_STATUSES.includes(t.status as (typeof PENDING_STATUSES)[number]) &&
+          !isTransfer(t)
+      )
+      .slice()
+      .sort((a, b) => new Date(a.date + "T00:00:00").getTime() - new Date(b.date + "T00:00:00").getTime())
+      .slice(0, 4)
+      .map((t) => ({
+        id: t.id,
+        date: t.date,
+        description: t.description,
+        amount: Number(t.amount),
+        status: t.status,
+        type: t.type,
+      }));
 
     const futureCommitments = commitmentTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
     const pendingCount = commitmentTransactions.length;
@@ -129,8 +182,11 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
 
     const metrics: DashboardMetrics = {
       currentBalance,
+      projectedBalance,
       monthlyIncome: periodIncome,
+      monthlyIncomePending: periodIncomePending,
       monthlyExpenses: periodExpenses,
+      monthlyExpensesPending: periodExpensesPending,
       futureCommitments,
       pendingCount,
       balanceChange,
@@ -190,14 +246,18 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
       metrics,
       cashflowData: last6Months,
       expensesByCategory: categories,
+      pendingExpenses,
+      pendingIncomes,
     };
   }, [transactions, period, customDateFrom, customDateTo]);
 
   return {
-    loading: isLoading,
+    loading: transactionsLoading || accountsLoading,
     metrics: result.metrics,
     cashflowData: result.cashflowData,
     expensesByCategory: result.expensesByCategory,
+    pendingExpenses: result.pendingExpenses,
+    pendingIncomes: result.pendingIncomes,
     refetch,
   };
 };
