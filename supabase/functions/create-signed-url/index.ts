@@ -23,7 +23,7 @@ serve(async (req) => {
     const { data, error } = await supabaseAdmin.storage.from("avatars").createSignedUrl(path, 60 * 60 * 24 * 7);
     if (error) throw error;
 
-    return new Response(JSON.stringify({ signedURL: data?.signedURL }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
+    return new Response(JSON.stringify({ signedUrl: data?.signedUrl }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("create-signed-url error", message);
