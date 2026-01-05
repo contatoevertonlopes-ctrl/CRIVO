@@ -17,7 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCards } from "@/hooks/useCards";
 import { useBankAccounts } from "@/hooks/useBankAccounts";
-import { differenceInDays, endOfMonth, format, startOfMonth } from "date-fns";
+import { addMonths, differenceInDays, endOfMonth, format, isSameDay, startOfMonth, subMonths } from "date-fns";
 import { Receipt, TrendingUp } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +26,6 @@ const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const today = new Date();
-  const [period, setPeriod] = useState(30);
   const [customDateFrom, setCustomDateFrom] = useState<Date | undefined>(startOfMonth(today));
   const [customDateTo, setCustomDateTo] = useState<Date | undefined>(endOfMonth(today));
   const { setMode } = useAppMode();
@@ -35,7 +34,7 @@ const Index = () => {
   // Calculate actual period for custom dates
   const effectivePeriod = customDateFrom && customDateTo 
     ? Math.max(1, differenceInDays(customDateTo, customDateFrom) + 1)
-    : period;
+    : 30;
     
   const { metrics, cashflowData, expensesByCategory, pendingExpenses, pendingIncomes, refetch } = useDashboardData(effectivePeriod, customDateFrom, customDateTo);
 
@@ -90,38 +89,32 @@ const Index = () => {
   };
 
   const getPeriodLabel = () => {
-    if (customDateFrom && customDateTo) {
-      return `${effectivePeriod}d`;
-    }
-    switch (period) {
-      case 7: return "7 dias";
-      case 30: return "30 dias";
-      case 90: return "90 dias";
-      case 365: return "1 ano";
-      default: return `${period}d`;
-    }
-  };
+    if (!customDateFrom || !customDateTo) return "Este mês";
 
-  const getPreviousPeriodLabel = () => {
-    if (customDateFrom && customDateTo) {
-      return "vs. período ant.";
-    }
-    switch (period) {
-      case 7: return "vs. semana ant.";
-      case 30: return "vs. mês ant.";
-      case 90: return "vs. trim. ant.";
-      case 365: return "vs. ano ant.";
-      default: return "vs. período ant.";
-    }
-  };
-  
-  const handlePeriodChange = (newPeriod: number) => {
-    setPeriod(newPeriod);
-    setCustomDateFrom(undefined);
-    setCustomDateTo(undefined);
+    const thisStart = startOfMonth(today);
+    const thisEnd = endOfMonth(today);
+    const prevRef = subMonths(today, 1);
+    const prevStart = startOfMonth(prevRef);
+    const prevEnd = endOfMonth(prevRef);
+    const nextRef = addMonths(today, 1);
+    const nextStart = startOfMonth(nextRef);
+    const nextEnd = endOfMonth(nextRef);
+
+    if (isSameDay(customDateFrom, prevStart) && isSameDay(customDateTo, prevEnd)) return "Mês anterior";
+    if (isSameDay(customDateFrom, thisStart) && isSameDay(customDateTo, thisEnd)) return "Este mês";
+    if (isSameDay(customDateFrom, nextStart) && isSameDay(customDateTo, nextEnd)) return "Próximo mês";
+
+    return "Personalizado";
   };
   
   const handleCustomDateChange = (from: Date | undefined, to: Date | undefined) => {
+    // Se limpar a seleção, volta para o padrão (este mês)
+    if (!from || !to) {
+      setCustomDateFrom(startOfMonth(today));
+      setCustomDateTo(endOfMonth(today));
+      return;
+    }
+
     setCustomDateFrom(from);
     setCustomDateTo(to);
   };
@@ -147,8 +140,6 @@ const Index = () => {
         <div className="max-w-6xl mx-auto px-4 py-4 lg:px-6 lg:py-6 flex flex-col gap-4 lg:gap-5">
           {/* Header */}
           <DashboardHeader 
-            period={period} 
-            onPeriodChange={handlePeriodChange}
             customDateFrom={customDateFrom}
             customDateTo={customDateTo}
             onCustomDateChange={handleCustomDateChange}
@@ -262,7 +253,7 @@ const Index = () => {
               <CardContent className="p-5">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-xs text-muted-foreground">Próx. {effectivePeriod}d</p>
+                    <p className="text-xs text-muted-foreground">{getPeriodLabel()}</p>
                     <p className="text-sm font-semibold text-foreground">A pagar</p>
                   </div>
                   <p className="text-xs text-muted-foreground">{metrics.pendingCount} pendentes</p>
@@ -292,7 +283,7 @@ const Index = () => {
               <CardContent className="p-5">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-xs text-muted-foreground">Próx. {effectivePeriod}d</p>
+                    <p className="text-xs text-muted-foreground">{getPeriodLabel()}</p>
                     <p className="text-sm font-semibold text-foreground">A receber</p>
                   </div>
                   <p className="text-xs text-muted-foreground">{pendingIncomes.length} itens</p>
@@ -321,11 +312,11 @@ const Index = () => {
 
           {/* Charts Row */}
           <section className="grid grid-cols-1 xl:grid-cols-[1.6fr_1fr] gap-4">
-            <CashflowChart data={cashflowData} />
+            <CashflowChart data={cashflowData} periodLabel={getPeriodLabel()} />
             
             <div className="flex flex-col gap-4">
               {showGoalsWidget && <GoalWidget />}
-              <ExpenseChart data={expensesByCategory} period={effectivePeriod} />
+              <ExpenseChart data={expensesByCategory} period={effectivePeriod} periodLabel={getPeriodLabel()} />
               <PlansCard />
             </div>
           </section>

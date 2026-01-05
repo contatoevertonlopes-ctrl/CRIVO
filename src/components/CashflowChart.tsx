@@ -8,9 +8,10 @@ interface MonthlyData {
 
 interface CashflowChartProps {
   data?: MonthlyData[];
+  periodLabel?: string;
 }
 
-const CashflowChart = ({ data = [] }: CashflowChartProps) => {
+const CashflowChart = ({ data = [], periodLabel }: CashflowChartProps) => {
   const hasData = data.some((d) => d.receitas > 0 || d.despesas > 0);
 
   return (
@@ -23,11 +24,11 @@ const CashflowChart = ({ data = [] }: CashflowChartProps) => {
           <div>
             <h3 className="text-sm font-medium">Fluxo de caixa</h3>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Receitas vs despesas (6 meses)
+              Receitas vs despesas (período)
             </p>
           </div>
           <span className="text-[10px] px-2 py-0.5 rounded-md bg-secondary/80 text-muted-foreground border border-border/30">
-            Consolidado
+            {periodLabel ?? "Período"}
           </span>
         </div>
 

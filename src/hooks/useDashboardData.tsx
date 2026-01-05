@@ -2,6 +2,17 @@ import { useMemo } from "react";
 import { useTransactions, Transaction } from "@/hooks/useTransactions";
 import { useBankAccounts } from "@/hooks/useBankAccounts";
 import {
+  addMonths,
+  differenceInCalendarDays,
+  endOfDay,
+  endOfMonth,
+  isSameDay,
+  startOfDay,
+  startOfMonth,
+  subDays,
+  subMonths,
+} from "date-fns";
+import {
   calculateTransactionTotals,
   isTransferTransaction,
   PAID_STATUSES,
@@ -68,21 +79,29 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
     const now = new Date();
     
     // Use custom dates if provided, otherwise use period
-    const periodStartDate = customDateFrom 
-      ? new Date(customDateFrom.getTime())
-      : new Date(now.getTime() - period * 24 * 60 * 60 * 1000);
-    
-    const periodEndDate = customDateTo
-      ? new Date(customDateTo.getTime() + 24 * 60 * 60 * 1000)
-      : now;
-      
-    const periodDays = customDateFrom && customDateTo
-      ? Math.ceil((periodEndDate.getTime() - periodStartDate.getTime()) / (24 * 60 * 60 * 1000))
-      : period;
-      
-    const previousPeriodStart = new Date(periodStartDate.getTime() - periodDays * 24 * 60 * 60 * 1000);
-    const previousPeriodEnd = new Date(periodStartDate.getTime());
-    const futureDate = new Date(now.getTime() + periodDays * 24 * 60 * 60 * 1000);
+    const periodStartDate = customDateFrom
+      ? startOfDay(customDateFrom)
+      : startOfDay(subDays(now, Math.max(0, period - 1)));
+
+    const periodEndDate = customDateTo ? endOfDay(customDateTo) : endOfDay(now);
+
+    const periodDays = differenceInCalendarDays(periodEndDate, periodStartDate) + 1;
+
+    const isFullSingleMonthRange =
+      !!customDateFrom &&
+      !!customDateTo &&
+      isSameDay(periodStartDate, startOfMonth(periodStartDate)) &&
+      isSameDay(periodEndDate, endOfMonth(periodStartDate)) &&
+      periodStartDate.getMonth() === periodEndDate.getMonth() &&
+      periodStartDate.getFullYear() === periodEndDate.getFullYear();
+
+    const previousPeriodStart = isFullSingleMonthRange
+      ? startOfMonth(subMonths(periodStartDate, 1))
+      : startOfDay(subDays(periodStartDate, periodDays));
+
+    const previousPeriodEnd = isFullSingleMonthRange
+      ? endOfDay(endOfMonth(subMonths(periodStartDate, 1)))
+      : endOfDay(subDays(periodStartDate, 1));
 
     // Filter transactions for current period
     const currentPeriodTransactions = transactions.filter((t) => {
@@ -93,7 +112,7 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
     // Filter transactions for previous period (for comparison)
     const previousPeriodTransactions = transactions.filter((t) => {
       const tDate = new Date(t.date + "T00:00:00");
-      return tDate >= previousPeriodStart && tDate < previousPeriodEnd;
+      return tDate >= previousPeriodStart && tDate <= previousPeriodEnd;
     });
 
     const currentPeriodTotals = calculateTransactionTotals(currentPeriodTransactions, {
@@ -194,33 +213,50 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
       expenseChange,
     };
 
-    // Calculate cashflow data for last 6 months
+    // Cashflow data for the selected period (bucketed by month)
     const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-    const last6Months: MonthlyData[] = [];
+    const cashflowByMonth: MonthlyData[] = [];
 
-    for (let i = 5; i >= 0; i--) {
-      const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+    let cursor = startOfMonth(periodStartDate);
+    const lastMonth = startOfMonth(periodEndDate);
 
-      const monthTransactions = transactions.filter((t) => {
+    while (cursor.getTime() <= lastMonth.getTime()) {
+      const monthStart = cursor;
+      const monthEnd = endOfMonth(cursor);
+
+      const rangeStart = monthStart.getTime() < periodStartDate.getTime() ? periodStartDate : monthStart;
+      const rangeEnd = monthEnd.getTime() > periodEndDate.getTime() ? periodEndDate : monthEnd;
+
+      const monthTransactions = currentPeriodTransactions.filter((t) => {
         const tDate = new Date(t.date + "T00:00:00");
-        return tDate >= monthDate && tDate <= monthEnd;
+        return tDate >= rangeStart && tDate <= rangeEnd;
       });
 
-      // Exclude transfers from cashflow calculations to avoid double counting
       const receitas = monthTransactions
-        .filter((t) => t.type === "income" && PAID_STATUSES.includes(t.status as (typeof PAID_STATUSES)[number]) && !isTransfer(t))
+        .filter(
+          (t) =>
+            t.type === "income" &&
+            PAID_STATUSES.includes(t.status as (typeof PAID_STATUSES)[number]) &&
+            !isTransfer(t)
+        )
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
       const despesas = monthTransactions
-        .filter((t) => t.type === "expense" && PAID_STATUSES.includes(t.status as (typeof PAID_STATUSES)[number]) && !isTransfer(t))
+        .filter(
+          (t) =>
+            t.type === "expense" &&
+            PAID_STATUSES.includes(t.status as (typeof PAID_STATUSES)[number]) &&
+            !isTransfer(t)
+        )
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
-      last6Months.push({
-        month: monthNames[monthDate.getMonth()],
+      cashflowByMonth.push({
+        month: monthNames[cursor.getMonth()],
         receitas,
         despesas,
       });
+
+      cursor = addMonths(cursor, 1);
     }
 
     // Calculate expenses by category (excluding transfers)
@@ -244,12 +280,12 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
 
     return {
       metrics,
-      cashflowData: last6Months,
+      cashflowData: cashflowByMonth,
       expensesByCategory: categories,
       pendingExpenses,
       pendingIncomes,
     };
-  }, [transactions, period, customDateFrom, customDateTo]);
+  }, [transactions, accounts, totalPatrimony, period, customDateFrom, customDateTo]);
 
   return {
     loading: transactionsLoading || accountsLoading,

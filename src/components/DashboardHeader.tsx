@@ -25,19 +25,15 @@ import {
 } from "@/components/ui/tooltip";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DateRangePicker } from "./DateRangePicker";
-import { startOfMonth, endOfMonth } from "date-fns";
+import { addMonths, endOfMonth, isSameDay, startOfMonth, subMonths } from "date-fns";
 
 interface DashboardHeaderProps {
-  period?: number;
-  onPeriodChange?: (days: number) => void;
   customDateFrom?: Date;
   customDateTo?: Date;
   onCustomDateChange?: (from: Date | undefined, to: Date | undefined) => void;
 }
 
 const DashboardHeader = ({ 
-  period = 30, 
-  onPeriodChange,
   customDateFrom,
   customDateTo,
   onCustomDateChange,
@@ -47,38 +43,47 @@ const DashboardHeader = ({
   const { signOut } = useAuth();
   const navigate = useNavigate();
   
-  const isCustomPeriod = customDateFrom !== undefined && customDateTo !== undefined;
-  
-  // Check if current selection is "this month"
   const today = new Date();
-  const monthStart = startOfMonth(today);
-  const monthEnd = endOfMonth(today);
-  const isThisMonth = customDateFrom?.getTime() === monthStart.getTime() && 
-                      customDateTo?.getTime() === monthEnd.getTime();
+  const thisMonthStart = startOfMonth(today);
+  const thisMonthEnd = endOfMonth(today);
+  const prevRef = subMonths(today, 1);
+  const prevMonthStart = startOfMonth(prevRef);
+  const prevMonthEnd = endOfMonth(prevRef);
+  const nextRef = addMonths(today, 1);
+  const nextMonthStart = startOfMonth(nextRef);
+  const nextMonthEnd = endOfMonth(nextRef);
+
+  const matchesRange = (start: Date, end: Date) =>
+    !!customDateFrom &&
+    !!customDateTo &&
+    isSameDay(customDateFrom, start) &&
+    isSameDay(customDateTo, end);
 
   const periodOptions = [
+    { value: "prev-month", label: "Mês anterior" },
     { value: "this-month", label: "Este mês" },
-    { value: "7", label: "7 dias" },
-    { value: "30", label: "30 dias" },
-    { value: "60", label: "60 dias" },
-    { value: "90", label: "90 dias" },
+    { value: "next-month", label: "Próximo mês" },
     { value: "custom", label: "Personalizado" },
   ];
 
   const getCurrentValue = () => {
-    if (isThisMonth) return "this-month";
-    if (isCustomPeriod) return "custom";
-    return period.toString();
+    if (matchesRange(prevMonthStart, prevMonthEnd)) return "prev-month";
+    if (matchesRange(thisMonthStart, thisMonthEnd)) return "this-month";
+    if (matchesRange(nextMonthStart, nextMonthEnd)) return "next-month";
+    if (customDateFrom && customDateTo) return "custom";
+    return "this-month";
   };
 
   const handlePeriodSelect = (value: string) => {
-    if (value === "this-month") {
-      onCustomDateChange?.(monthStart, monthEnd);
+    if (value === "prev-month") {
+      onCustomDateChange?.(prevMonthStart, prevMonthEnd);
+    } else if (value === "this-month") {
+      onCustomDateChange?.(thisMonthStart, thisMonthEnd);
+    } else if (value === "next-month") {
+      onCustomDateChange?.(nextMonthStart, nextMonthEnd);
     } else if (value === "custom") {
       const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
       onCustomDateChange?.(thirtyDaysAgo, today);
-    } else {
-      onPeriodChange?.(parseInt(value));
     }
   };
 
@@ -145,7 +150,7 @@ const DashboardHeader = ({
           </SelectContent>
         </Select>
         
-        {(isCustomPeriod && !isThisMonth) && onCustomDateChange && (
+        {getCurrentValue() === "custom" && onCustomDateChange && (
           <DateRangePicker
             dateFrom={customDateFrom}
             dateTo={customDateTo}

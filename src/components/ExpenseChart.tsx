@@ -8,11 +8,12 @@ interface CategoryData {
 interface ExpenseChartProps {
   data?: CategoryData[];
   period?: number;
+  periodLabel?: string;
 }
 
 const COLORS = ["hsl(var(--primary))", "hsl(217 91% 60%)", "hsl(48 96% 53%)", "hsl(var(--destructive))"];
 
-const ExpenseChart = ({ data = [], period = 30 }: ExpenseChartProps) => {
+const ExpenseChart = ({ data = [], period = 30, periodLabel }: ExpenseChartProps) => {
   const hasData = data.length > 0 && data[0].name !== "Sem dados";
 
   const getPeriodLabel = () => {
@@ -39,7 +40,7 @@ const ExpenseChart = ({ data = [], period = 30 }: ExpenseChartProps) => {
             </p>
           </div>
           <span className="text-[10px] px-2 py-0.5 rounded-md bg-secondary/80 text-muted-foreground border border-border/30">
-            {getPeriodLabel()}
+            {periodLabel ?? getPeriodLabel()}
           </span>
         </div>
 
