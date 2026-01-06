@@ -8,6 +8,7 @@ import { SidebarProvider } from "@/contexts/SidebarContext";
 import { AppModeProvider } from "@/contexts/AppModeContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { PwaUpdateNotifier } from "@/components/PwaUpdateNotifier";
+import { LocationSync } from "@/components/LocationSync";
 import Home from "./pages/Home";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
@@ -52,6 +53,7 @@ const App = () => (
                   v7_relativeSplatPath: true,
                 }}
               >
+                <LocationSync />
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/app" element={<Index />} />
