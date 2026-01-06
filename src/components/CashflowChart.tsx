@@ -1,4 +1,4 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 interface MonthlyData {
   month: string;
@@ -39,20 +39,22 @@ const CashflowChart = ({ data = [], periodLabel, fitHeight = false }: CashflowCh
           </span>
         </div>
 
-        <div className={fitHeight ? "flex-1 min-h-[200px]" : "h-[200px]"}>
+        <div className={fitHeight ? "flex-1 min-h-[200px]" : "h-[240px]"}>
           {!hasData ? (
             <div className="h-full flex items-center justify-center text-muted-foreground text-xs">
               Adicione transações para visualizar
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data}>
+              <BarChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.3)" />
                 <XAxis 
                   dataKey="month" 
                   tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} 
                   axisLine={{ stroke: "hsl(var(--border) / 0.5)" }}
                   tickLine={false}
+                  interval="preserveStartEnd"
+                  minTickGap={24}
                 />
                 <YAxis 
                   tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} 
@@ -77,28 +79,24 @@ const CashflowChart = ({ data = [], periodLabel, fitHeight = false }: CashflowCh
                 />
                 <Legend 
                   wrapperStyle={{ fontSize: "10px", paddingTop: "8px" }} 
-                  iconType="circle"
+                  iconType="rect"
                   iconSize={6}
                 />
-                <Line
-                  type="monotone"
+                <Bar
                   dataKey="receitas"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  dot={{ fill: "hsl(var(--primary))", r: 3 }}
-                  activeDot={{ r: 5 }}
                   name="Receitas"
+                  fill="hsl(var(--primary))"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={84}
                 />
-                <Line
-                  type="monotone"
+                <Bar
                   dataKey="despesas"
-                  stroke="hsl(var(--destructive))"
-                  strokeWidth={2}
-                  dot={{ fill: "hsl(var(--destructive))", r: 3 }}
-                  activeDot={{ r: 5 }}
                   name="Despesas"
+                  fill="hsl(var(--destructive))"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={84}
                 />
-              </LineChart>
+              </BarChart>
             </ResponsiveContainer>
           )}
         </div>

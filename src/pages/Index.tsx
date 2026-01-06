@@ -9,7 +9,6 @@ import DashboardHeader from "@/components/DashboardHeader";
 import CashflowChart from "@/components/CashflowChart";
 import ExpenseChart from "@/components/ExpenseChart";
 import PlansCard from "@/components/PlansCard";
-import TransactionsTable from "@/components/TransactionsTable";
 import GoalWidget from "@/components/goals/GoalWidget";
 import { QuickAddInput } from "@/components/QuickAddInput";
 import { Button } from "@/components/ui/button";
@@ -126,7 +125,7 @@ const Index = () => {
       { i: "balance", x: 0, y: 0, w: 8, h: 7, minW: 6, minH: 6 },
       { i: "pay", x: 0, y: 7, w: 4, h: 6, minW: 3, minH: 5 },
       { i: "receive", x: 4, y: 7, w: 4, h: 6, minW: 3, minH: 5 },
-      { i: "cashflow", x: 0, y: 13, w: 8, h: 18, minW: 6, minH: 10 },
+      { i: "cashflow", x: 0, y: 13, w: 8, h: 11, minW: 6, minH: 10 },
       { i: "expense", x: 8, y: 13, w: 4, h: 8, minW: 3, minH: 6 },
     ];
 
@@ -144,11 +143,6 @@ const Index = () => {
 
     if (showPlansWidget) {
       base.push({ i: "plans", x: 8, y: 25, w: 4, h: 6, minW: 3, minH: 5 });
-      // Full width on bottom
-      base.push({ i: "transactions", x: 0, y: 31, w: 12, h: 10, minW: 8, minH: 8 });
-    } else {
-      // Full width on bottom
-      base.push({ i: "transactions", x: 0, y: 25, w: 12, h: 10, minW: 8, minH: 8 });
     }
     return base;
   };
@@ -650,34 +644,6 @@ const Index = () => {
     </div>
   ) : null;
 
-  const TransactionsWidget = (
-    <Card
-      className={
-        [
-          "rounded-2xl border overflow-hidden backdrop-blur card-shadow-soft h-full relative",
-          isSurvival
-            ? "bg-survival-card border-survival-border/70"
-            : "bg-prosperity-card border-prosperity-border/70",
-          isEditingLayout && wiggleOnce ? "dashboard-edit-wiggle-card" : "",
-        ]
-          .filter(Boolean)
-          .join(" ")
-      }
-    >
-      {isEditingLayout && <OverlayGrip />}
-      <CardContent className="p-0 h-full flex flex-col">
-        <div className="flex-1 min-h-0 overflow-auto dashboard-no-drag">
-          <TransactionsTable
-            embedded
-            onRefresh={refetch}
-            periodDays={effectivePeriod}
-            customDateFrom={customDateFrom}
-            customDateTo={customDateTo}
-          />
-        </div>
-      </CardContent>
-    </Card>
-  );
   
   const handleCustomDateChange = (from: Date | undefined, to: Date | undefined) => {
     // Se limpar a seleção, volta para o padrão (este mês)
@@ -809,7 +775,6 @@ const Index = () => {
               {showPlansWidget && (
                 <div key="plans" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0"}>{PlansWidget}</div>
               )}
-              <div key="transactions" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0"}>{TransactionsWidget}</div>
             </ResponsiveGridLayout>
           </section>
 

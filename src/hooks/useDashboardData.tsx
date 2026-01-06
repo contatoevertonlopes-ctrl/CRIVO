@@ -252,6 +252,13 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
         });
         cursor = addDays(cursor, 1);
       }
+
+      // Para gráficos diários no dashboard (ex.: barras), remover dias sem movimento
+      // melhora a legibilidade e evita "apertar" a largura em 31 categorias vazias.
+      for (let i = cashflowSeries.length - 1; i >= 0; i--) {
+        const d = cashflowSeries[i];
+        if (d.receitas <= 0 && d.despesas <= 0) cashflowSeries.splice(i, 1);
+      }
     } else {
       const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
       let cursor = startOfMonth(periodStartDate);
