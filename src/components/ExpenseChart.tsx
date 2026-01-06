@@ -9,11 +9,12 @@ interface ExpenseChartProps {
   data?: CategoryData[];
   period?: number;
   periodLabel?: string;
+  fitHeight?: boolean;
 }
 
 const COLORS = ["hsl(var(--primary))", "hsl(217 91% 60%)", "hsl(48 96% 53%)", "hsl(var(--destructive))"];
 
-const ExpenseChart = ({ data = [], period = 30, periodLabel }: ExpenseChartProps) => {
+const ExpenseChart = ({ data = [], period = 30, periodLabel, fitHeight = false }: ExpenseChartProps) => {
   const hasData = data.length > 0 && data[0].name !== "Sem dados";
 
   const getPeriodLabel = () => {
@@ -27,11 +28,17 @@ const ExpenseChart = ({ data = [], period = 30, periodLabel }: ExpenseChartProps
   };
 
   return (
-    <div className="relative overflow-hidden rounded-xl bg-card border border-border/50 shadow-sm p-4">
+    <div
+      className={
+        fitHeight
+          ? "relative overflow-hidden rounded-xl bg-card border border-border/70 shadow-sm p-4 h-full flex flex-col"
+          : "relative overflow-hidden rounded-xl bg-card border border-border/70 shadow-sm p-4"
+      }
+    >
       {/* Subtle gradient accent */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
 
-      <div className="relative z-10">
+      <div className={fitHeight ? "relative z-10 h-full flex flex-col" : "relative z-10"}>
         <div className="flex justify-between items-start gap-2 mb-3">
           <div>
             <h3 className="text-sm font-medium">Despesas por categoria</h3>
@@ -44,7 +51,7 @@ const ExpenseChart = ({ data = [], period = 30, periodLabel }: ExpenseChartProps
           </span>
         </div>
 
-        <div className="h-[160px]">
+        <div className={fitHeight ? "flex-1 min-h-[160px]" : "h-[160px]"}>
           {!hasData ? (
             <div className="h-full flex items-center justify-center text-muted-foreground text-xs">
               Adicione despesas
@@ -61,6 +68,7 @@ const ExpenseChart = ({ data = [], period = 30, periodLabel }: ExpenseChartProps
                   fill="#8884d8"
                   paddingAngle={2}
                   dataKey="value"
+                  nameKey="name"
                 >
                   {data.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -72,14 +80,23 @@ const ExpenseChart = ({ data = [], period = 30, periodLabel }: ExpenseChartProps
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
                     fontSize: "11px",
+                    color: "hsl(var(--foreground))",
                     boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                   }}
-                  formatter={(value: number) =>
+                  labelStyle={{
+                    color: "hsl(var(--foreground))",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                  }}
+                  itemStyle={{ color: "hsl(var(--foreground))" }}
+                  separator=" - "
+                  formatter={(value: number, name: string) => [
                     new Intl.NumberFormat("pt-BR", {
                       style: "currency",
                       currency: "BRL",
-                    }).format(value)
-                  }
+                    }).format(value),
+                    name,
+                  ]}
                 />
                 <Legend
                   wrapperStyle={{ fontSize: "10px", paddingTop: "4px" }}

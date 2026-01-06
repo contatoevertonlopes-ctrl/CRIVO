@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Plus, Target, ArrowLeft, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import ThemeToggle from "@/components/ThemeToggle";
 import {
   Sheet,
   SheetContent,
@@ -122,30 +123,33 @@ const Goals = () => {
       <Sidebar />
 
       <main className="flex-1 min-w-0 pt-16 pb-24 lg:pt-0 lg:pb-0">
-        <div className="max-w-5xl mx-auto px-4 py-6 lg:px-6">
+        <div className="max-w-6xl mx-auto px-4 py-4 lg:px-6 lg:py-6 flex flex-col gap-4 lg:gap-5">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-xl font-bold">Meus Objetivos</h1>
               <p className="text-sm text-muted-foreground mt-0.5">
                 Planeje e acompanhe seus sonhos financeiros
               </p>
             </div>
-            <Button
-              onClick={() => {
-                setEditingGoal(null);
-                setDialogOpen(true);
-              }}
-              className={cn(
-                "gap-2",
-                isSurvival 
-                  ? "bg-survival-primary hover:bg-survival-primary/90" 
-                  : "bg-prosperity-emerald hover:bg-prosperity-emerald/90"
-              )}
-            >
-              <Plus className="w-4 h-4" />
-              Novo Objetivo
-            </Button>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button
+                onClick={() => {
+                  setEditingGoal(null);
+                  setDialogOpen(true);
+                }}
+                className={cn(
+                  "gap-2",
+                  isSurvival
+                    ? "bg-survival-primary hover:bg-survival-primary/90"
+                    : "bg-prosperity-emerald hover:bg-prosperity-emerald/90"
+                )}
+              >
+                <Plus className="w-4 h-4" />
+                Novo Objetivo
+              </Button>
+            </div>
           </div>
 
           {/* Goals Grid */}
@@ -154,12 +158,7 @@ const Goals = () => {
               {[1, 2, 3].map((i) => (
                 <div 
                   key={i} 
-                  className={cn(
-                    "rounded-2xl border p-5 animate-pulse",
-                    isSurvival 
-                      ? "bg-survival-card border-survival-border/50" 
-                      : "bg-prosperity-card border-prosperity-border/50"
-                  )}
+                  className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur p-5 animate-pulse card-shadow-soft"
                 >
                   <div className="h-12 bg-muted rounded mb-4"></div>
                   <div className="h-4 bg-muted rounded w-2/3 mb-2"></div>
@@ -168,12 +167,7 @@ const Goals = () => {
               ))}
             </div>
           ) : goals.length === 0 ? (
-            <div className={cn(
-              "rounded-2xl border p-8 text-center",
-              isSurvival 
-                ? "bg-survival-card border-survival-border/50" 
-                : "bg-prosperity-card border-prosperity-border/50"
-            )}>
+            <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur p-8 text-center card-shadow-soft">
               <div className={cn(
                 "w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4",
                 isSurvival ? "bg-survival-primary/15" : "bg-prosperity-emerald/15"

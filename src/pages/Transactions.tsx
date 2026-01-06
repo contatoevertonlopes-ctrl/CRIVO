@@ -8,13 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Search, Plus, Edit2, Trash2, ArrowLeft, Filter, Download, Lock, Crown, RefreshCw, Calendar, Copy, ArrowUpDown, ChevronUp, ChevronDown, ChevronRight, CheckSquare } from "lucide-react";
-import TransactionForm from "@/components/TransactionForm";
-import type { TransactionFormData } from "@/components/TransactionForm";
 import AddTransactionCompactDialog from "@/components/AddTransactionCompactDialog";
 import Sidebar from "@/components/Sidebar";
 import ImportTransactionsDialog from "@/components/ImportTransactionsDialog";
@@ -22,6 +19,7 @@ import TransactionCard from "@/components/TransactionCard";
 import StatusSelector from "@/components/StatusSelector";
 import TransactionPagination from "@/components/TransactionPagination";
 import BulkEditDialog from "@/components/BulkEditDialog";
+import ThemeToggle from "@/components/ThemeToggle";
 import { sortTransactionsByPriority } from "@/utils/transactionSort";
 import { startOfMonth, endOfMonth, subMonths, addMonths, format } from "date-fns";
 import { calculateTransactionTotals } from "@/utils/transactionTotals";
@@ -94,8 +92,8 @@ const TransactionRow = ({
       <span
         className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full ${
           transaction.type === "income"
-            ? "bg-primary/14 text-green-200"
-            : "bg-destructive/10 text-red-200"
+            ? "bg-primary/10 text-primary"
+            : "bg-destructive/10 text-destructive"
         }`}
       >
         {transaction.type === "income" ? "Entrada" : "Saída"}
@@ -184,27 +182,6 @@ const Transactions = () => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
   const itemsPerPage = 10;
-
-  const [formData, setFormData] = useState<TransactionFormData>({
-    description: "",
-    amount: "",
-    category: "Outros",
-    type: "expense" as "income" | "expense",
-    status: "em_aberto",
-    date: new Date().toISOString().split("T")[0],
-    is_recurring: false,
-    recurring_interval: "monthly",
-    paid_date: "",
-    tag: "",
-    is_installment: false,
-    installment_count: "2",
-    installment_interval: "monthly",
-    payment_method: "",
-    bank_account_id: "",
-    card_id: "",
-  });
-
-  const todayStr = new Date().toISOString().split("T")[0];
   const loading = authLoading || subLoading || transactionsLoading;
 
   useEffect(() => {
@@ -397,50 +374,6 @@ const Transactions = () => {
   const paginatedTransactions = groupBy === "none" 
     ? filteredTransactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
     : filteredTransactions;
-
-
-
-  const handleEdit = async () => {
-    if (!editingTransaction || !user) return;
-
-    try {
-      const normalizedCategory = (formData.category || "").trim() || "Outros";
-      const isPaid = formData.status === "pagamento_concluido";
-      const normalizedPaidDate = isPaid ? (formData.paid_date || todayStr) : null;
-
-      const { error } = await supabase
-        .from("transactions")
-        .update({
-          description: formData.description,
-          amount: parseFloat(formData.amount),
-          category: normalizedCategory,
-          type: formData.type,
-          status: formData.status,
-          date: formData.date,
-          is_recurring: subscribed ? formData.is_recurring : false,
-          recurring_interval: formData.is_recurring ? formData.recurring_interval : null,
-          paid_date: normalizedPaidDate,
-          tag: formData.tag || null,
-          payment_method: formData.payment_method || null,
-          bank_account_id: formData.bank_account_id || null,
-          card_id: formData.card_id || null,
-        })
-        .eq("id", editingTransaction.id)
-        .eq("user_id", user.id);
-
-      if (error) throw error;
-
-      toast.success("Transação atualizada com sucesso!");
-      setIsEditDialogOpen(false);
-      setEditingTransaction(null);
-      resetForm();
-      fetchTransactions();
-    } catch (error) {
-      console.error("Error updating transaction:", error);
-      toast.error("Erro ao atualizar transação");
-    }
-  };
-
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir esta transação?")) return;
 
@@ -498,47 +431,30 @@ const Transactions = () => {
 
   const openEditDialog = (transaction: Transaction) => {
     setEditingTransaction(transaction);
-    setFormData({
-      description: transaction.description,
-      amount: transaction.amount.toString(),
-      category: transaction.category,
-      type: transaction.type,
-      status: transaction.status,
-      date: transaction.date,
-      is_recurring: transaction.is_recurring || false,
-      recurring_interval: transaction.recurring_interval || "monthly",
-      paid_date: transaction.paid_date || "",
-      tag: transaction.tag || "",
-      is_installment: false,
-      installment_count: "2",
-      installment_interval: "monthly",
-      payment_method: transaction.payment_method || "",
-      bank_account_id: transaction.bank_account_id || "",
-      card_id: transaction.card_id || "",
-    });
     setIsEditDialogOpen(true);
   };
 
-  const resetForm = () => {
-    setFormData({
-      description: "",
-      amount: "",
-      category: "",
-      type: "expense",
-      status: "em_aberto",
-      date: new Date().toISOString().split("T")[0],
-      is_recurring: false,
-      recurring_interval: "monthly",
-      paid_date: "",
-      tag: "",
+  const editInitialFormData = useMemo(() => {
+    if (!editingTransaction) return undefined;
+    return {
+      description: editingTransaction.description,
+      amount: editingTransaction.amount.toString(),
+      category: editingTransaction.category,
+      type: editingTransaction.type,
+      status: editingTransaction.status,
+      date: editingTransaction.date,
+      is_recurring: editingTransaction.is_recurring || false,
+      recurring_interval: editingTransaction.recurring_interval || "monthly",
+      paid_date: editingTransaction.paid_date || "",
+      tag: editingTransaction.tag || "",
       is_installment: false,
       installment_count: "2",
       installment_interval: "monthly",
-      payment_method: "",
-      bank_account_id: "",
-      card_id: "",
-    });
-  };
+      payment_method: editingTransaction.payment_method || "",
+      bank_account_id: editingTransaction.bank_account_id || "",
+      card_id: editingTransaction.card_id || "",
+    };
+  }, [editingTransaction]);
 
   const getStatusLabel = (status: string) => {
     const statusMap: Record<string, string> = {
@@ -558,11 +474,11 @@ const Transactions = () => {
       case "pagamento_concluido":
       case "confirmed":
       case "paid":
-        return "bg-primary/14 text-green-200";
+        return "bg-primary/10 text-primary";
       case "a_vencer":
-        return "bg-warning/10 text-yellow-200";
+        return "bg-warning/10 text-warning";
       case "vencido":
-        return "bg-destructive/10 text-red-200";
+        return "bg-destructive/10 text-destructive";
       default:
         return "bg-secondary/50 text-muted-foreground";
     }
@@ -651,10 +567,10 @@ const Transactions = () => {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       
-      <main className="flex-1 p-4 sm:p-5 lg:p-4 flex flex-col gap-4 sm:gap-5 min-w-0 pt-20 lg:pt-4 pb-24 lg:pb-4">
-        <div className="max-w-7xl mx-auto w-full">
+      <main className="flex-1 min-w-0 pt-16 pb-24 lg:pt-0 lg:pb-0">
+        <div className="max-w-6xl mx-auto px-4 py-4 lg:px-6 lg:py-6 flex flex-col gap-4 lg:gap-5">
           {/* Header */}
-          <div className="flex flex-col gap-4 mb-4 sm:mb-8 lg:pl-0">
+          <div className="flex flex-col gap-4 lg:pl-0">
             <div className="flex items-start justify-between">
               <div>
                 <button
@@ -669,17 +585,20 @@ const Transactions = () => {
                   Gerencie suas entradas e saídas
                 </p>
               </div>
-              {/* Mobile: only add button */}
-              <AddTransactionCompactDialog
-                onSuccess={fetchTransactions}
-                contentClassName="max-w-[95vw] sm:max-w-lg"
-                trigger={
-                  <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90 sm:hidden">
-                    <Plus className="w-4 h-4" />
-                    <span className="sr-only sm:not-sr-only">Nova</span>
-                  </Button>
-                }
-              />
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                {/* Mobile: only add button */}
+                <AddTransactionCompactDialog
+                  onSuccess={fetchTransactions}
+                  contentClassName="max-w-[95vw] sm:max-w-lg"
+                  trigger={
+                    <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90 sm:hidden">
+                      <Plus className="w-4 h-4" />
+                      <span className="sr-only sm:not-sr-only">Nova</span>
+                    </Button>
+                  }
+                />
+              </div>
             </div>
             {/* Desktop actions */}
             <div className="hidden sm:flex gap-2 flex-wrap">
@@ -720,32 +639,32 @@ const Transactions = () => {
 
           {/* Summary Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Entradas</p>
               <p className="text-lg sm:text-2xl font-bold text-primary">{formatCurrency(totals.incomePaid)}</p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Saídas</p>
               <p className="text-lg sm:text-2xl font-bold text-destructive">{formatCurrency(totals.expensePaid)}</p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">Saldo</p>
               <p className={`text-lg sm:text-2xl font-bold ${totals.balancePaid >= 0 ? "text-primary" : "text-destructive"}`}>
                 {formatCurrency(totals.balancePaid)}
               </p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-blue-500/20 p-3 sm:p-4">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">A Receber</p>
               <p className="text-lg sm:text-2xl font-bold text-blue-500">{formatCurrency(totals.pendingIncome)}</p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-warning/20 p-3 sm:p-4">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">A Pagar</p>
               <p className="text-lg sm:text-2xl font-bold text-warning">{formatCurrency(totals.pendingExpense)}</p>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4 mb-4 sm:mb-6">
+          <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 mb-4 sm:mb-6 card-shadow-soft">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="flex items-center gap-2">
                 <Filter className="w-4 h-4 text-muted-foreground" />
@@ -987,7 +906,7 @@ const Transactions = () => {
           </div>
 
           {/* Transactions List */}
-          <div className="rounded-xl sm:rounded-2xl lg:rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] overflow-hidden">
+          <div className="rounded-xl sm:rounded-2xl lg:rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft overflow-hidden">
             {loading ? (
               <div className="text-center py-12 text-muted-foreground text-sm">Carregando...</div>
             ) : filteredTransactions.length === 0 ? (
@@ -1210,23 +1129,20 @@ const Transactions = () => {
             )}
           </div>
 
-          {/* Edit Dialog */}
-          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-            <DialogContent className="max-w-[95vw] sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Editar Transação</DialogTitle>
-                <DialogDescription>Modifique os campos da transação.</DialogDescription>
-              </DialogHeader>
-              <TransactionForm 
-                formData={formData} 
-                setFormData={(data) => setFormData(data)} 
-                onSubmit={handleEdit} 
-                submitLabel="Salvar Alterações" 
-                subscribed={subscribed}
-                showInstallment={false}
-              />
-            </DialogContent>
-          </Dialog>
+          {/* Edit Dialog (same component as "Nova Transação") */}
+          <AddTransactionCompactDialog
+            open={isEditDialogOpen}
+            onOpenChange={(nextOpen) => {
+              setIsEditDialogOpen(nextOpen);
+              if (!nextOpen) setEditingTransaction(null);
+            }}
+            mode="edit"
+            transactionId={editingTransaction?.id}
+            initialFormData={editInitialFormData}
+            contentClassName="max-w-[95vw] sm:max-w-lg"
+            showInstallment={false}
+            onSuccess={fetchTransactions}
+          />
 
           {/* Bulk Edit Dialog */}
           <BulkEditDialog

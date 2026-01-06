@@ -11,6 +11,7 @@ import Sidebar from "@/components/Sidebar";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { differenceInMonths, startOfMonth, format } from "date-fns";
 import { useState, useEffect } from "react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const COMPLETED_STATUSES = ["pagamento_concluido", "paid", "confirmed"];
 
@@ -243,10 +244,10 @@ const Reports = () => {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       
-      <main className="flex-1 p-4 sm:p-5 lg:p-4 flex flex-col gap-4 sm:gap-5 min-w-0 pt-20 lg:pt-4 pb-24 lg:pb-4">
-        <div className="max-w-7xl mx-auto w-full">
+      <main className="flex-1 min-w-0 pt-16 pb-24 lg:pt-0 lg:pb-0">
+        <div className="max-w-6xl mx-auto px-4 py-4 lg:px-6 lg:py-6 flex flex-col gap-4 lg:gap-5">
           {/* Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 sm:mb-8 lg:pl-0">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:pl-0">
             <div>
               <button
                 onClick={() => navigate("/")}
@@ -261,6 +262,7 @@ const Reports = () => {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
+              <ThemeToggle />
               <Select value={period} onValueChange={(value) => {
                 setPeriod(value);
                 if (value !== "custom") {
@@ -295,21 +297,21 @@ const Reports = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
               <div className="flex items-center gap-2 mb-1 sm:mb-2">
                 <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                 <p className="text-xs sm:text-sm text-muted-foreground">Total Entradas</p>
               </div>
               <p className="text-lg sm:text-2xl font-bold text-primary">{formatCurrency(stats.totalIncome)}</p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
               <div className="flex items-center gap-2 mb-1 sm:mb-2">
                 <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-destructive" />
                 <p className="text-xs sm:text-sm text-muted-foreground">Total Saídas</p>
               </div>
               <p className="text-lg sm:text-2xl font-bold text-destructive">{formatCurrency(stats.totalExpense)}</p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
               <div className="flex items-center gap-2 mb-1 sm:mb-2">
                 <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
                 <p className="text-xs sm:text-sm text-muted-foreground">Saldo Total</p>
@@ -318,7 +320,7 @@ const Reports = () => {
                 {formatCurrency(stats.balance)}
               </p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
               <div className="flex items-center gap-2 mb-1 sm:mb-2">
                 <PieChart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-400" />
                 <p className="text-xs sm:text-sm text-muted-foreground">Categorias</p>
@@ -330,7 +332,7 @@ const Reports = () => {
           {/* Charts Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Area Chart - Fluxo de Caixa */}
-            <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-4 sm:p-5">
+            <div className="rounded-2xl sm:rounded-3xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-4 sm:p-5">
               <h3 className="text-xs sm:text-sm font-medium mb-3 sm:mb-4">Fluxo de Caixa Mensal</h3>
               {loading ? (
                 <div className="h-48 sm:h-64 flex items-center justify-center text-muted-foreground">
@@ -349,16 +351,19 @@ const Reports = () => {
                         <stop offset="95%" stopColor="hsl(0 84% 60%)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(217 33% 17%)" />
-                    <XAxis dataKey="month" stroke="hsl(220 9% 46%)" fontSize={10} />
-                    <YAxis stroke="hsl(220 9% 46%)" fontSize={10} tickFormatter={(v) => `R$${v / 1000}k`} width={45} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickFormatter={(v) => `R$${v / 1000}k`} width={45} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "hsl(222 47% 5%)",
-                        border: "1px solid hsl(217 33% 17%)",
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
                         borderRadius: "8px",
                         fontSize: "12px",
+                        color: "hsl(var(--foreground))",
                       }}
+                      itemStyle={{ color: "hsl(var(--foreground))" }}
+                      labelStyle={{ color: "hsl(var(--foreground))" }}
                       formatter={(value: number) => formatCurrency(value)}
                     />
                     <Area type="monotone" dataKey="entradas" stroke="hsl(142 76% 45%)" fill="url(#colorEntradas)" name="Entradas" />
@@ -370,7 +375,7 @@ const Reports = () => {
 
             {/* Pie Chart - Despesas por Categoria */}
             <ProFeatureOverlay>
-              <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-4 sm:p-5">
+              <div className="rounded-2xl sm:rounded-3xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-4 sm:p-5">
                 <h3 className="text-xs sm:text-sm font-medium mb-3 sm:mb-4">Despesas por Categoria</h3>
                 {loading ? (
                   <div className="h-48 sm:h-64 flex items-center justify-center text-muted-foreground">
@@ -390,7 +395,7 @@ const Reports = () => {
                           dataKey="value"
                           label={({ name, percent }) => {
                             return (
-                              <text fill="white" fontSize={11}>
+                              <text fill="hsl(var(--foreground))" fontSize={11}>
                                 {`${(percent * 100).toFixed(0)}%`}
                               </text>
                             );
@@ -403,14 +408,14 @@ const Reports = () => {
                         </Pie>
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: "hsl(222 47% 5%)",
-                            border: "1px solid hsl(217 33% 17%)",
+                            backgroundColor: "hsl(var(--card))",
+                            border: "1px solid hsl(var(--border))",
                             borderRadius: "8px",
                             fontSize: "12px",
-                            color: "white",
+                            color: "hsl(var(--foreground))",
                           }}
-                          itemStyle={{ color: "white" }}
-                          labelStyle={{ color: "white" }}
+                          itemStyle={{ color: "hsl(var(--foreground))" }}
+                          labelStyle={{ color: "hsl(var(--foreground))" }}
                           formatter={(value: number) => formatCurrency(value)}
                         />
                       </RechartsPie>
@@ -436,7 +441,7 @@ const Reports = () => {
 
             {/* Bar Chart - Comparativo Mensal */}
             <ProFeatureOverlay>
-              <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-4 sm:p-5">
+              <div className="rounded-2xl sm:rounded-3xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-4 sm:p-5">
                 <h3 className="text-xs sm:text-sm font-medium mb-3 sm:mb-4">Comparativo de Saldo Mensal</h3>
                 {loading ? (
                   <div className="h-48 sm:h-64 flex items-center justify-center text-muted-foreground">
@@ -445,19 +450,27 @@ const Reports = () => {
                 ) : (
                   <ResponsiveContainer width="100%" height={window.innerWidth < 640 ? 200 : 280}>
                     <BarChart data={monthlyData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(217 33% 17%)" />
-                      <XAxis dataKey="month" stroke="hsl(220 9% 46%)" fontSize={10} />
-                      <YAxis stroke="hsl(220 9% 46%)" fontSize={10} tickFormatter={(v) => `R$${v / 1000}k`} width={45} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickFormatter={(v) => `R$${v / 1000}k`} width={45} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "hsl(222 47% 5%)",
-                          border: "1px solid hsl(217 33% 17%)",
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
                           borderRadius: "8px",
                           fontSize: "12px",
+                          color: "hsl(var(--foreground))",
                         }}
+                        itemStyle={{ color: "hsl(var(--foreground))" }}
+                        labelStyle={{ color: "hsl(var(--foreground))" }}
                         formatter={(value: number) => formatCurrency(value)}
                       />
-                      <Legend wrapperStyle={{ fontSize: "12px" }} />
+                      <Legend
+                        wrapperStyle={{ fontSize: "12px" }}
+                        formatter={(value) => (
+                          <span style={{ color: "hsl(var(--foreground))" }}>{value}</span>
+                        )}
+                      />
                       <Bar dataKey="saldo" fill="hsl(217 91% 60%)" name="Saldo" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -467,7 +480,7 @@ const Reports = () => {
 
             {/* Médias */}
             <ProFeatureOverlay>
-              <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-4 sm:p-5">
+              <div className="rounded-2xl sm:rounded-3xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-4 sm:p-5">
                 <h3 className="text-xs sm:text-sm font-medium mb-3 sm:mb-4">Análise de Médias Mensais</h3>
                 <div className="space-y-3 sm:space-y-4">
                   <div className="p-3 sm:p-4 rounded-xl bg-secondary/30 border border-border">

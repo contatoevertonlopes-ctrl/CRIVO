@@ -26,6 +26,7 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DateRangePicker } from "./DateRangePicker";
 import { addMonths, endOfMonth, isSameDay, startOfMonth, subMonths } from "date-fns";
+import ThemeToggle from "./ThemeToggle";
 
 interface DashboardHeaderProps {
   customDateFrom?: Date;
@@ -131,6 +132,7 @@ const DashboardHeader = ({
 
       {/* Actions - Removed ModeToggle, only show on desktop */}
       <div className="flex items-center gap-2 flex-wrap">
+        <ThemeToggle />
         <NotificationsDropdown />
         
         <Select

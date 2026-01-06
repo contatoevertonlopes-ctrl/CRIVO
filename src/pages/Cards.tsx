@@ -23,6 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const Cards = () => {
   const { user, loading: authLoading } = useAuth();
@@ -154,6 +155,7 @@ const Cards = () => {
             </div>
 
             <div className="flex gap-2">
+              <ThemeToggle />
               <Button
                 variant="outline"
                 size="sm"

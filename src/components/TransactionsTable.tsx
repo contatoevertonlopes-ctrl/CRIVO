@@ -29,9 +29,18 @@ interface TransactionsTableProps {
   periodDays?: number;
   customDateFrom?: Date;
   customDateTo?: Date;
+  embedded?: boolean;
+  className?: string;
 }
 
-const TransactionsTable = ({ onRefresh, periodDays = 30, customDateFrom, customDateTo }: TransactionsTableProps) => {
+const TransactionsTable = ({
+  onRefresh,
+  periodDays = 30,
+  customDateFrom,
+  customDateTo,
+  embedded = false,
+  className,
+}: TransactionsTableProps) => {
   const { user } = useAuth();
   const { householdId } = useHouseholdId();
   const { members } = useHousehold();
@@ -172,13 +181,18 @@ const TransactionsTable = ({ onRefresh, periodDays = 30, customDateFrom, customD
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
   return (
-    <div className={cn(
-      "rounded-2xl border overflow-hidden card-shadow-soft",
-      isSurvival 
-        ? "bg-survival-card border-survival-border/50" 
-        : "bg-prosperity-card border-prosperity-border/50"
-    )}>
+    <div
+      className={cn(
+        embedded ? "w-full" : "rounded-2xl border overflow-hidden card-shadow-soft",
+        !embedded &&
+          (isSurvival
+            ? "bg-survival-card border-survival-border/50"
+            : "bg-prosperity-card border-prosperity-border/50"),
+        className
+      )}
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 p-4 border-b border-border/30">
         <div>

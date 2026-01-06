@@ -28,8 +28,8 @@ const MetricCard = ({ title, value, pill, trend, trendUp = true, icon: Icon, val
       className={cn(
         "relative overflow-hidden rounded-2xl border p-4 transition-all duration-300 hover:scale-[1.02]",
         isSurvival 
-          ? "bg-survival-card border-survival-border/50 card-shadow-soft" 
-          : "bg-prosperity-card border-prosperity-border/50 card-shadow-soft"
+          ? "bg-survival-card border-survival-border/70 card-shadow-soft" 
+          : "bg-prosperity-card border-prosperity-border/70 card-shadow-soft"
       )}
     >
       {/* Subtle gradient overlay */}

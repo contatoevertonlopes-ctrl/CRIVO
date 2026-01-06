@@ -9,6 +9,8 @@ import {
   isSameDay,
   startOfDay,
   startOfMonth,
+  addDays,
+  format,
   subDays,
   subMonths,
 } from "date-fns";
@@ -213,50 +215,86 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
       expenseChange,
     };
 
-    // Cashflow data for the selected period (bucketed by month)
-    const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-    const cashflowByMonth: MonthlyData[] = [];
+    // Cashflow data for the selected period
+    // - If range is a single full month ("Este mês"/"Mês anterior"), show days (01..31)
+    // - Otherwise, bucket by month
+    const isSingleMonthRange =
+      periodStartDate.getMonth() === periodEndDate.getMonth() &&
+      periodStartDate.getFullYear() === periodEndDate.getFullYear();
 
-    let cursor = startOfMonth(periodStartDate);
-    const lastMonth = startOfMonth(periodEndDate);
+    const useDailyBuckets = isFullSingleMonthRange || (isSingleMonthRange && periodDays <= 31);
 
-    while (cursor.getTime() <= lastMonth.getTime()) {
-      const monthStart = cursor;
-      const monthEnd = endOfMonth(cursor);
+    const cashflowSeries: MonthlyData[] = [];
 
-      const rangeStart = monthStart.getTime() < periodStartDate.getTime() ? periodStartDate : monthStart;
-      const rangeEnd = monthEnd.getTime() > periodEndDate.getTime() ? periodEndDate : monthEnd;
+    if (useDailyBuckets) {
+      const byDay = new Map<string, { receitas: number; despesas: number }>();
 
-      const monthTransactions = currentPeriodTransactions.filter((t) => {
-        const tDate = new Date(t.date + "T00:00:00");
-        return tDate >= rangeStart && tDate <= rangeEnd;
-      });
+      for (const t of currentPeriodTransactions) {
+        if (isTransfer(t)) continue;
+        if (!PAID_STATUSES.includes(t.status as (typeof PAID_STATUSES)[number])) continue;
 
-      const receitas = monthTransactions
-        .filter(
-          (t) =>
-            t.type === "income" &&
-            PAID_STATUSES.includes(t.status as (typeof PAID_STATUSES)[number]) &&
-            !isTransfer(t)
-        )
-        .reduce((sum, t) => sum + Number(t.amount), 0);
+        const key = t.date; // YYYY-MM-DD
+        const curr = byDay.get(key) ?? { receitas: 0, despesas: 0 };
+        if (t.type === "income") curr.receitas += Number(t.amount);
+        if (t.type === "expense") curr.despesas += Number(t.amount);
+        byDay.set(key, curr);
+      }
 
-      const despesas = monthTransactions
-        .filter(
-          (t) =>
-            t.type === "expense" &&
-            PAID_STATUSES.includes(t.status as (typeof PAID_STATUSES)[number]) &&
-            !isTransfer(t)
-        )
-        .reduce((sum, t) => sum + Number(t.amount), 0);
+      let cursor = startOfDay(periodStartDate);
+      const last = startOfDay(periodEndDate);
+      while (cursor.getTime() <= last.getTime()) {
+        const key = format(cursor, "yyyy-MM-dd");
+        const totals = byDay.get(key) ?? { receitas: 0, despesas: 0 };
+        cashflowSeries.push({
+          month: format(cursor, "dd/MM"),
+          receitas: totals.receitas,
+          despesas: totals.despesas,
+        });
+        cursor = addDays(cursor, 1);
+      }
+    } else {
+      const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+      let cursor = startOfMonth(periodStartDate);
+      const lastMonth = startOfMonth(periodEndDate);
 
-      cashflowByMonth.push({
-        month: monthNames[cursor.getMonth()],
-        receitas,
-        despesas,
-      });
+      while (cursor.getTime() <= lastMonth.getTime()) {
+        const monthStart = cursor;
+        const monthEnd = endOfMonth(cursor);
 
-      cursor = addMonths(cursor, 1);
+        const rangeStart = monthStart.getTime() < periodStartDate.getTime() ? periodStartDate : monthStart;
+        const rangeEnd = monthEnd.getTime() > periodEndDate.getTime() ? periodEndDate : monthEnd;
+
+        const monthTransactions = currentPeriodTransactions.filter((t) => {
+          const tDate = new Date(t.date + "T00:00:00");
+          return tDate >= rangeStart && tDate <= rangeEnd;
+        });
+
+        const receitas = monthTransactions
+          .filter(
+            (t) =>
+              t.type === "income" &&
+              PAID_STATUSES.includes(t.status as (typeof PAID_STATUSES)[number]) &&
+              !isTransfer(t)
+          )
+          .reduce((sum, t) => sum + Number(t.amount), 0);
+
+        const despesas = monthTransactions
+          .filter(
+            (t) =>
+              t.type === "expense" &&
+              PAID_STATUSES.includes(t.status as (typeof PAID_STATUSES)[number]) &&
+              !isTransfer(t)
+          )
+          .reduce((sum, t) => sum + Number(t.amount), 0);
+
+        cashflowSeries.push({
+          month: monthNames[cursor.getMonth()],
+          receitas,
+          despesas,
+        });
+
+        cursor = addMonths(cursor, 1);
+      }
     }
 
     // Calculate expenses by category (excluding transfers)
@@ -280,7 +318,7 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
 
     return {
       metrics,
-      cashflowData: cashflowByMonth,
+      cashflowData: cashflowSeries,
       expensesByCategory: categories,
       pendingExpenses,
       pendingIncomes,

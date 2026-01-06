@@ -19,6 +19,7 @@ import NotificationTriggers from "@/components/settings/NotificationTriggers";
 import DataManagement from "@/components/settings/DataManagement";
 import ModuleSettings from "@/components/settings/ModuleSettings";
 import { User, Wallet, Bell, LogOut, MessageSquare, Sparkles } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
@@ -246,18 +247,22 @@ const Settings = () => {
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex min-h-screen w-full bg-background">
       <Sidebar />
       
-      <main className="flex-1 p-4 sm:p-6 lg:p-8">
-        <div className="pl-12 lg:pl-0 mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold mb-1">Configurações</h1>
-          <p className="text-sm text-muted-foreground">
-            Personalize sua experiência e gerencie suas preferências
-          </p>
-        </div>
+      <main className="flex-1 min-w-0 pt-16 pb-24 lg:pt-0 lg:pb-0">
+        <div className="max-w-6xl mx-auto px-4 py-4 lg:px-6 lg:py-6 flex flex-col gap-4 lg:gap-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold mb-1">Configurações</h1>
+              <p className="text-sm text-muted-foreground">
+                Personalize sua experiência e gerencie suas preferências
+              </p>
+            </div>
+            <ThemeToggle />
+          </div>
 
-        <Tabs defaultValue="general" className="max-w-4xl">
+          <Tabs defaultValue="general" className="max-w-4xl">
           <TabsList className="mb-6 bg-card/50 border border-border/50 p-1">
             <TabsTrigger value="general" className="data-[state=active]:bg-background gap-2">
               <User className="w-4 h-4" />
@@ -280,12 +285,12 @@ const Settings = () => {
           {/* General Tab */}
           <TabsContent value="general" className="space-y-6">
             {/* Mode Selector */}
-            <section className="rounded-2xl bg-gradient-to-bl from-background to-card border border-border/50 shadow-lg p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
               <ModeSelector />
             </section>
 
             {/* Profile Section */}
-            <section className="rounded-2xl bg-gradient-to-bl from-background to-card border border-border/50 shadow-lg p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
               <h3 className="text-sm font-medium mb-4">Perfil</h3>
               
               <form onSubmit={handleUpdateProfile} className="space-y-4">
@@ -363,7 +368,7 @@ const Settings = () => {
             </section>
 
             {/* Subscription Section */}
-            <section className={`rounded-2xl bg-gradient-to-bl from-background to-card border shadow-lg p-5 sm:p-6 ${
+            <section className={`rounded-2xl bg-card/50 backdrop-blur border card-shadow-soft p-5 sm:p-6 ${
               isPro ? "border-primary/40" : "border-border/50"
             }`}>
               <h3 className="text-sm font-medium mb-4">Assinatura</h3>
@@ -397,7 +402,7 @@ const Settings = () => {
             <HouseholdSection />
 
             {/* WhatsApp Section */}
-            <section className="rounded-2xl bg-gradient-to-bl from-background to-card border border-border/50 shadow-lg p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
               <div className="flex items-center gap-2 mb-4">
                 <MessageSquare className="w-4 h-4 text-green-500" />
                 <h3 className="text-sm font-medium">WhatsApp</h3>
@@ -442,12 +447,12 @@ const Settings = () => {
             </section>
 
             {/* Data Management */}
-            <section className="rounded-2xl bg-gradient-to-bl from-background to-card border border-border/50 shadow-lg p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
               <DataManagement />
             </section>
 
             {/* Logout Section */}
-            <section className="rounded-2xl bg-gradient-to-bl from-background to-card border border-border/50 shadow-lg p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
               <h3 className="text-sm font-medium mb-4">Conta</h3>
               
               <Button
@@ -463,7 +468,7 @@ const Settings = () => {
 
           {/* Experience Tab - Module Settings */}
           <TabsContent value="experience" className="space-y-6">
-            <section className="rounded-2xl bg-gradient-to-bl from-background to-card border border-border/50 shadow-lg p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
               <ModuleSettings />
             </section>
           </TabsContent>
@@ -471,23 +476,24 @@ const Settings = () => {
           {/* Financial Tab */}
           <TabsContent value="financial" className="space-y-6">
             {/* Goals Section */}
-            <section className="rounded-2xl bg-gradient-to-bl from-background to-card border border-border/50 shadow-lg p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
               <GoalsSection />
             </section>
 
             {/* Category Manager */}
-            <section className="rounded-2xl bg-gradient-to-bl from-background to-card border border-border/50 shadow-lg p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
               <CategoryManager />
             </section>
           </TabsContent>
 
           {/* Notifications Tab */}
           <TabsContent value="notifications" className="space-y-6">
-            <section className="rounded-2xl bg-gradient-to-bl from-background to-card border border-border/50 shadow-lg p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
               <NotificationTriggers />
             </section>
           </TabsContent>
-        </Tabs>
+          </Tabs>
+        </div>
       </main>
     </div>
   );

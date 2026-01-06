@@ -9,17 +9,24 @@ interface MonthlyData {
 interface CashflowChartProps {
   data?: MonthlyData[];
   periodLabel?: string;
+  fitHeight?: boolean;
 }
 
-const CashflowChart = ({ data = [], periodLabel }: CashflowChartProps) => {
+const CashflowChart = ({ data = [], periodLabel, fitHeight = false }: CashflowChartProps) => {
   const hasData = data.some((d) => d.receitas > 0 || d.despesas > 0);
 
   return (
-    <div className="relative overflow-hidden rounded-xl bg-card border border-border/50 shadow-sm p-4">
+    <div
+      className={
+        fitHeight
+          ? "relative overflow-hidden rounded-xl bg-card border border-border/70 shadow-sm p-4 h-full flex flex-col"
+          : "relative overflow-hidden rounded-xl bg-card border border-border/70 shadow-sm p-4"
+      }
+    >
       {/* Subtle gradient accent */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
 
-      <div className="relative z-10">
+      <div className={fitHeight ? "relative z-10 h-full flex flex-col" : "relative z-10"}>
         <div className="flex justify-between items-start gap-2 mb-4">
           <div>
             <h3 className="text-sm font-medium">Fluxo de caixa</h3>
@@ -32,7 +39,7 @@ const CashflowChart = ({ data = [], periodLabel }: CashflowChartProps) => {
           </span>
         </div>
 
-        <div className="h-[200px]">
+        <div className={fitHeight ? "flex-1 min-h-[200px]" : "h-[200px]"}>
           {!hasData ? (
             <div className="h-full flex items-center justify-center text-muted-foreground text-xs">
               Adicione transações para visualizar

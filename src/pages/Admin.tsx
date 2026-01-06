@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import Sidebar from "@/components/Sidebar";
 import {
   Users,
   CreditCard,
@@ -342,10 +343,13 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 sm:mb-8">
+    <div className="flex min-h-screen bg-background">
+      <Sidebar />
+
+      <main className="flex-1 min-w-0 pt-16 pb-24 lg:pt-0 lg:pb-0">
+        <div className="max-w-6xl mx-auto px-4 py-4 lg:px-6 lg:py-6 flex flex-col gap-4 lg:gap-5">
+          {/* Header */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <button
               onClick={() => navigate("/")}
@@ -373,8 +377,8 @@ const Admin = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <div className="rounded-xl sm:rounded-2xl bg-gradient-to-br from-card/80 to-background border border-secondary p-3 sm:p-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-5 card-shadow-soft">
             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
                 <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
@@ -384,7 +388,7 @@ const Admin = () => {
             <p className="text-xl sm:text-3xl font-bold">{revenue.total_users}</p>
           </div>
 
-          <div className="rounded-xl sm:rounded-2xl bg-gradient-to-br from-card/80 to-background border border-secondary p-3 sm:p-5">
+          <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-5 card-shadow-soft">
             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                 <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
@@ -394,7 +398,7 @@ const Admin = () => {
             <p className="text-xl sm:text-3xl font-bold text-primary">{revenue.active_subscriptions}</p>
           </div>
 
-          <div className="rounded-xl sm:rounded-2xl bg-gradient-to-br from-card/80 to-background border border-secondary p-3 sm:p-5">
+          <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-5 card-shadow-soft">
             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
                 <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
@@ -404,7 +408,7 @@ const Admin = () => {
             <p className="text-lg sm:text-3xl font-bold text-green-400">{formatCurrency(revenue.monthly_revenue)}</p>
           </div>
 
-          <div className="rounded-xl sm:rounded-2xl bg-gradient-to-br from-card/80 to-background border border-secondary p-3 sm:p-5">
+          <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-5 card-shadow-soft">
             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
                 <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
@@ -416,7 +420,7 @@ const Admin = () => {
         </div>
 
         {/* Pricing Management */}
-        <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-4 sm:p-6 card-shadow-soft">
           <div className="flex items-center gap-2 mb-4">
             <DollarSign className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium">Gerenciar Preços da Assinatura</span>
@@ -502,7 +506,7 @@ const Admin = () => {
         </div>
 
         {/* Coupon Management */}
-        <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-4 sm:p-6 card-shadow-soft">
           <div className="flex items-center gap-2 mb-4">
             <Tag className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium">Criar Cupom de Desconto</span>
@@ -596,7 +600,7 @@ const Admin = () => {
         </div>
 
         {/* Filters */}
-        <div className="rounded-xl sm:rounded-2xl bg-gradient-to-bl from-background to-black border border-secondary p-3 sm:p-4 mb-4 sm:mb-6">
+        <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
             <Search className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium">Filtros</span>
@@ -661,8 +665,8 @@ const Admin = () => {
         </div>
 
         {/* Users Table */}
-        <div className="rounded-3xl bg-gradient-to-bl from-background to-black border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] overflow-hidden">
-          <div className="p-4 border-b border-secondary">
+        <div className="rounded-3xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft overflow-hidden">
+          <div className="p-4 border-b border-border/30">
             <h3 className="font-semibold flex items-center gap-2">
               <Users className="w-4 h-4" />
               Usuários ({filteredUsers.length})
@@ -679,7 +683,7 @@ const Admin = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-muted-foreground border-b border-secondary bg-secondary/30">
+                  <tr className="text-muted-foreground border-b border-border/30 bg-secondary/30">
                     <th className="text-left py-4 px-4 font-medium">Usuário</th>
                     <th className="text-left py-4 px-4 font-medium">Data Cadastro</th>
                     <th className="text-left py-4 px-4 font-medium">Plano</th>
@@ -692,13 +696,13 @@ const Admin = () => {
                   {filteredUsers.map((u) => (
                     <tr
                       key={u.user_id}
-                      className="border-b border-secondary/50 hover:bg-secondary/30 transition-colors"
+                      className="border-b border-border/20 hover:bg-secondary/50 transition-colors"
                     >
                       <td className="py-4 px-4">
                         <div>
                           <p className="font-medium">{u.full_name || "Sem nome"}</p>
                           <p className="text-xs text-muted-foreground truncate max-w-[150px]">
-                            {u.user_id.substring(0, 8)}...
+                            {u.email || `${u.user_id.substring(0, 8)}...`}
                           </p>
                         </div>
                       </td>
@@ -707,7 +711,7 @@ const Admin = () => {
                         <span
                           className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full ${
                             u.subscription_plan === "pro"
-                              ? "bg-primary/14 text-green-200"
+                              ? "bg-primary/10 text-primary"
                               : "bg-secondary/50 text-muted-foreground"
                           }`}
                         >
@@ -719,8 +723,8 @@ const Admin = () => {
                         <span
                           className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full ${
                             u.subscription_status === "active"
-                              ? "bg-primary/14 text-green-200"
-                              : "bg-destructive/10 text-red-200"
+                              ? "bg-primary/10 text-primary"
+                              : "bg-destructive/10 text-destructive"
                           }`}
                         >
                           {u.subscription_status === "active" ? (
@@ -765,6 +769,7 @@ const Admin = () => {
           )}
         </div>
       </div>
+      </main>
     </div>
   );
 };

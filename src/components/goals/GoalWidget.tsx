@@ -7,7 +7,11 @@ import { differenceInDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Target, ChevronRight, Sparkles, Calendar } from "lucide-react";
 
-const GoalWidget = () => {
+type GoalWidgetProps = {
+  className?: string;
+};
+
+const GoalWidget = ({ className }: GoalWidgetProps) => {
   const navigate = useNavigate();
   const { mode } = useAppMode();
   const { goals, loading } = useGoals();
@@ -38,7 +42,8 @@ const GoalWidget = () => {
         "rounded-2xl border p-4 animate-pulse card-shadow-soft",
         isSurvival 
           ? "bg-survival-card border-survival-border/50" 
-          : "bg-prosperity-card border-prosperity-border/50"
+          : "bg-prosperity-card border-prosperity-border/50",
+        className
       )}>
         <div className="h-4 bg-muted rounded w-1/3 mb-3"></div>
         <div className="h-8 bg-muted rounded w-2/3 mb-2"></div>
@@ -55,7 +60,8 @@ const GoalWidget = () => {
           "rounded-2xl border p-4 transition-all hover:scale-[1.02] cursor-pointer card-shadow-soft",
           isSurvival 
             ? "bg-survival-card border-survival-border/50" 
-            : "bg-prosperity-card border-prosperity-border/50"
+            : "bg-prosperity-card border-prosperity-border/50",
+          className
         )}
       >
         <div className="flex items-center justify-between">
@@ -94,7 +100,8 @@ const GoalWidget = () => {
         "rounded-2xl border p-4 transition-all hover:scale-[1.02] cursor-pointer card-shadow-soft",
         isSurvival 
           ? "bg-survival-card border-survival-border/50" 
-          : "bg-prosperity-card border-prosperity-border/50"
+          : "bg-prosperity-card border-prosperity-border/50",
+        className
       )}
     >
       {/* Header */}

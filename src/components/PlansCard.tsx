@@ -13,7 +13,7 @@ const PlansCard = () => {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-background via-background to-black border border-primary/40 shadow-[0_0_60px_rgba(34,197,94,0.3)] p-5">
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-background via-background to-card border border-primary/40 shadow-[0_0_60px_rgba(34,197,94,0.3)] p-5">
       {/* Gradient ghost effect */}
       <div className="absolute inset-[-40%] bg-[radial-gradient(circle_at_0%_0%,rgba(34,197,94,0.16),transparent_55%),radial-gradient(circle_at_100%_0,rgba(59,130,246,0.16),transparent_52%)] opacity-40 pointer-events-none blur-sm"></div>
 

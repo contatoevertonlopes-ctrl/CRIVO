@@ -8,6 +8,100 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    /* Light theme (default) */
+    --background: 210 30% 96%;
+    --foreground: 222 47% 11%;
+
+    --card: 210 40% 99%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 210 40% 99%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 142 76% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 28% 92%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 28% 92%;
+    --muted-foreground: 215 16% 40%;
+
+    --accent: 142 76% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --warning: 48 96% 53%;
+    --warning-foreground: 48 96% 10%;
+
+    --border: 214 18% 80%;
+    --input: 214 18% 80%;
+    --ring: 142 76% 45%;
+
+    --radius: 1rem;
+
+    --sidebar-background: 210 40% 99%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 142 76% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 28% 92%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 18% 80%;
+    --sidebar-ring: 142 76% 45%;
+
+    /* Custom fintech tokens */
+    --bg-elevated: 210 40% 99%;
+    --bg-card-soft: 210 28% 92%;
+    --accent-glow: 142 76% 45%;
+    --text-muted: 215 16% 40%;
+    
+    /* Survival Mode Colors */
+    --survival-background: 210 30% 96%;
+    --survival-card: 210 40% 99%;
+    --survival-border: 214 18% 80%;
+    --survival-primary: 210 100% 52%;
+    --survival-secondary: 210 28% 92%;
+    --survival-emergency: 0 84% 60%;
+    --survival-critical: 25 95% 53%;
+    --survival-warning: 28 92% 50%;
+    --survival-good: 160 84% 45%;
+    --survival-excellent: 160 84% 40%;
+    --survival-muted: 215 16% 40%;
+    --survival-accent: 28 95% 55%;
+    
+    /* Prosperity Mode Colors */
+    --prosperity-background: 210 30% 96%;
+    --prosperity-card: 210 40% 99%;
+    --prosperity-border: 214 18% 80%;
+    --prosperity-primary: 155 75% 45%;
+    --prosperity-secondary: 210 28% 92%;
+    --prosperity-accent: 45 93% 47%;
+    --prosperity-muted: 215 16% 40%;
+    --prosperity-gold: 43 96% 56%;
+    --prosperity-emerald: 155 75% 45%;
+    
+    /* Gradients */
+    --gradient-primary: radial-gradient(circle at top left, hsl(210 28% 92%), hsl(210 40% 99%));
+    --gradient-elevated: radial-gradient(circle at top, hsl(210 40% 99%), hsl(210 30% 96%));
+    --gradient-accent: linear-gradient(135deg, hsl(142 76% 45%), hsl(142 69% 38%));
+    --gradient-survival: linear-gradient(135deg, hsl(210 28% 92%), hsl(210 30% 96%));
+    --gradient-prosperity: linear-gradient(135deg, hsl(210 28% 92%), hsl(210 30% 96%));
+    
+    /* Shadows */
+    --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.08);
+    --shadow-card: 0 6px 18px rgba(0, 0, 0, 0.08);
+    --shadow-glow-blue: 0 0 30px rgba(59, 130, 246, 0.16);
+    --shadow-glow-green: 0 0 30px rgba(34, 197, 94, 0.16);
+    --shadow-glow-gold: 0 0 30px rgba(234, 179, 8, 0.12);
+    
+    /* Transitions */
+    --transition-smooth: all 0.2s ease-out;
+  }
+
+  .dark {
+    /* Dark theme (previous default) */
     --background: 222 47% 3%;
     --foreground: 210 17% 98%;
 
@@ -35,11 +129,9 @@ All colors MUST be HSL.
     --warning: 48 96% 53%;
     --warning-foreground: 48 96% 10%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
+    --border: 217 22% 24%;
+    --input: 217 22% 24%;
     --ring: 142 76% 45%;
-
-    --radius: 1rem;
 
     --sidebar-background: 222 84% 1%;
     --sidebar-foreground: 220 9% 46%;
@@ -47,7 +139,7 @@ All colors MUST be HSL.
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 217 33% 10%;
     --sidebar-accent-foreground: 210 17% 98%;
-    --sidebar-border: 217 33% 12%;
+    --sidebar-border: 217 22% 20%;
     --sidebar-ring: 142 76% 45%;
 
     /* Custom fintech tokens */
@@ -55,11 +147,11 @@ All colors MUST be HSL.
     --bg-card-soft: 222 84% 1%;
     --accent-glow: 142 76% 45%;
     --text-muted: 220 9% 46%;
-    
-    /* Survival Mode Colors - Blues & Oranges (Wealthfront-inspired alert style) */
+
+    /* Survival Mode Colors */
     --survival-background: 217 50% 4%;
     --survival-card: 217 45% 7%;
-    --survival-border: 217 35% 18%;
+    --survival-border: 217 25% 26%;
     --survival-primary: 210 100% 52%;
     --survival-secondary: 217 40% 12%;
     --survival-emergency: 0 84% 60%;
@@ -69,34 +161,31 @@ All colors MUST be HSL.
     --survival-excellent: 160 84% 40%;
     --survival-muted: 217 30% 25%;
     --survival-accent: 28 95% 55%;
-    
-    /* Prosperity Mode Colors - Dark Grays & Emerald/Gold (Wealthfront style) */
+
+    /* Prosperity Mode Colors */
     --prosperity-background: 220 15% 5%;
     --prosperity-card: 220 15% 8%;
-    --prosperity-border: 220 12% 18%;
+    --prosperity-border: 220 12% 26%;
     --prosperity-primary: 155 75% 45%;
     --prosperity-secondary: 220 12% 12%;
     --prosperity-accent: 45 93% 47%;
     --prosperity-muted: 220 10% 22%;
     --prosperity-gold: 43 96% 56%;
     --prosperity-emerald: 155 75% 45%;
-    
+
     /* Gradients */
     --gradient-primary: radial-gradient(circle at top left, hsl(217 33% 12%), hsl(222 84% 1%));
     --gradient-elevated: radial-gradient(circle at top, hsl(222 84% 1%), hsl(0 0% 0%));
     --gradient-accent: linear-gradient(135deg, hsl(142 76% 45%), hsl(142 69% 38%));
     --gradient-survival: linear-gradient(135deg, hsl(217 50% 6%), hsl(217 40% 4%));
     --gradient-prosperity: linear-gradient(135deg, hsl(220 15% 7%), hsl(220 15% 4%));
-    
+
     /* Shadows */
     --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.25);
     --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.15);
     --shadow-glow-blue: 0 0 30px rgba(59, 130, 246, 0.2);
     --shadow-glow-green: 0 0 30px rgba(34, 197, 94, 0.2);
     --shadow-glow-gold: 0 0 30px rgba(234, 179, 8, 0.15);
-    
-    /* Transitions */
-    --transition-smooth: all 0.2s ease-out;
   }
 }
 
@@ -139,9 +228,13 @@ All colors MUST be HSL.
 
   /* Date input calendar icon styling */
   input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
+    filter: invert(0);
     cursor: pointer;
     opacity: 0.8;
+  }
+
+  .dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
   }
 
   input[type="date"]::-webkit-calendar-picker-indicator:hover {
@@ -165,5 +258,20 @@ All colors MUST be HSL.
   
   .glow-prosperity {
     box-shadow: var(--shadow-glow-green);
+  }
+
+  @keyframes dashboard-edit-wiggle-card {
+    0% { transform: rotate(0deg) translateX(0); }
+    16% { transform: rotate(-0.6deg) translateX(-1px); }
+    32% { transform: rotate(0.6deg) translateX(1px); }
+    48% { transform: rotate(-0.45deg) translateX(-1px); }
+    64% { transform: rotate(0.45deg) translateX(1px); }
+    100% { transform: rotate(0deg) translateX(0); }
+  }
+
+  .dashboard-edit-wiggle-card {
+    animation: dashboard-edit-wiggle-card 0.55s ease-in-out 1;
+    transform-origin: 50% 50%;
+    will-change: transform;
   }
 }

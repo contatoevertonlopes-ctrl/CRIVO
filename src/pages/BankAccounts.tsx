@@ -105,9 +105,10 @@ const BankAccounts = () => {
     <div className="min-h-screen flex w-full bg-background">
       <Sidebar />
       
-      <main className="flex-1 p-4 lg:p-6 overflow-auto">
+      <main className="flex-1 min-w-0 pt-16 pb-24 lg:pt-0 lg:pb-0">
+        <div className="max-w-6xl mx-auto px-4 py-4 lg:px-6 lg:py-6 flex flex-col gap-4 lg:gap-5">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Landmark className="w-6 h-6 text-primary" />
@@ -133,7 +134,7 @@ const BankAccounts = () => {
                 setEditingAccount(null);
                 setDialogOpen(true);
               }}
-              className="bg-gradient-to-r from-primary to-green-600 text-primary-foreground shadow-lg"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               <Plus className="w-4 h-4 mr-2" />
               Nova Conta
@@ -142,9 +143,9 @@ const BankAccounts = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Total Patrimony */}
-          <Card className="bg-gradient-to-br from-primary/10 to-green-600/10 border-primary/20">
+          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
@@ -161,7 +162,7 @@ const BankAccounts = () => {
           </Card>
 
           {/* Total Positive */}
-          <Card className="border-green-500/20 bg-green-500/5">
+          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
@@ -178,7 +179,7 @@ const BankAccounts = () => {
           </Card>
 
           {/* Total Accounts */}
-          <Card className="border-border/50">
+          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
@@ -234,6 +235,7 @@ const BankAccounts = () => {
             ))}
           </div>
         )}
+        </div>
       </main>
 
       {/* Dialogs */}

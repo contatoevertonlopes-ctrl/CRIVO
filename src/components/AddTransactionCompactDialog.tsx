@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useHouseholdId } from "@/hooks/useHouseholdId";
@@ -17,39 +17,67 @@ import { addDays, addMonths, addWeeks } from "date-fns";
 import { getNextRecurringDate, getRecurringGenerationCount } from "@/utils/recurringGeneration";
 
 interface AddTransactionCompactDialogProps {
-  trigger: React.ReactElement;
+  trigger?: React.ReactElement;
   onSuccess?: () => void;
   contentClassName?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  mode?: "create" | "edit";
+  transactionId?: string;
+  initialFormData?: TransactionFormData;
+  dialogTitle?: string;
+  dialogDescription?: string;
+  submitLabel?: string;
+  showInstallment?: boolean;
 }
+
+const getDefaultFormData = (): TransactionFormData => ({
+  description: "",
+  amount: "",
+  category: "Outros",
+  type: "expense",
+  status: "em_aberto",
+  date: new Date().toISOString().split("T")[0],
+  is_recurring: false,
+  recurring_interval: "monthly",
+  paid_date: "",
+  tag: "",
+  is_installment: false,
+  installment_count: "2",
+  installment_interval: "monthly",
+  payment_method: "",
+  bank_account_id: "",
+  card_id: "",
+});
 
 const AddTransactionCompactDialog = ({
   trigger,
   onSuccess,
   contentClassName,
+  open: controlledOpen,
+  onOpenChange,
+  mode = "create",
+  transactionId,
+  initialFormData,
+  dialogTitle,
+  dialogDescription,
+  submitLabel,
+  showInstallment,
 }: AddTransactionCompactDialogProps) => {
   const { user } = useAuth();
   const { subscribed } = useSubscription();
   const { householdId } = useHouseholdId();
 
-  const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState<TransactionFormData>({
-    description: "",
-    amount: "",
-    category: "Outros",
-    type: "expense" as "income" | "expense",
-    status: "em_aberto",
-    date: new Date().toISOString().split("T")[0],
-    is_recurring: false,
-    recurring_interval: "monthly",
-    paid_date: "",
-    tag: "",
-    is_installment: false,
-    installment_count: "2",
-    installment_interval: "monthly",
-    payment_method: "",
-    bank_account_id: "",
-    card_id: "",
-  });
+  const isControlled = typeof controlledOpen === "boolean";
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
+
+  const setOpen = (nextOpen: boolean) => {
+    if (!isControlled) setUncontrolledOpen(nextOpen);
+    onOpenChange?.(nextOpen);
+  };
+
+  const [formData, setFormData] = useState<TransactionFormData>(() => initialFormData ?? getDefaultFormData());
 
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
 
@@ -60,26 +88,16 @@ const AddTransactionCompactDialog = ({
     return "em_aberto";
   };
 
-  const resetForm = () => {
-    setFormData({
-      description: "",
-      amount: "",
-      category: "Outros",
-      type: "expense",
-      status: "em_aberto",
-      date: new Date().toISOString().split("T")[0],
-      is_recurring: false,
-      recurring_interval: "monthly",
-      paid_date: "",
-      tag: "",
-      is_installment: false,
-      installment_count: "2",
-      installment_interval: "monthly",
-      payment_method: "",
-      bank_account_id: "",
-      card_id: "",
-    });
-  };
+  const resetForm = () => setFormData(getDefaultFormData());
+
+  useEffect(() => {
+    if (!open) return;
+    if (initialFormData) {
+      setFormData(initialFormData);
+      return;
+    }
+    resetForm();
+  }, [open, initialFormData]);
 
   const getNextInstallmentDate = (baseDate: Date, index: number, interval: string) => {
     switch (interval) {
@@ -424,29 +442,84 @@ const AddTransactionCompactDialog = ({
     }
   };
 
-  const handleOpenChange = (nextOpen: boolean) => {
-    setOpen(nextOpen);
-    if (nextOpen) {
+  const handleEdit = async () => {
+    if (!user || !transactionId) return;
+
+    if (!formData.description || !formData.amount) {
+      toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+
+    if (formData.is_recurring && !subscribed) {
+      toast.error("Transações recorrentes são exclusivas do Plano Pro");
+      return;
+    }
+
+    try {
+      const normalizedCategory = (formData.category || "").trim() || "Outros";
+      const isPaid = formData.status === "pagamento_concluido";
+      const normalizedPaidDate = isPaid ? (formData.paid_date || todayStr) : null;
+
+      const { error } = await supabase
+        .from("transactions")
+        .update({
+          description: formData.description,
+          amount: parseFloat(formData.amount),
+          category: normalizedCategory,
+          type: formData.type,
+          status: formData.status,
+          date: formData.date,
+          is_recurring: subscribed ? formData.is_recurring : false,
+          recurring_interval: formData.is_recurring ? formData.recurring_interval : null,
+          paid_date: normalizedPaidDate,
+          tag: formData.tag || null,
+          payment_method: formData.payment_method || null,
+          bank_account_id: formData.bank_account_id || null,
+          card_id: formData.card_id || null,
+        })
+        .eq("id", transactionId)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      toast.success("Transação atualizada com sucesso!");
+      setOpen(false);
       resetForm();
+      onSuccess?.();
+    } catch (error) {
+      console.error("Error updating transaction:", error);
+      toast.error("Erro ao atualizar transação");
     }
   };
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+  };
+
+  const resolvedTitle = dialogTitle ?? (mode === "edit" ? "Editar Transação" : "Adicionar Transação");
+  const resolvedDescription = dialogDescription ?? (
+    mode === "edit"
+      ? "Modifique os campos da transação."
+      : "Preencha os campos para adicionar uma nova transação."
+  );
+  const resolvedSubmitLabel = submitLabel ?? (mode === "edit" ? "Salvar Alterações" : "Adicionar");
+  const resolvedShowInstallment = showInstallment ?? mode !== "edit";
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
       <DialogContent className={contentClassName}>
         <DialogHeader>
-          <DialogTitle>Adicionar Transação</DialogTitle>
-          <DialogDescription>
-            Preencha os campos para adicionar uma nova transação.
-          </DialogDescription>
+          <DialogTitle>{resolvedTitle}</DialogTitle>
+          <DialogDescription>{resolvedDescription}</DialogDescription>
         </DialogHeader>
         <TransactionForm
           formData={formData}
           setFormData={(data) => setFormData(data)}
-          onSubmit={handleAdd}
-          submitLabel="Adicionar"
+          onSubmit={mode === "edit" ? handleEdit : handleAdd}
+          submitLabel={resolvedSubmitLabel}
           subscribed={subscribed}
+          showInstallment={resolvedShowInstallment}
           variant="compact"
         />
       </DialogContent>
