@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { AppModeProvider } from "@/contexts/AppModeContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { PwaUpdateNotifier } from "@/components/PwaUpdateNotifier";
 import Home from "./pages/Home";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
@@ -44,6 +45,7 @@ const App = () => (
             <TooltipProvider>
               <Toaster />
               <Sonner />
+              <PwaUpdateNotifier />
               <BrowserRouter
                 future={{
                   v7_startTransition: true,
