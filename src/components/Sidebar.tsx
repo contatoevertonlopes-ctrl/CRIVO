@@ -47,7 +47,7 @@ const Sidebar = () => {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur-sm border-b border-sidebar-border px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <AppLogo size={28} className="text-primary" />
-          <span className="font-semibold text-sm">Finance Club</span>
+          <span className="font-semibold text-sm">FinTrack</span>
         </div>
         <button
           onClick={toggle}
@@ -222,7 +222,7 @@ const Sidebar = () => {
           <AppLogo size={28} className="text-primary shrink-0" />
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="text-sm font-semibold leading-tight">Finance Club</span>
+              <span className="text-sm font-semibold leading-tight">FinTrack</span>
               <span className="text-[10px] text-muted-foreground">Dashboard Financeiro</span>
             </div>
           )}

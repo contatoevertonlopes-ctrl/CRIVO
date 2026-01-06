@@ -212,7 +212,7 @@ const Onboarding = () => {
               </div>
               
               <h1 className="text-3xl font-bold mb-3">
-                Bem-vindo ao Finance Club
+                Bem-vindo ao FinTrack
               </h1>
               
               <p className="text-lg text-muted-foreground mb-8">
