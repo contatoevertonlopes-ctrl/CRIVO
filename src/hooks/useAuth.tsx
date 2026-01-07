@@ -56,9 +56,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // If signup successful and user exists, update profile with phone
     if (!error && data.user && phone) {
       await supabase
-        .from("profiles")
-        .update({ phone })
-        .eq("user_id", data.user.id);
+        .from("profiles_private")
+        .upsert({ user_id: data.user.id, phone }, { onConflict: "user_id" });
     }
 
     return { error };

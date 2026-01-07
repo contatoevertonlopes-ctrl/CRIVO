@@ -468,7 +468,6 @@ export type Database = {
           id: string
           monthly_income: number | null
           onboarding_completed: boolean | null
-          phone: string | null
           updated_at: string
           user_id: string
         }
@@ -482,7 +481,6 @@ export type Database = {
           id?: string
           monthly_income?: number | null
           onboarding_completed?: boolean | null
-          phone?: string | null
           updated_at?: string
           user_id: string
         }
@@ -496,7 +494,6 @@ export type Database = {
           id?: string
           monthly_income?: number | null
           onboarding_completed?: boolean | null
-          phone?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -506,6 +503,35 @@ export type Database = {
             columns: ["household_id"]
             isOneToOne: false
             referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles_private: {
+        Row: {
+          created_at: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_private_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]

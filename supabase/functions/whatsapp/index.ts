@@ -272,7 +272,7 @@ serve(async (req) => {
           // For now, we'll respond with instructions to link the account
           
           const { data: profile } = await supabase
-            .from("profiles")
+            .from("profiles_private")
             .select("user_id")
             .eq("phone", phone)
             .single();
@@ -320,7 +320,7 @@ serve(async (req) => {
 
         case "get_summary": {
           const { data: profile } = await supabase
-            .from("profiles")
+            .from("profiles_private")
             .select("user_id")
             .eq("phone", phone)
             .single();
@@ -380,7 +380,7 @@ serve(async (req) => {
 
         case "get_pending": {
           const { data: profile } = await supabase
-            .from("profiles")
+            .from("profiles_private")
             .select("user_id")
             .eq("phone", phone)
             .single();

@@ -1,5 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { enforceCronSecret } from "../_shared/cronAuth.ts";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { getClientIp } from "../_shared/request.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,17 +16,16 @@ serve(async (req) => {
   }
 
   try {
-    // Verify cron secret for security
-    const authHeader = req.headers.get('Authorization');
-    const cronSecret = Deno.env.get('CRON_SECRET');
-    
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      console.log('Unauthorized request - invalid cron secret');
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    const cronAuth = enforceCronSecret(corsHeaders, req);
+    if (cronAuth) return cronAuth;
+
+    const ip = getClientIp(req);
+    const rateLimited = await enforceRateLimit(corsHeaders, {
+      key: `close-card-bills:ip:${ip}`,
+      limit: 5,
+      windowSeconds: 60,
+    });
+    if (rateLimited) return rateLimited;
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;

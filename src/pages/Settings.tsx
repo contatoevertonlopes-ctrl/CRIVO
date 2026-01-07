@@ -55,16 +55,16 @@ const Settings = () => {
 
   const fetchProfile = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-    
-    if (data) {
-      setFullName(data.full_name || "");
-      setPhone(data.phone || "");
+    const [{ data: profile }, { data: priv }] = await Promise.all([
+      supabase.from("profiles").select("*").eq("user_id", user.id).single(),
+      supabase.from("profiles_private").select("phone").eq("user_id", user.id).maybeSingle(),
+    ]);
+
+    if (profile) {
+      setFullName(profile.full_name || "");
     }
+
+    setPhone(priv?.phone || "");
   };
 
   const fetchSubscription = async () => {
@@ -169,9 +169,8 @@ const Settings = () => {
       const formattedPhone = phone.replace(/\D/g, "");
       
       const { error } = await supabase
-        .from("profiles")
-        .update({ phone: formattedPhone })
-        .eq("user_id", user.id);
+        .from("profiles_private")
+        .upsert({ user_id: user.id, phone: formattedPhone }, { onConflict: "user_id" });
 
       if (error) throw error;
 
