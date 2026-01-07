@@ -8,6 +8,23 @@ type SubscriptionRow = {
   expires_at: string | null;
 };
 
+const isActivePaidPlan = (row: SubscriptionRow | null | undefined) => {
+  if (!row) return false;
+  if (row.status !== "active") return false;
+  if (row.plan === "free") return false;
+  if (row.expires_at) {
+    const expiresAt = new Date(row.expires_at).getTime();
+    if (Number.isFinite(expiresAt) && expiresAt <= Date.now()) return false;
+  }
+  return row.plan === "pro" || row.plan === "monthly" || row.plan === "annual";
+};
+
+const toPlanType = (plan: string | null | undefined): "monthly" | "annual" | null => {
+  if (plan === "pro") return "monthly";
+  if (plan === "monthly" || plan === "annual") return plan;
+  return null;
+};
+
 let sharedUserId: string | null = null;
 let sharedChannel: ReturnType<typeof supabase.channel> | null = null;
 let sharedRefCount = 0;
@@ -56,6 +73,18 @@ export const useSubscription = () => {
     loading: true,
   });
 
+  const fetchSubscriptionRow = useCallback(async (): Promise<SubscriptionRow | null> => {
+    if (!user) return null;
+    const { data, error } = await supabase
+      .from("subscriptions")
+      .select("plan,status,expires_at")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (error) return null;
+    return (data as SubscriptionRow) ?? null;
+  }, [user]);
+
   const checkSubscription = useCallback(async () => {
     if (!user || !session) {
       setSubscription({
@@ -83,9 +112,15 @@ export const useSubscription = () => {
         loading: false,
       });
     } catch {
-      setSubscription(prev => ({ ...prev, loading: false }));
+      const row = await fetchSubscriptionRow();
+      setSubscription({
+        subscribed: isActivePaidPlan(row),
+        planType: toPlanType(row?.plan),
+        subscriptionEnd: row?.expires_at ?? null,
+        loading: false,
+      });
     }
-  }, [user, session]);
+  }, [user, session, fetchSubscriptionRow]);
 
   // Initial check
   useEffect(() => {
@@ -101,8 +136,8 @@ export const useSubscription = () => {
 
     const handler = (newData: SubscriptionRow) => {
       setSubscription({
-        subscribed: newData.status === "active" && newData.plan === "pro",
-        planType: newData.plan === "pro" ? "monthly" : null,
+        subscribed: isActivePaidPlan(newData),
+        planType: toPlanType(newData.plan),
         subscriptionEnd: newData.expires_at,
         loading: false,
       });

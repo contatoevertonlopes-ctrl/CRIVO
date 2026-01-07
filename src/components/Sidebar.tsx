@@ -13,7 +13,7 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
-  const { subscribed } = useSubscription();
+  const { subscribed, loading: subscriptionLoading } = useSubscription();
   const { collapsed, toggle } = useSidebarContext();
   const { modules } = useModulePreferences();
 
@@ -143,7 +143,7 @@ const Sidebar = () => {
             {/* Bottom section */}
             <div className="mt-auto pt-4 border-t border-sidebar-border/50">
               {user ? (
-                subscribed ? (
+                subscriptionLoading ? null : subscribed ? (
                   <button
                     onClick={() => {
                       navigate("/plans");
