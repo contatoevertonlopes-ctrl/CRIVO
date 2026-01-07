@@ -1,7 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
-import { enforceRateLimit } from "../_shared/rateLimit.ts";
-import { getClientIp } from "../_shared/request.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -40,13 +38,6 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const ip = getClientIp(req);
-    const rateLimited = await enforceRateLimit(corsHeaders, {
-      key: `get-prices:ip:${ip}`,
-      limit: 60,
-      windowSeconds: 60,
-    });
-    if (rateLimited) return rateLimited;
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
