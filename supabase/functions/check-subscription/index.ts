@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,13 +46,6 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
-
-    const rateLimited = await enforceRateLimit(corsHeaders, {
-      key: `check-subscription:user:${user.id}`,
-      limit: 30,
-      windowSeconds: 60,
-    });
-    if (rateLimited) return rateLimited;
 
     // FIRST: Check local database for admin-granted subscriptions
     const { data: localSub, error: localSubError } = await supabaseClient
