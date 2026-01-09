@@ -20,7 +20,8 @@ CREATE OR REPLACE FUNCTION public.accept_household_invite(p_invite_code text)
 RETURNS json
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, row_security = off
+SET search_path = public
+SET row_security = off
 AS $$
 DECLARE
   v_invite record;

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getStripeClient } from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,16 +19,15 @@ serve(async (req) => {
   }
 
   const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    Deno.env.get("EDGE_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("EDGE_SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     { auth: { persistSession: false } }
   );
 
   try {
     logStep("Function started");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    getStripeClient();
     logStep("Stripe key verified");
 
     const authHeader = req.headers.get("Authorization");
@@ -75,7 +75,7 @@ serve(async (req) => {
     logStep("No active Pro in local DB, checking Stripe");
 
     // SECOND: Check Stripe for paid subscriptions
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const stripe = getStripeClient();
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
 
     if (customers.data.length === 0) {
@@ -102,12 +102,31 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+      const rawCurrentPeriodEnd = (subscription as any).current_period_end as unknown;
+      const parsedCurrentPeriodEnd =
+        typeof rawCurrentPeriodEnd === "number"
+          ? rawCurrentPeriodEnd
+          : typeof rawCurrentPeriodEnd === "string"
+            ? Number(rawCurrentPeriodEnd)
+            : typeof rawCurrentPeriodEnd === "bigint"
+              ? Number(rawCurrentPeriodEnd)
+              : NaN;
+
+      if (Number.isFinite(parsedCurrentPeriodEnd) && parsedCurrentPeriodEnd > 0) {
+        subscriptionEnd = new Date(parsedCurrentPeriodEnd * 1000).toISOString();
+      } else {
+        subscriptionEnd = null;
+        logStep("Missing/invalid current_period_end", {
+          subscriptionId: subscription.id,
+          value: rawCurrentPeriodEnd,
+          type: typeof rawCurrentPeriodEnd,
+        });
+      }
       productId = subscription.items.data[0].price.product as string;
       
-      // Determine plan type based on billing interval
-      const priceId = subscription.items.data[0].price.id;
-      planType = priceId === "price_1SajDCA22gVNuvUZ7dyE7bor" ? "monthly" : "annual";
+      // Determine plan type based on Stripe recurring interval
+      const interval = subscription.items.data[0].price.recurring?.interval;
+      planType = interval === "month" ? "monthly" : interval === "year" ? "annual" : null;
       
       logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd, planType });
     } else {

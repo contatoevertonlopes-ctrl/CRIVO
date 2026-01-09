@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getStripeClient } from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +13,41 @@ const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
 
+const stripeIntervalToPlan = (interval: string | null | undefined): "monthly" | "annual" | "pro" => {
+  if (interval === "month") return "monthly";
+  if (interval === "year") return "annual";
+  return "pro";
+};
+
+const toDbStatus = (stripeStatus: Stripe.Subscription.Status | string): "active" | "cancelled" => {
+  return stripeStatus === "active" || stripeStatus === "trialing" ? "active" : "cancelled";
+};
+
+const upsertSubscription = async (
+  supabaseClient: ReturnType<typeof createClient>,
+  input: {
+    userId: string;
+    plan: "pro" | "monthly" | "annual" | "free";
+    status: "active" | "cancelled";
+    expiresAt: string | null;
+  },
+) => {
+  const { error } = await supabaseClient
+    .from("subscriptions")
+    .upsert(
+      {
+        user_id: input.userId,
+        plan: input.plan,
+        status: input.status,
+        expires_at: input.expiresAt,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
+
+  if (error) throw new Error(`DB upsert failed: ${error.message}`);
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -20,38 +56,50 @@ serve(async (req) => {
   try {
     logStep("Webhook received");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const stripe = getStripeClient();
 
     const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      Deno.env.get("EDGE_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("EDGE_SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    logStep("Supabase client configured", {
+      url: Deno.env.get("EDGE_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL") ?? null,
+    });
 
     const body = await req.text();
     const signature = req.headers.get("stripe-signature");
     
     logStep("Processing webhook", { hasSignature: !!signature });
 
-    // Parse the event - in production, verify with webhook secret
+    // Parse the event. If STRIPE_WEBHOOK_SECRET is configured, require signature verification.
     let event: Stripe.Event;
-    
+
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
-    if (webhookSecret && signature) {
+    if (webhookSecret) {
+      if (!signature) {
+        logStep("Missing stripe-signature header while STRIPE_WEBHOOK_SECRET is set");
+        return new Response(JSON.stringify({ error: "Missing stripe-signature" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        });
+      }
+
       try {
-        event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+        event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
         logStep("Event signature verified");
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : String(err);
-        logStep("Signature verification failed, parsing as JSON", { error: errorMessage });
-        event = JSON.parse(body);
+        logStep("Signature verification failed", { error: errorMessage });
+        return new Response(JSON.stringify({ error: "Invalid signature" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        });
       }
     } else {
       event = JSON.parse(body);
-      logStep("No webhook secret configured, parsing as JSON");
+      logStep("No STRIPE_WEBHOOK_SECRET configured; parsing as JSON (dev-only)");
     }
 
     logStep("Event type", { type: event.type });
@@ -67,146 +115,76 @@ serve(async (req) => {
         mode: session.mode,
       });
 
-      // Get customer email from session
-      const customerEmail = session.customer_email || session.customer_details?.email;
-      const clientReferenceId = session.client_reference_id;
-
-      if (!customerEmail && !clientReferenceId) {
-        logStep("No customer email or reference ID found");
-        return new Response(JSON.stringify({ error: "No customer identifier" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        });
-      }
-
-      // Find user by email or client_reference_id (which could be user_id)
-      let userId: string | null = null;
-
-      if (clientReferenceId) {
-        // client_reference_id is the user_id
-        userId = clientReferenceId;
-        logStep("Using client_reference_id as user_id", { userId });
-      } else if (customerEmail) {
-        // Find user by email in auth.users
-        const { data: users, error: userError } = await supabaseClient
-          .from("profiles")
-          .select("user_id")
-          .eq("user_id", (
-            await supabaseClient.auth.admin.listUsers()
-          ).data.users.find(u => u.email === customerEmail)?.id || "")
-          .maybeSingle();
-
-        // Alternative: search through auth users
-        const { data: authUsers } = await supabaseClient.auth.admin.listUsers();
-        const foundUser = authUsers.users.find(u => u.email === customerEmail);
-        
-        if (foundUser) {
-          userId = foundUser.id;
-          logStep("Found user by email", { userId, email: customerEmail });
-        }
-      }
+      // Prefer metadata (we set it in create-checkout). Fallback to client_reference_id.
+      const userId =
+        (session.metadata?.user_id as string | undefined) ??
+        (session.client_reference_id as string | null) ??
+        null;
 
       if (!userId) {
-        logStep("Could not find user", { customerEmail, clientReferenceId });
-        return new Response(JSON.stringify({ error: "User not found" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 404,
+        // Don't fail the webhook (Stripe will retry forever); log loudly.
+        logStep("Missing userId on checkout session", {
+          sessionId: session.id,
+          hasMetadataUserId: !!session.metadata?.user_id,
+          clientReferenceId: session.client_reference_id,
         });
-      }
-
-      // Calculate subscription end date
-      let expiresAt: string | null = null;
-      
-      if (session.mode === "subscription") {
-        // For subscriptions, get the actual subscription to find end date
-        if (session.subscription) {
-          const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
-          expiresAt = new Date(subscription.current_period_end * 1000).toISOString();
-          logStep("Subscription period end", { expiresAt });
-        }
       } else {
-        // For one-time payments, set expiry to 1 year from now
-        const oneYearFromNow = new Date();
-        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-        expiresAt = oneYearFromNow.toISOString();
-      }
+        const planType = (session.metadata?.plan_type as string | undefined) ?? "pro";
+        const plan = planType === "monthly" || planType === "annual" ? planType : "pro";
 
-      // Update subscription in database
-      const { error: updateError } = await supabaseClient
-        .from("subscriptions")
-        .update({
-          plan: "pro",
+        await upsertSubscription(supabaseClient, {
+          userId,
+          plan,
           status: "active",
-          expires_at: expiresAt,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", userId);
+          expiresAt: null,
+        });
 
-      if (updateError) {
-        logStep("Error updating subscription", { error: updateError.message });
-        
-        // Try to insert if update failed (record might not exist)
-        const { error: insertError } = await supabaseClient
-          .from("subscriptions")
-          .insert({
-            user_id: userId,
-            plan: "pro",
-            status: "active",
-            expires_at: expiresAt,
-          });
-
-        if (insertError) {
-          logStep("Error inserting subscription", { error: insertError.message });
-          return new Response(JSON.stringify({ error: insertError.message }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 500,
-          });
-        }
+        logStep("Subscription upserted from checkout", { userId, plan });
       }
-
-      logStep("Subscription updated successfully", { userId, plan: "pro", expiresAt });
     }
 
-    // Handle subscription updates (renewal, cancellation, etc.)
-    if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
+    // Handle subscription events (created/updated/deleted)
+    if (
+      event.type === "customer.subscription.created" ||
+      event.type === "customer.subscription.updated" ||
+      event.type === "customer.subscription.deleted"
+    ) {
       const subscription = event.data.object as Stripe.Subscription;
-      const customerEmail = subscription.customer as string;
+      const userId = (subscription.metadata?.user_id as string | undefined) ?? null;
       
       logStep("Subscription event", { 
         type: event.type, 
         status: subscription.status,
-        customerId: customerEmail 
+        customerId: subscription.customer,
+        hasMetadataUserId: !!userId,
       });
 
-      // Get customer email from Stripe
-      const customer = await stripe.customers.retrieve(subscription.customer as string);
-      const email = (customer as Stripe.Customer).email;
+      if (!userId) {
+        // We intentionally avoid searching users by email here (slow, and can hang in local Docker).
+        // If metadata isn't present, it's a creation-flow issue.
+        logStep("Skipping subscription event: missing metadata.user_id", {
+          subscriptionId: subscription.id,
+        });
+      } else {
+        const dbStatus = toDbStatus(subscription.status);
+        const interval = subscription.items.data[0]?.price.recurring?.interval;
+        const plan = dbStatus === "active" ? stripeIntervalToPlan(interval) : "free";
+        const expiresAt =
+          dbStatus === "active" ? new Date(subscription.current_period_end * 1000).toISOString() : null;
 
-      if (email) {
-        // Find user by email
-        const { data: authUsers } = await supabaseClient.auth.admin.listUsers();
-        const foundUser = authUsers.users.find(u => u.email === email);
+        await upsertSubscription(supabaseClient, {
+          userId,
+          plan,
+          status: dbStatus,
+          expiresAt,
+        });
 
-        if (foundUser) {
-          const isActive = subscription.status === "active" || subscription.status === "trialing";
-          
-          await supabaseClient
-            .from("subscriptions")
-            .update({
-              status: isActive ? "active" : "canceled",
-              plan: isActive ? "pro" : "free",
-              expires_at: isActive 
-                ? new Date(subscription.current_period_end * 1000).toISOString() 
-                : null,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("user_id", foundUser.id);
-
-          logStep("Subscription status updated", { 
-            userId: foundUser.id, 
-            status: isActive ? "active" : "canceled" 
-          });
-        }
+        logStep("Subscription upserted from Stripe subscription", {
+          userId,
+          plan,
+          status: dbStatus,
+          expiresAt,
+        });
       }
     }
 

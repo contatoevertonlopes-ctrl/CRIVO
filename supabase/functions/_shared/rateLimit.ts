@@ -14,7 +14,16 @@ export async function checkRateLimit(params: {
   });
 
   if (error) {
-    throw new Error(`rate_limit rpc error: ${error.message}`);
+    const msg = error.message ?? "";
+    // In some local setups PostgREST schema cache may not include the RPC.
+    // To avoid blocking core flows (e.g., Stripe checkout) during local dev,
+    // fall back to allowing the request.
+    if (msg.includes("Could not find the function public.check_rate_limit") || msg.includes("schema cache")) {
+      console.warn("[RATE-LIMIT] check_rate_limit RPC unavailable; allowing request", { message: msg });
+      return true;
+    }
+
+    throw new Error(`rate_limit rpc error: ${msg}`);
   }
 
   return Boolean(data);

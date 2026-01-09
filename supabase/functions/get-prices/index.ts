@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { getStripeClient } from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,10 +16,9 @@ const MONTHLY_PRODUCT_NAME = "Plano Pro Mensal";
 const ANNUAL_PRODUCT_NAME = "Plano Pro Anual";
 
 const getProductByName = async (stripe: Stripe, name: string) => {
-  const products = await stripe.products.search({
-    query: `name:"${name}" AND active:"true"`,
-  });
-  return products.data?.[0] ?? null;
+  // Use products.list() for compatibility across Stripe accounts.
+  const products = await stripe.products.list({ active: true, limit: 100 });
+  return products.data.find((p) => p.name === name) ?? null;
 };
 
 const getActivePriceForProduct = async (stripe: Stripe, productId: string) => {
@@ -39,10 +39,7 @@ serve(async (req) => {
     logStep("Function started");
 
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const stripe = getStripeClient();
 
     // Resolve products by name (avoids hard-coded prod_ IDs tied to a specific Stripe account)
     const [monthlyProduct, annualProduct] = await Promise.all([

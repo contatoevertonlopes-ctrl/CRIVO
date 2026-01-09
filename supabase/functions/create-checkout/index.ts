@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { getStripeClient } from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,8 +14,8 @@ serve(async (req) => {
   }
 
   const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    Deno.env.get("EDGE_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("EDGE_SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? ""
   );
 
   try {
@@ -49,21 +49,19 @@ serve(async (req) => {
 
     console.log("[CREATE-CHECKOUT] User authenticated:", user.email);
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2025-08-27.basil",
-    });
+    const stripe = getStripeClient();
 
-    // Fetch active prices dynamically from Stripe
+    // Fetch active prices dynamically from Stripe.
+    // Use products.list() instead of products.search() for better compatibility.
     const productName = priceType === "annual" ? "Plano Pro Anual" : "Plano Pro Mensal";
-    const products = await stripe.products.search({
-      query: `name:"${productName}" AND active:"true"`,
-    });
+    const products = await stripe.products.list({ active: true, limit: 100 });
+    const product = products.data.find((p) => p.name === productName);
 
-    if (products.data.length === 0) {
-      throw new Error(`Product not found: ${productName}`);
+    if (!product) {
+      throw new Error(
+        `Product not found: ${productName}. Create an ACTIVE product in Stripe (Test mode) with this exact name.`
+      );
     }
-
-    const product = products.data[0];
     const prices = await stripe.prices.list({
       product: product.id,
       active: true,
@@ -84,9 +82,21 @@ serve(async (req) => {
       console.log("[CREATE-CHECKOUT] Existing customer found:", customerId);
     }
 
+    const origin = req.headers.get("origin") ?? "";
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
+      client_reference_id: user.id,
+      metadata: {
+        user_id: user.id,
+        plan_type: priceType,
+      },
+      subscription_data: {
+        metadata: {
+          user_id: user.id,
+          plan_type: priceType,
+        },
+      },
       line_items: [
         {
           price: priceId,
@@ -94,8 +104,8 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/plans?success=true`,
-      cancel_url: `${req.headers.get("origin")}/plans?canceled=true`,
+      success_url: `${origin}/plans?success=true`,
+      cancel_url: `${origin}/plans?canceled=true`,
     });
 
     console.log("[CREATE-CHECKOUT] Checkout session created:", session.id);

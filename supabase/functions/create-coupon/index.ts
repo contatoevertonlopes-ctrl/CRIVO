@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { getStripeClient } from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,8 +22,7 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    getStripeClient();
 
     // Initialize Supabase client to verify admin
     const supabaseClient = createClient(
@@ -73,7 +73,7 @@ serve(async (req) => {
     }
     logStep("Request params", { name, discountType, discountValue, duration, durationInMonths });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const stripe = getStripeClient();
 
     // Build coupon params
     const couponParams: Stripe.CouponCreateParams = {
