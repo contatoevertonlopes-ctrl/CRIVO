@@ -93,12 +93,12 @@ const DashboardHeader = ({
       {/* Title Section */}
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-lg font-semibold">Dashboard financeiro</h1>
+          <h1 className="text-2xl font-bold">Dashboard financeiro</h1>
           {!householdLoading && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium transition-all cursor-default ${
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold transition-all cursor-default ${
                     isShared
                       ? "bg-primary/10 text-primary border border-primary/20"
                       : "bg-secondary text-muted-foreground border border-border/30"
@@ -125,7 +125,7 @@ const DashboardHeader = ({
             </Tooltip>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Visão geral do fluxo de caixa
         </p>
       </div>
@@ -139,7 +139,7 @@ const DashboardHeader = ({
           value={getCurrentValue()}
           onValueChange={handlePeriodSelect}
         >
-          <SelectTrigger className="h-8 w-[120px] rounded-lg border-border/50 bg-secondary/60 text-xs text-muted-foreground hover:border-border hover:text-foreground">
+          <SelectTrigger className="h-10 w-[140px] rounded-lg border-border/50 bg-secondary/60 text-sm text-muted-foreground hover:border-border hover:text-foreground">
             <span className="w-1.5 h-1.5 rounded-full bg-primary mr-1.5"></span>
             <SelectValue />
           </SelectTrigger>
@@ -157,7 +157,7 @@ const DashboardHeader = ({
             dateFrom={customDateFrom}
             dateTo={customDateTo}
             onDateChange={onCustomDateChange}
-            className="h-8 text-xs"
+            className="h-10 text-sm"
           />
         )}
 

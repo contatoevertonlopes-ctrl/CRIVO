@@ -363,14 +363,14 @@ const Admin = () => {
                 <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Painel Administrativo</h1>
-                <p className="text-muted-foreground text-xs sm:text-sm">
+                <h1 className="text-2xl font-bold">Painel Administrativo</h1>
+                <p className="text-muted-foreground text-xs sm:text-sm hidden sm:block">
                   Gerencie usuários, planos e métricas
                 </p>
               </div>
             </div>
           </div>
-          <Button onClick={fetchData} variant="outline" className="gap-2">
+          <Button onClick={fetchData} variant="outline" size="sm" className="gap-2 w-full sm:w-auto">
             <RefreshCw className="w-4 h-4" />
             Atualizar
           </Button>

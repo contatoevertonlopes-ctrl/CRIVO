@@ -25,6 +25,7 @@ const Sidebar = () => {
     { icon: CreditCard, label: "Cartões", path: "/cards", module: "creditCards" as const },
     { icon: Target, label: "Objetivos", path: "/goals", module: "budgets" as const },
     { icon: BarChart3, label: "Relatórios", path: "/reports", alwaysShow: true },
+    { icon: Settings, label: "Configurações", path: "/settings", alwaysShow: true },
   ];
 
   // Filter items based on active modules
@@ -36,9 +37,9 @@ const Sidebar = () => {
   const mobileTabItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/" },
     { icon: ArrowRightLeft, label: "Transações", path: "/transactions" },
+    { icon: BarChart3, label: "Relatórios", path: "/reports" },
     ...(modules.bankAccounts ? [{ icon: Landmark, label: "Contas", path: "/accounts" }] : []),
     ...(modules.creditCards ? [{ icon: CreditCard, label: "Cartões", path: "/cards" }] : []),
-    { icon: Settings, label: "Config", path: "/settings" },
   ];
 
   return (
@@ -59,7 +60,7 @@ const Sidebar = () => {
 
       {/* Mobile Bottom Tab Bar */}
       <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur-sm border-t border-sidebar-border px-2 py-2 safe-area-pb"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur-sm border-t border-sidebar-border px-3 py-3 safe-area-pb"
         style={{ paddingLeft: 'env(safe-area-inset-left,12px)', paddingRight: 'env(safe-area-inset-right,12px)' }}
       >
         <div className="flex items-center justify-between w-full">
@@ -71,12 +72,12 @@ const Sidebar = () => {
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  "flex-1 min-w-0 flex flex-col items-center gap-1 py-2 rounded-xl transition-all",
+                  "flex-1 min-w-0 flex flex-col items-center gap-1.5 py-3 rounded-xl transition-all",
                   isActive ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium truncate w-full text-center">{item.label}</span>
+                <Icon className="w-6 h-6" />
+                <span className="text-xs font-semibold truncate w-full text-center">{item.label}</span>
               </button>
             );
           })}

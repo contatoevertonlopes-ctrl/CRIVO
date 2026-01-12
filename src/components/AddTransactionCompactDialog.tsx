@@ -11,10 +11,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import TransactionForm, { type TransactionFormData } from "@/components/TransactionForm";
 import { toast } from "sonner";
 import { addDays, addMonths, addWeeks } from "date-fns";
 import { getNextRecurringDate, getRecurringGenerationCount } from "@/utils/recurringGeneration";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AddTransactionCompactDialogProps {
   trigger?: React.ReactElement;
@@ -67,6 +76,7 @@ const AddTransactionCompactDialog = ({
   const { user } = useAuth();
   const { subscribed } = useSubscription();
   const { householdId } = useHouseholdId();
+  const isMobile = useIsMobile();
 
   const isControlled = typeof controlledOpen === "boolean";
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
@@ -497,13 +507,34 @@ const AddTransactionCompactDialog = ({
   };
 
   const resolvedTitle = dialogTitle ?? (mode === "edit" ? "Editar Transação" : "Adicionar Transação");
-  const resolvedDescription = dialogDescription ?? (
-    mode === "edit"
-      ? "Modifique os campos da transação."
-      : "Preencha os campos para adicionar uma nova transação."
-  );
+  const resolvedDescription = dialogDescription ?? "";
   const resolvedSubmitLabel = submitLabel ?? (mode === "edit" ? "Salvar Alterações" : "Adicionar");
   const resolvedShowInstallment = showInstallment ?? mode !== "edit";
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={handleOpenChange}>
+        {trigger ? <DrawerTrigger asChild>{trigger}</DrawerTrigger> : null}
+        <DrawerContent className="max-h-[90vh]">
+          <DrawerHeader className="pb-2">
+            <DrawerTitle>{resolvedTitle}</DrawerTitle>
+            {resolvedDescription ? <DrawerDescription>{resolvedDescription}</DrawerDescription> : null}
+          </DrawerHeader>
+          <div className="px-4 pb-4 overflow-auto">
+            <TransactionForm
+              formData={formData}
+              setFormData={(data) => setFormData(data)}
+              onSubmit={mode === "edit" ? handleEdit : handleAdd}
+              submitLabel={resolvedSubmitLabel}
+              subscribed={subscribed}
+              showInstallment={resolvedShowInstallment}
+              variant="compact"
+            />
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -511,7 +542,7 @@ const AddTransactionCompactDialog = ({
       <DialogContent className={contentClassName}>
         <DialogHeader>
           <DialogTitle>{resolvedTitle}</DialogTitle>
-          <DialogDescription>{resolvedDescription}</DialogDescription>
+          {resolvedDescription ? <DialogDescription>{resolvedDescription}</DialogDescription> : null}
         </DialogHeader>
         <TransactionForm
           formData={formData}

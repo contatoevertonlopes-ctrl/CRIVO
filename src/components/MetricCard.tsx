@@ -63,11 +63,11 @@ const MetricCard = ({ title, value, pill, trend, trendUp = true, icon: Icon, val
                 />
               </div>
             )}
-            <span className="text-xs text-muted-foreground font-medium">{title}</span>
+            <span className="text-sm text-muted-foreground font-medium">{title}</span>
           </div>
           <span 
             className={cn(
-              "text-[10px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap",
+              "text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap",
               isSurvival 
                 ? "bg-survival-secondary text-survival-primary/80 border border-survival-border/30" 
                 : "bg-prosperity-secondary text-prosperity-emerald/80 border border-prosperity-border/30"
@@ -90,7 +90,7 @@ const MetricCard = ({ title, value, pill, trend, trendUp = true, icon: Icon, val
         {breakdown && breakdown.length > 0 && (
           <div className="mb-2 space-y-1">
             {breakdown.map((item) => (
-              <div key={item.label} className="flex items-center justify-between text-[11px]">
+              <div key={item.label} className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground font-medium">{item.label}</span>
                 <span className={cn("font-semibold tabular-nums", item.valueClassName)}>{item.value}</span>
               </div>
@@ -101,7 +101,7 @@ const MetricCard = ({ title, value, pill, trend, trendUp = true, icon: Icon, val
         {/* Trend */}
         <div
           className={cn(
-            "inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full font-medium",
+            "inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium",
             trendUp 
               ? isSurvival 
                 ? "bg-survival-good/15 text-survival-good" 

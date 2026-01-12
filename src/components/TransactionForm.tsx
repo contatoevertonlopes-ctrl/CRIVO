@@ -4,13 +4,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { RefreshCw, Lock, Tag, ListOrdered, CreditCard, Landmark, Wallet, AlertCircle, ThumbsUp, ThumbsDown } from "lucide-react";
+import { RefreshCw, Lock, Tag, ListOrdered, CreditCard, Landmark, Wallet, AlertCircle, ThumbsUp, ThumbsDown, ChevronRight } from "lucide-react";
 import { useBankAccounts } from "@/hooks/useBankAccounts";
 import { useCards } from "@/hooks/useCards";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { detectCategory } from "@/utils/categorySuggestion";
+import CurrencyInput from "@/components/CurrencyInput";
+import CategoryPicker from "@/components/CategoryPicker";
+import { useTransactionCategories } from "@/hooks/useTransactionCategories";
+import { CATEGORY_ICONS, findCategoryByName } from "@/lib/transactionCategories";
 
 export interface TransactionFormData {
   description: string;
@@ -57,6 +61,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
   const installmentCount = formData.installment_count || "2";
   const installmentInterval = formData.installment_interval || "monthly";
   const isCompact = variant === "compact";
+  const { categories: transactionCategories } = useTransactionCategories();
 
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
 
@@ -213,24 +218,44 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
   const repeatMode: "none" | "recurring" | "installment" =
     formData.is_installment ? "installment" : formData.is_recurring ? "recurring" : "none";
 
+  const selectedCategory = useMemo(() => {
+    const current = (formData.category || "").trim() || "Outros";
+    return (
+      findCategoryByName(transactionCategories, current) ??
+      findCategoryByName(transactionCategories, "Outros")
+    );
+  }, [transactionCategories, formData.category]);
+
+  const SelectedCategoryIcon = selectedCategory ? CATEGORY_ICONS[selectedCategory.icon] : null;
+
   return (
-    <div className={cn("space-y-4", isCompact && "space-y-3")}>
+    <div className={cn("space-y-4", isCompact && "space-y-3")}> 
       {isCompact && (
         <div className="space-y-2">
-          <Label>Tipo</Label>
+          <Label className="text-sm">Tipo</Label>
           <Tabs
             value={formData.type}
             onValueChange={(v) => setFormData({ ...formData, type: v as "income" | "expense" })}
           >
-            <TabsList className="w-full h-9">
-              <TabsTrigger value="expense" className="flex-1 py-1">Despesa</TabsTrigger>
-              <TabsTrigger value="income" className="flex-1 py-1">Receita</TabsTrigger>
+            <TabsList className="w-full h-11 bg-secondary/40">
+              <TabsTrigger
+                value="expense"
+                className="flex-1 text-sm font-medium data-[state=active]:bg-red-500/15 data-[state=active]:text-red-700 dark:data-[state=active]:text-red-300"
+              >
+                Despesa
+              </TabsTrigger>
+              <TabsTrigger
+                value="income"
+                className="flex-1 text-sm font-medium data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-300"
+              >
+                Receita
+              </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className={cn("space-y-2", isCompact && "space-y-1.5")}>
         <Label className={cn(errors.description && "text-destructive")}>
           Descrição <span className="text-destructive">*</span>
         </Label>
@@ -242,7 +267,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
           autoComplete="off"
           className={cn(
             errors.description && "border-destructive focus-visible:ring-destructive",
-            isCompact && "h-10"
+            isCompact && "h-12 text-base"
           )}
         />
         {errors.description && (
@@ -254,12 +279,26 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
       </div>
       {isCompact ? (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-2 h-9">
-                <Label className={cn(errors.amount && "text-destructive")}>
-                  {isInstallment ? "Valor Total" : "Valor"} <span className="text-destructive">*</span>
-                </Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label className={cn("text-sm", errors.amount && "text-destructive")}>
+                {isInstallment ? "Valor Total" : "Valor"} <span className="text-destructive">*</span>
+              </Label>
+
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <CurrencyInput
+                    value={formData.amount}
+                    onValueChange={(v) => setFormData({ ...formData, amount: v })}
+                    placeholder="0,00"
+                    inputClassName={cn(
+                      errors.amount && "border-destructive focus-visible:ring-destructive",
+                      "h-12 text-xl font-semibold tracking-tight"
+                    )}
+                    onBlur={() => handleBlur("amount")}
+                  />
+                </div>
+
                 <ToggleGroup
                   type="single"
                   variant="outline"
@@ -271,26 +310,15 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
                     setPaidState(v === "paid");
                   }}
                 >
-                  <ToggleGroupItem value="unpaid" aria-label="Não pago" className="h-9 w-9 p-0 rounded-full">
-                    <ThumbsDown className={cn("w-4 h-4", !isPaid && "fill-current")} />
+                  <ToggleGroupItem value="unpaid" aria-label="Não pago" className="h-12 w-12 p-0 rounded-xl">
+                    <ThumbsDown className={cn("w-5 h-5", !isPaid && "fill-current")} />
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="paid" aria-label="Pago" className="h-9 w-9 p-0 rounded-full">
-                    <ThumbsUp className={cn("w-4 h-4", isPaid && "fill-current")} />
+                  <ToggleGroupItem value="paid" aria-label="Pago" className="h-12 w-12 p-0 rounded-xl">
+                    <ThumbsUp className={cn("w-5 h-5", isPaid && "fill-current")} />
                   </ToggleGroupItem>
                 </ToggleGroup>
               </div>
-              <Input
-                type="number"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                onBlur={() => handleBlur("amount")}
-                placeholder="0,00"
-                autoComplete="off"
-                className={cn(
-                  errors.amount && "border-destructive focus-visible:ring-destructive",
-                  "h-10"
-                )}
-              />
+
               {errors.amount && (
                 <p className="text-xs text-destructive flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" />
@@ -299,36 +327,56 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
               )}
             </div>
 
-            <div className="space-y-2">
-              <div className="h-9 flex items-center">
-                <Label>{isInstallment ? "Data 1ª Parcela" : "Data"}</Label>
-              </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">{isInstallment ? "Data 1ª Parcela" : "Data"}</Label>
               <Input
                 type="date"
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="h-10"
+                className="h-12 text-base"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className={cn("text-sm", errors.category && "text-destructive")}>
+                Categoria <span className="text-muted-foreground">(opcional)</span>
+              </Label>
+              <CategoryPicker
+                value={(formData.category || "").trim() || "Outros"}
+                onValueChange={(v) => {
+                  setFormData({ ...formData, category: v });
+                  setTouched((prev) => ({ ...prev, category: true }));
+                }}
+                trigger={
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-between items-center h-12 px-3",
+                      errors.category && "border-destructive focus-visible:ring-destructive"
+                    )}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: selectedCategory?.color ?? "#22C55E" }}
+                      >
+                        {SelectedCategoryIcon ? <SelectedCategoryIcon className="h-5 w-5 text-white" /> : null}
+                      </div>
+                      <span className="text-base leading-none truncate">
+                        {selectedCategory?.name ?? ((formData.category || "").trim() || "Outros")}
+                      </span>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                  </Button>
+                }
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label className={cn(errors.category && "text-destructive")}>
-              Categoria <span className="text-muted-foreground">(opcional)</span>
-            </Label>
-            <Input
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              onBlur={() => handleBlur("category")}
-              placeholder="Outros"
-              autoComplete="off"
-              className={cn(errors.category && "border-destructive focus-visible:ring-destructive", "h-10")}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className={cn("flex items-center gap-2", errors.payment_method && "text-destructive")}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className={cn("flex items-center gap-2 text-sm", errors.payment_method && "text-destructive")}>
                 <Wallet className="w-4 h-4" />
                 Forma de Pagamento <span className="text-destructive">*</span>
               </Label>
@@ -342,11 +390,11 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
                   setTouched(prev => ({ ...prev, payment_method: true }));
                 }}
               >
-                <ToggleGroupItem value="bank" aria-label="Pago pelo banco" className="gap-2">
+                <ToggleGroupItem value="bank" aria-label="Pago pelo banco" className="gap-2 h-10 px-3 text-sm">
                   <Landmark className="w-4 h-4" />
                   Banco
                 </ToggleGroupItem>
-                <ToggleGroupItem value="credit_card" aria-label="Pago no cartão de crédito" className="gap-2">
+                <ToggleGroupItem value="credit_card" aria-label="Pago no cartão de crédito" className="gap-2 h-10 px-3 text-sm">
                   <CreditCard className="w-4 h-4" />
                   Cartão
                 </ToggleGroupItem>
@@ -357,38 +405,137 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
                   Forma de pagamento é obrigatória
                 </p>
               )}
+
+              {requiresBankAccount && (
+                <div className="space-y-1.5 pt-1 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+                  <Label className={cn("flex items-center gap-2 text-sm", errors.bank_account_id && "text-destructive")}>
+                    <Landmark className="w-4 h-4 text-primary" />
+                    Selecionar Conta <span className="text-destructive">*</span>
+                  </Label>
+                  {accounts.length > 0 ? (
+                    <>
+                      <Select
+                        value={formData.bank_account_id || ""}
+                        onValueChange={(v) => {
+                          setFormData({ ...formData, bank_account_id: v });
+                          setTouched(prev => ({ ...prev, bank_account_id: true }));
+                        }}
+                      >
+                        <SelectTrigger className={cn("h-11", errors.bank_account_id && "border-destructive focus:ring-destructive")}>
+                          <SelectValue placeholder="Escolha a conta bancária" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {accounts.map((account) => (
+                            <SelectItem key={account.id} value={account.id}>
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-2 h-2 rounded-full"
+                                  style={{ backgroundColor: account.color || "#6366f1" }}
+                                />
+                                {account.bank_name} - {account.name}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.bank_account_id && (
+                        <p className="text-xs text-destructive flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          Selecione uma conta bancária
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                      Nenhuma conta bancária cadastrada. Cadastre uma conta em "Contas Bancárias".
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {requiresCard && (
+                <div className="space-y-1.5 pt-1 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+                  <Label className={cn("flex items-center gap-2 text-sm", errors.card_id && "text-destructive")}>
+                    <CreditCard className="w-4 h-4 text-primary" />
+                    Selecionar Cartão <span className="text-destructive">*</span>
+                  </Label>
+                  {cards.length > 0 ? (
+                    <>
+                      <Select
+                        value={formData.card_id || ""}
+                        onValueChange={(v) => {
+                          setFormData({ ...formData, card_id: v });
+                          setTouched(prev => ({ ...prev, card_id: true }));
+                        }}
+                      >
+                        <SelectTrigger className={cn("h-11", errors.card_id && "border-destructive focus:ring-destructive")}>
+                          <SelectValue placeholder="Escolha o cartão" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {cards.map((card) => (
+                            <SelectItem key={card.id} value={card.id}>
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-2 h-2 rounded-full"
+                                  style={{ backgroundColor: card.color || "#8B5CF6" }}
+                                />
+                                {card.name} {card.last_four_digits && `•••• ${card.last_four_digits}`}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.card_id && (
+                        <p className="text-xs text-destructive flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          Selecione um cartão
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                      Nenhum cartão cadastrado. Cadastre um cartão em "Cartões de Crédito".
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
-            <div className="space-y-2">
-              <Label>Repetir lançamento</Label>
-              {subscribed ? (
-                <>
-                  <ToggleGroup
-                    type="single"
-                    variant="outline"
-                    className="justify-start"
-                    value={repeatMode}
-                    onValueChange={(v) => {
-                      if (!v || v === "none") {
-                        setFormData({
-                          ...formData,
-                          is_recurring: false,
-                          is_installment: false,
-                        });
-                        return;
-                      }
-
-                      if (v === "recurring") {
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-sm">Transação recorrente</Label>
+                {subscribed ? (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={repeatMode === "recurring" ? "default" : "outline"}
+                      className="h-9 px-3"
+                      onClick={() => {
+                        if (repeatMode === "recurring") {
+                          setFormData({ ...formData, is_recurring: false, is_installment: false });
+                          return;
+                        }
                         setFormData({
                           ...formData,
                           is_recurring: true,
                           recurring_interval: formData.recurring_interval || "monthly",
                           is_installment: false,
                         });
-                        return;
-                      }
-
-                      if (v === "installment") {
+                      }}
+                    >
+                      Fixo
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={repeatMode === "installment" ? "default" : "outline"}
+                      className="h-9 px-3"
+                      onClick={() => {
+                        if (repeatMode === "installment") {
+                          setFormData({ ...formData, is_recurring: false, is_installment: false });
+                          return;
+                        }
                         setFormData({
                           ...formData,
                           is_installment: true,
@@ -396,20 +543,23 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
                           installment_interval: formData.installment_interval || "monthly",
                           is_recurring: false,
                         });
-                      }
-                    }}
-                  >
-                    <ToggleGroupItem value="recurring" aria-label="Despesa fixa">Fixo</ToggleGroupItem>
-                    <ToggleGroupItem value="installment" aria-label="Despesa parcelada">Parcelado</ToggleGroupItem>
-                  </ToggleGroup>
+                      }}
+                    >
+                      Parcelado
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
 
+              {subscribed ? (
+                <>
                   {repeatMode === "recurring" && (
                     <div className="pt-1">
                       <Select
                         value={formData.recurring_interval}
                         onValueChange={(v) => setFormData({ ...formData, recurring_interval: v })}
                       >
-                        <SelectTrigger className="h-10">
+                        <SelectTrigger className="h-11">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -430,13 +580,13 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
                         max="48"
                         value={installmentCount}
                         onChange={(e) => setFormData({ ...formData, installment_count: e.target.value })}
-                        className="h-10"
+                        className="h-11"
                       />
                       <Select
                         value={installmentInterval}
                         onValueChange={(v) => setFormData({ ...formData, installment_interval: v })}
                       >
-                        <SelectTrigger className="h-10">
+                        <SelectTrigger className="h-11">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -474,14 +624,12 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
               <Label className={cn(errors.amount && "text-destructive")}>
                 {isInstallment ? "Valor Total" : "Valor"} <span className="text-destructive">*</span>
               </Label>
-              <Input
-                type="number"
+              <CurrencyInput
                 value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                onBlur={() => handleBlur("amount")}
+                onValueChange={(v) => setFormData({ ...formData, amount: v })}
                 placeholder="0,00"
-                autoComplete="off"
-                className={cn(errors.amount && "border-destructive focus-visible:ring-destructive")}
+                inputClassName={cn(errors.amount && "border-destructive focus-visible:ring-destructive")}
+                onBlur={() => handleBlur("amount")}
               />
               {errors.amount && (
                 <p className="text-xs text-destructive flex items-center gap-1">
@@ -494,13 +642,35 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
               <Label className={cn(errors.category && "text-destructive")}>
                 Categoria <span className="text-destructive">*</span>
               </Label>
-              <Input
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                onBlur={() => handleBlur("category")}
-                placeholder="Ex: Serviços"
-                autoComplete="off"
-                className={cn(errors.category && "border-destructive focus-visible:ring-destructive")}
+              <CategoryPicker
+                value={(formData.category || "").trim() || "Outros"}
+                onValueChange={(v) => {
+                  setFormData({ ...formData, category: v });
+                  setTouched((prev) => ({ ...prev, category: true }));
+                }}
+                trigger={
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-between",
+                      errors.category && "border-destructive focus-visible:ring-destructive"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-7 w-7 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: selectedCategory?.color ?? "#22C55E" }}
+                      >
+                        {SelectedCategoryIcon ? <SelectedCategoryIcon className="h-4 w-4 text-white" /> : null}
+                      </div>
+                      <span className="text-sm">
+                        {selectedCategory?.name ?? ((formData.category || "").trim() || "Outros")}
+                      </span>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                  </Button>
+                }
               />
               {errors.category && (
                 <p className="text-xs text-destructive flex items-center gap-1">
@@ -597,7 +767,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
 
 
       {/* Bank Account Selector - shows for PIX, Transfer, Debit */}
-      {requiresBankAccount && (
+      {!isCompact && requiresBankAccount && (
         <div className="space-y-2 animate-in fade-in-0 slide-in-from-top-2 duration-200">
           <Label className={cn("flex items-center gap-2", errors.bank_account_id && "text-destructive")}>
             <Landmark className="w-4 h-4 text-primary" />
@@ -645,7 +815,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
       )}
 
       {/* Card Selector - shows for Credit Card */}
-      {requiresCard && (
+      {!isCompact && requiresCard && (
         <div className="space-y-2 animate-in fade-in-0 slide-in-from-top-2 duration-200">
           <Label className={cn("flex items-center gap-2", errors.card_id && "text-destructive")}>
             <CreditCard className="w-4 h-4 text-primary" />

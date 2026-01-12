@@ -5,7 +5,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useTransactions } from "@/hooks/useTransactions";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, TrendingUp, TrendingDown, PieChart, BarChart3, Lock, Crown } from "lucide-react";
+import { TrendingUp, TrendingDown, PieChart, BarChart3, Lock, Crown } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, BarChart, Bar, Legend } from "recharts";
 import Sidebar from "@/components/Sidebar";
 import { DateRangePicker } from "@/components/DateRangePicker";
@@ -248,21 +248,19 @@ const Reports = () => {
         <div className="max-w-6xl mx-auto px-4 py-4 lg:px-6 lg:py-6 flex flex-col gap-4 lg:gap-5">
           {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:pl-0">
-            <div>
-              <button
-                onClick={() => navigate("/")}
-                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span className="text-sm">Voltar</span>
-              </button>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Relatórios & Gráficos</h1>
-              <p className="text-muted-foreground text-xs sm:text-sm mt-1">
-                Análise detalhada das suas finanças
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                  <BarChart3 className="w-6 h-6 text-primary" />
+                  Relatórios & Gráficos
+                </h1>
+                <p className="text-muted-foreground text-xs sm:text-sm mt-1 hidden sm:block">
+                  Análise detalhada das suas finanças
+                </p>
+              </div>
               <ThemeToggle />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Select value={period} onValueChange={(value) => {
                 setPeriod(value);
                 if (value !== "custom") {
@@ -270,7 +268,7 @@ const Reports = () => {
                   setCustomDateTo(undefined);
                 }
               }}>
-                <SelectTrigger className="w-40 sm:w-48">
+                <SelectTrigger className="w-full sm:w-48 h-11 text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -289,7 +287,7 @@ const Reports = () => {
                     setCustomDateFrom(from);
                     setCustomDateTo(to);
                   }}
-                  className="w-auto"
+                  className="w-full sm:w-auto"
                 />
               )}
             </div>
@@ -300,32 +298,32 @@ const Reports = () => {
             <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
               <div className="flex items-center gap-2 mb-1 sm:mb-2">
                 <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
-                <p className="text-xs sm:text-sm text-muted-foreground">Total Entradas</p>
+                <p className="text-sm text-muted-foreground">Total Entradas</p>
               </div>
-              <p className="text-lg sm:text-2xl font-bold text-primary">{formatCurrency(stats.totalIncome)}</p>
+              <p className="text-xl sm:text-2xl font-bold text-primary">{formatCurrency(stats.totalIncome)}</p>
             </div>
             <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
               <div className="flex items-center gap-2 mb-1 sm:mb-2">
                 <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-destructive" />
-                <p className="text-xs sm:text-sm text-muted-foreground">Total Saídas</p>
+                <p className="text-sm text-muted-foreground">Total Saídas</p>
               </div>
-              <p className="text-lg sm:text-2xl font-bold text-destructive">{formatCurrency(stats.totalExpense)}</p>
+              <p className="text-xl sm:text-2xl font-bold text-destructive">{formatCurrency(stats.totalExpense)}</p>
             </div>
             <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
               <div className="flex items-center gap-2 mb-1 sm:mb-2">
                 <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
-                <p className="text-xs sm:text-sm text-muted-foreground">Saldo Total</p>
+                <p className="text-sm text-muted-foreground">Saldo Total</p>
               </div>
-              <p className={`text-lg sm:text-2xl font-bold ${stats.balance >= 0 ? "text-primary" : "text-destructive"}`}>
+              <p className={`text-xl sm:text-2xl font-bold ${stats.balance >= 0 ? "text-primary" : "text-destructive"}`}>
                 {formatCurrency(stats.balance)}
               </p>
             </div>
             <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
               <div className="flex items-center gap-2 mb-1 sm:mb-2">
                 <PieChart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-400" />
-                <p className="text-xs sm:text-sm text-muted-foreground">Categorias</p>
+                <p className="text-sm text-muted-foreground">Categorias</p>
               </div>
-              <p className="text-lg sm:text-2xl font-bold">{categoryData.length}</p>
+              <p className="text-xl sm:text-2xl font-bold">{categoryData.length}</p>
             </div>
           </div>
 
@@ -333,7 +331,7 @@ const Reports = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Area Chart - Fluxo de Caixa */}
             <div className="rounded-2xl sm:rounded-3xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-4 sm:p-5">
-              <h3 className="text-xs sm:text-sm font-medium mb-3 sm:mb-4">Fluxo de Caixa Mensal</h3>
+              <h3 className="text-sm font-medium mb-3 sm:mb-4">Fluxo de Caixa Mensal</h3>
               {loading ? (
                 <div className="h-48 sm:h-64 flex items-center justify-center text-muted-foreground">
                   Carregando...
@@ -376,7 +374,7 @@ const Reports = () => {
             {/* Pie Chart - Despesas por Categoria */}
             <ProFeatureOverlay>
               <div className="rounded-2xl sm:rounded-3xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-4 sm:p-5">
-                <h3 className="text-xs sm:text-sm font-medium mb-3 sm:mb-4">Despesas por Categoria</h3>
+                <h3 className="text-sm font-medium mb-3 sm:mb-4">Despesas por Categoria</h3>
                 {loading ? (
                   <div className="h-48 sm:h-64 flex items-center justify-center text-muted-foreground">
                     Carregando...

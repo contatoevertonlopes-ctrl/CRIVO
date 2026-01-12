@@ -127,8 +127,8 @@ const Goals = () => {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-xl font-bold">Meus Objetivos</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
+              <h1 className="text-2xl font-bold">Meus Objetivos</h1>
+              <p className="text-sm text-muted-foreground mt-0.5 hidden sm:block">
                 Planeje e acompanhe seus sonhos financeiros
               </p>
             </div>
@@ -140,7 +140,7 @@ const Goals = () => {
                   setDialogOpen(true);
                 }}
                 className={cn(
-                  "gap-2",
+                  "gap-2 w-full sm:w-auto",
                   isSurvival
                     ? "bg-survival-primary hover:bg-survival-primary/90"
                     : "bg-prosperity-emerald hover:bg-prosperity-emerald/90"

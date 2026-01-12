@@ -20,6 +20,7 @@ import { BankAccountDialog } from "@/components/accounts/BankAccountDialog";
 import { TransferDialog } from "@/components/accounts/TransferDialog";
 import { Plus, Landmark, TrendingUp, Wallet, ArrowRightLeft } from "lucide-react";
 import { Navigate } from "react-router-dom";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("pt-BR", {
@@ -97,9 +98,7 @@ const BankAccounts = () => {
   };
 
   const positiveAccounts = accounts.filter(a => a.balance >= 0);
-  const negativeAccounts = accounts.filter(a => a.balance < 0);
   const totalPositive = positiveAccounts.reduce((sum, a) => sum + a.balance, 0);
-  const totalNegative = Math.abs(negativeAccounts.reduce((sum, a) => sum + a.balance, 0));
 
   return (
     <div className="min-h-screen flex w-full bg-background">
@@ -108,90 +107,20 @@ const BankAccounts = () => {
       <main className="flex-1 min-w-0 pt-16 pb-24 lg:pt-0 lg:pb-0">
         <div className="max-w-6xl mx-auto px-4 py-4 lg:px-6 lg:py-6 flex flex-col gap-4 lg:gap-5">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Landmark className="w-6 h-6 text-primary" />
               Minhas Contas
+              <span className="ml-1 inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+                {accounts.length}
+              </span>
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground mt-1 hidden sm:block">
               Gerencie suas contas bancárias e acompanhe seu patrimônio
             </p>
           </div>
-          
-          <div className="flex gap-2">
-            {accounts.length >= 2 && (
-              <Button
-                variant="outline"
-                onClick={() => setTransferOpen(true)}
-              >
-                <ArrowRightLeft className="w-4 h-4 mr-2" />
-                Transferir
-              </Button>
-            )}
-            <Button
-              onClick={() => {
-                setEditingAccount(null);
-                setDialogOpen(true);
-              }}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nova Conta
-            </Button>
-          </div>
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Total Patrimony */}
-          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                  <Wallet className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Patrimônio Total</p>
-                  <p className={`text-xl font-bold ${totalPatrimony >= 0 ? "text-primary" : "text-destructive"}`}>
-                    {formatCurrency(totalPatrimony)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Total Positive */}
-          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-green-500" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Saldos Positivos</p>
-                  <p className="text-xl font-bold text-green-500">
-                    {formatCurrency(totalPositive)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Total Accounts */}
-          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-                  <Landmark className="w-5 h-5 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Total de Contas</p>
-                  <p className="text-xl font-bold">{accounts.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ThemeToggle />
         </div>
 
         {/* Accounts Grid */}
@@ -235,8 +164,69 @@ const BankAccounts = () => {
             ))}
           </div>
         )}
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Total Patrimony */}
+          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <Wallet className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Patrimônio Total</p>
+                  <p className={`text-2xl font-bold ${totalPatrimony >= 0 ? "text-primary" : "text-destructive"}`}>
+                    {formatCurrency(totalPatrimony)}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Total Positive */}
+          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-green-500/20 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-green-500" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Saldos Positivos</p>
+                  <p className="text-2xl font-bold text-green-500">
+                    {formatCurrency(totalPositive)}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
         </div>
       </main>
+
+      {/* FABs */}
+      <div className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 flex flex-col gap-2 z-40">
+        {accounts.length >= 2 && (
+          <Button
+            size="lg"
+            variant="outline"
+            className="rounded-full w-14 h-14 shadow-lg"
+            onClick={() => setTransferOpen(true)}
+          >
+            <ArrowRightLeft className="w-5 h-5" />
+          </Button>
+        )}
+        <Button
+          size="lg"
+          className="rounded-full w-14 h-14 shadow-lg"
+          onClick={() => {
+            setEditingAccount(null);
+            setDialogOpen(true);
+          }}
+        >
+          <Plus className="w-6 h-6" />
+        </Button>
+      </div>
 
       {/* Dialogs */}
       <BankAccountDialog

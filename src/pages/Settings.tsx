@@ -253,8 +253,8 @@ const Settings = () => {
         <div className="max-w-6xl mx-auto px-4 py-4 lg:px-6 lg:py-6 flex flex-col gap-4 lg:gap-5">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold mb-1">Configurações</h1>
-              <p className="text-sm text-muted-foreground">
+                <h1 className="text-2xl font-bold">Configurações</h1>
+              <p className="text-sm text-muted-foreground hidden sm:block">
                 Personalize sua experiência e gerencie suas preferências
               </p>
             </div>

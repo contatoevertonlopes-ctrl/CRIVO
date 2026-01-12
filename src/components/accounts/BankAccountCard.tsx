@@ -64,14 +64,17 @@ export const BankAccountCard = ({ account, onEdit, onDelete }: BankAccountCardPr
   const color = account.color || preset.color;
   const icon = account.icon || preset.icon;
   const isNegative = account.balance < 0;
-  const readableColor = isColorDark(color) ? "#ffffff" : color;
-  const iconColor = readableColor;
+  const darkBg = isColorDark(color);
+  const readableColor = darkBg ? "#ffffff" : color;
+  const iconColor = darkBg ? "#ffffff" : color;
 
   return (
     <Card 
       className="relative overflow-hidden border-border/50 hover:border-border transition-colors group"
       style={{ 
-        background: `linear-gradient(135deg, hsl(var(--card)) 0%, ${color}10 100%)`,
+        background: darkBg
+          ? `linear-gradient(135deg, ${color} 0%, ${color} 100%)`
+          : `linear-gradient(135deg, hsl(var(--card)) 0%, ${color}10 100%)`,
       }}
     >
       {/* Color stripe at top */}
@@ -80,18 +83,18 @@ export const BankAccountCard = ({ account, onEdit, onDelete }: BankAccountCardPr
         style={{ backgroundColor: color }}
       />
       
-      <CardContent className="p-4 pt-5">
+      <CardContent className="p-5 pt-6">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
             <div 
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: `${color}20` }}
+              className="w-11 h-11 rounded-xl flex items-center justify-center"
+              style={{ backgroundColor: darkBg ? "rgba(255,255,255,0.14)" : `${color}20` }}
             >
               {getIcon(icon, iconColor)}
             </div>
             <div>
-              <h3 className="font-semibold text-sm">{account.bank_name}</h3>
-              <p className="text-xs text-muted-foreground">{account.name}</p>
+              <h3 className={`font-semibold text-base ${darkBg ? "text-white" : ""}`}>{account.bank_name}</h3>
+              <p className={`text-sm ${darkBg ? "text-white/80" : "text-muted-foreground"}`}>{account.name}</p>
             </div>
           </div>
           
@@ -123,16 +126,16 @@ export const BankAccountCard = ({ account, onEdit, onDelete }: BankAccountCardPr
         
         <div className="space-y-2">
           <div className="flex items-baseline justify-between">
-            <span className="text-xs text-muted-foreground">Saldo atual</span>
+            <span className={`text-sm ${darkBg ? "text-white/70" : "text-muted-foreground"}`}>Saldo atual</span>
             <Badge 
               variant={account.account_type === "checking" ? "default" : "secondary"}
-              className="text-[10px] px-2 py-0"
+              className={`text-xs px-2 py-0 ${darkBg ? "bg-white/15 text-white border border-white/20" : ""}`}
             >
               {account.account_type === "checking" ? "Corrente" : "Poupança"}
             </Badge>
           </div>
           <p 
-            className={`text-xl font-bold ${isNegative ? "text-destructive" : ""}`}
+            className={`text-2xl font-bold ${isNegative ? "text-destructive" : darkBg ? "text-white" : ""}`}
             style={{ color: isNegative ? undefined : readableColor }}
           >
             {formatCurrency(account.balance)}

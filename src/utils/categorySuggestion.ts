@@ -25,7 +25,7 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     "táxi",
     "pedágio",
   ],
-  "Moradia": [
+  "Casa": [
     "aluguel",
     "condomínio",
     "iptu",
@@ -44,7 +44,7 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     "hospital",
     "dentista",
   ],
-  "Lazer": [
+  "Lazer e hobbies": [
     "cinema",
     "show",
     "festa",
