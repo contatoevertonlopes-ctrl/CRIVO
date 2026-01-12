@@ -14,7 +14,11 @@ export async function checkRateLimit(params: {
   });
 
   if (error) {
-    const msg = error.message ?? "";
+    // Different PostgREST/Supabase versions sometimes put the useful message in `details`.
+    const msg = [error.message, (error as any).details, (error as any).hint]
+      .filter(Boolean)
+      .join(" | ");
+
     // In some local setups PostgREST schema cache may not include the RPC.
     // To avoid blocking core flows (e.g., Stripe checkout) during local dev,
     // fall back to allowing the request.

@@ -24,7 +24,9 @@ const toDbStatus = (stripeStatus: Stripe.Subscription.Status | string): "active"
 };
 
 const upsertSubscription = async (
-  supabaseClient: ReturnType<typeof createClient>,
+  // NOTE: We intentionally keep this untyped in edge functions to avoid PostgREST generic
+  // type issues in Deno type-checking when Database types aren't bundled.
+  supabaseClient: any,
   input: {
     userId: string;
     plan: "pro" | "monthly" | "annual" | "free";
