@@ -76,8 +76,16 @@ Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/c
 
 ### Dev against production (cloud)
 - Runs the Vite dev server but uses the Supabase Cloud project (values from `.env`).
-- Command: `npm run dev:prod`
+- Command: `npm run dev` (or `npm run dev:prod`)
+
+⚠️ Caution: this will read/write real production data (and can create real Stripe Live customers/subscriptions).
+Use a dedicated test user and prefer Stripe trials/coupons when validating flows.
 
 ### Dev against local Supabase
-- Runs the Vite dev server using local Supabase (values from `.env.development.local`).
+- Runs the Vite dev server using local Supabase (values from `.env.development.local`, gitignored).
 - Command: `npm run dev:local`
+
+### Environment files
+- `.env` (committed): Supabase Cloud URL + key used by default.
+- `.env.local` (gitignored): loaded for all modes (kept empty by default here).
+- `.env.development.local` (gitignored): local overrides for `npm run dev:local`.

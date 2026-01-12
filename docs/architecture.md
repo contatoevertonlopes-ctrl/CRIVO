@@ -88,6 +88,27 @@ O cliente Supabase está em `src/integrations/supabase/client.ts` e usa:
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
 - armazenamento de sessão em `localStorage` (persistSession + autoRefreshToken)
 
+### 1.4 Ambientes (dev local vs cloud)
+
+Este projeto permite rodar o **frontend em modo dev (Vite)**, mas escolhendo se as chamadas vão para:
+
+- **Supabase Cloud (prod)**: útil para testar a UI em modo dev usando o backend real.
+- **Supabase local**: útil para desenvolvimento isolado e testes locais.
+
+Estratégia usada (Vite env files):
+
+- `.env` (versionado): contém `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` do **Supabase Cloud**.
+- `.env.local` (gitignored): é carregado em qualquer modo; mantemos vazio por padrão para não “forçar” um ambiente.
+- `.env.development.local` (gitignored): contém overrides do **Supabase local** e só é carregado em `--mode development`.
+
+Scripts:
+
+- `npm run dev` (ou `npm run dev:prod`): sobe o Vite dev server usando Supabase Cloud.
+- `npm run dev:local`: sobe o Vite dev server usando Supabase local.
+
+⚠️ Atenção: ao usar Supabase Cloud em dev, você pode criar/alterar dados reais e também acionar Stripe Live.
+Recomendação: use um usuário de teste dedicado e, no Stripe, prefira trial/cupom para validar o fluxo.
+
 ### 1.3 “Backend” (Supabase)
 
 No Supabase, as responsabilidades ficam distribuídas assim:

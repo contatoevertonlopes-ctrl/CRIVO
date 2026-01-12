@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "dev:prod": "vite --mode prod",
+    "dev": "vite --mode prod",
+    "dev:prod": "npm run dev",
     "dev:local": "vite --mode development",
     "build": "vite build",
     "build:dev": "vite build --mode development",
