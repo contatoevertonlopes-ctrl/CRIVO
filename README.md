@@ -71,3 +71,13 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Getting Started
+
+### Dev against production (cloud)
+- Runs the Vite dev server but uses the Supabase Cloud project (values from `.env`).
+- Command: `npm run dev:prod`
+
+### Dev against local Supabase
+- Runs the Vite dev server using local Supabase (values from `.env.development.local`).
+- Command: `npm run dev:local`
