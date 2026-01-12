@@ -18,7 +18,7 @@ const ANNUAL_PRODUCT_NAME = "Plano Pro Anual";
 const getProductByName = async (stripe: Stripe, name: string) => {
   // Use products.list() for compatibility across Stripe accounts.
   const products = await stripe.products.list({ active: true, limit: 100 });
-  return products.data.find((p) => p.name === name) ?? null;
+  return products.data.find((p: Stripe.Product) => p.name === name) ?? null;
 };
 
 const getActivePriceForProduct = async (stripe: Stripe, productId: string) => {

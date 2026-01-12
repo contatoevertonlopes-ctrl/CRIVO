@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
 import { getStripeClient } from "../_shared/stripe.ts";
@@ -55,7 +56,7 @@ serve(async (req) => {
     // Use products.list() instead of products.search() for better compatibility.
     const productName = priceType === "annual" ? "Plano Pro Anual" : "Plano Pro Mensal";
     const products = await stripe.products.list({ active: true, limit: 100 });
-    const product = products.data.find((p) => p.name === productName);
+    const product = products.data.find((p: Stripe.Product) => p.name === productName);
 
     if (!product) {
       throw new Error(
