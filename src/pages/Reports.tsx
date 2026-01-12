@@ -208,7 +208,7 @@ const Reports = () => {
     };
   }, [transactions, period, customDateFrom, customDateTo, isCustomPeriod]);
 
-  if (authLoading || subLoading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-muted-foreground">Carregando...</div>
@@ -218,7 +218,7 @@ const Reports = () => {
 
   const ProFeatureOverlay = ({ children }: { children: React.ReactNode }) => (
     <div className="relative">
-      {!subscribed && (
+      {!subLoading && !subscribed && (
         <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-3 rounded-2xl">
           <Lock className="w-8 h-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground text-center px-4">

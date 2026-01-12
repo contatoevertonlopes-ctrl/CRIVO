@@ -193,7 +193,7 @@ const Transactions = () => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
   const itemsPerPage = 10;
-  const loading = authLoading || subLoading || transactionsLoading;
+  const loading = authLoading || transactionsLoading;
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -580,7 +580,7 @@ const Transactions = () => {
 
   const totals = calculateTransactionTotals(filteredTransactions, { excludeTransfers: true });
 
-  if (authLoading || subLoading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-muted-foreground">Carregando...</div>
