@@ -50,7 +50,7 @@ const SurvivalWidget = ({
 
   if (loading) {
     return (
-      <div className="bg-survival-card border border-survival-border/70 rounded-2xl p-6 animate-pulse card-shadow-soft">
+      <div className="min-w-0 bg-survival-card border border-survival-border/70 rounded-2xl p-6 animate-pulse card-shadow-soft">
         <div className="h-6 bg-survival-muted rounded w-1/3 mb-4"></div>
         <div className="h-36 bg-survival-muted rounded-full w-36 mx-auto mb-4"></div>
         <div className="h-4 bg-survival-muted rounded w-2/3 mx-auto"></div>
@@ -59,7 +59,7 @@ const SurvivalWidget = ({
   }
 
   return (
-    <div className="bg-survival-card border border-survival-border/70 rounded-2xl p-5 md:p-6 transition-all duration-300 card-shadow-soft">
+    <div className="min-w-0 bg-survival-card border border-survival-border/70 rounded-2xl p-5 md:p-6 transition-all duration-300 card-shadow-soft">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
@@ -194,17 +194,17 @@ const SurvivalWidget = ({
       )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3 mt-5 pt-4 border-t border-survival-border/70">
-        <div className="p-3 rounded-xl bg-survival-secondary/50">
+      <div className="grid min-w-0 grid-cols-2 gap-3 mt-5 pt-4 border-t border-survival-border/70">
+        <div className="min-w-0 p-3 rounded-xl bg-survival-secondary/50">
           <p className="text-[10px] text-muted-foreground mb-1">Custo de vida</p>
-          <p className="text-base font-semibold text-foreground">
+          <p className="text-sm sm:text-base font-semibold text-foreground break-words">
             {formatCurrency(dailyExpenseAverage * 30)}
             <span className="text-[10px] text-muted-foreground font-normal">/mês</span>
           </p>
         </div>
-        <div className="p-3 rounded-xl bg-survival-secondary/50">
+        <div className="min-w-0 p-3 rounded-xl bg-survival-secondary/50">
           <p className="text-[10px] text-muted-foreground mb-1">Reserva atual</p>
-          <p className="text-base font-semibold text-survival-primary">
+          <p className="text-sm sm:text-base font-semibold text-survival-primary break-words">
             {formatCurrency(currentBalance)}
           </p>
         </div>

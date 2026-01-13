@@ -146,27 +146,27 @@ const Landing = () => {
   const goInstall = () => navigate("/install");
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
+    <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
       <Background />
 
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-16 max-w-7xl min-w-0 items-center justify-between px-4 sm:px-6 lg:px-8">
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="flex items-center gap-3 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="flex min-w-0 items-center gap-3 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             aria-label="Ir para a página inicial"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
               <AppLogo size={26} className="text-primary-foreground" />
             </div>
-            <div className="hidden flex-col sm:flex">
+            <div className="hidden min-w-0 flex-col sm:flex">
               <span className="text-sm uppercase tracking-[0.28em] text-muted-foreground">FinTrack</span>
-              <span className="font-['Space_Grotesk'] text-lg font-semibold">Club Finance Track</span>
+              <span className="truncate font-['Space_Grotesk'] text-lg font-semibold">Club Finance Track</span>
             </div>
           </button>
 
-          <nav className="hidden items-center gap-8 text-sm md:flex" aria-label="Navegação da landing">
+          <nav className="hidden min-w-0 items-center gap-8 text-sm md:flex" aria-label="Navegação da landing">
             <a
               className="rounded-md px-2 py-1.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary/60"
               href="#visao"
@@ -219,8 +219,8 @@ const Landing = () => {
 
       <main className="pt-28">
         <section className="relative">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 pb-14 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
-            <div>
+          <div className="mx-auto grid max-w-7xl min-w-0 items-center gap-12 px-4 pb-14 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
+            <div className="min-w-0">
               <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/75 px-4 py-1 text-xs font-medium text-muted-foreground">
                 <Sparkles className="h-4 w-4 text-primary" />
                 Controle financeiro moderno e adaptativo
@@ -264,8 +264,8 @@ const Landing = () => {
               </div>
             </div>
 
-            <div className="lg:justify-self-end">
-              <div className="rounded-[32px] border border-border/70 bg-card/70 p-6 shadow-2xl backdrop-blur">
+            <div className="w-full min-w-0 lg:justify-self-end">
+              <div className="w-full rounded-[32px] border border-border/70 bg-card/70 p-6 shadow-2xl backdrop-blur lg:max-w-[520px]">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground">Preview real do sistema</p>
@@ -277,12 +277,16 @@ const Landing = () => {
                   </div>
                 </div>
 
-                <div className="mt-5 grid gap-4">
-                  <CashflowChart data={demoCashflow} periodLabel="Últimos 6 meses" />
+                <div className="mt-5 grid min-w-0 gap-4">
+                  <div className="min-w-0">
+                    <CashflowChart data={demoCashflow} periodLabel="Últimos 6 meses" />
+                  </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <ExpenseChart data={demoExpenses} period={30} periodLabel="30 dias" />
-                    <div className="rounded-xl border border-border/70 bg-card p-2 shadow-sm">
+                  <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+                    <div className="min-w-0">
+                      <ExpenseChart data={demoExpenses} period={30} periodLabel="30 dias" />
+                    </div>
+                    <div className="min-w-0 overflow-hidden rounded-xl border border-border/70 bg-card p-2 shadow-sm">
                       {mode === "survival" ? (
                         <SurvivalWidget
                           currentBalance={4200}

@@ -54,7 +54,7 @@ const ProsperityWidget = ({
 
   if (loading) {
     return (
-      <div className="bg-prosperity-card border border-prosperity-border/70 rounded-2xl p-6 animate-pulse card-shadow-soft">
+      <div className="min-w-0 bg-prosperity-card border border-prosperity-border/70 rounded-2xl p-6 animate-pulse card-shadow-soft">
         <div className="h-6 bg-prosperity-muted rounded w-1/3 mb-4"></div>
         <div className="h-36 bg-prosperity-muted rounded-full w-36 mx-auto mb-4"></div>
         <div className="h-4 bg-prosperity-muted rounded w-2/3 mx-auto"></div>
@@ -64,7 +64,7 @@ const ProsperityWidget = ({
 
   if (variant === "compact") {
     return (
-      <div className="bg-prosperity-card border border-prosperity-border/70 rounded-2xl p-4 transition-all duration-300 card-shadow-soft">
+      <div className="min-w-0 bg-prosperity-card border border-prosperity-border/70 rounded-2xl p-4 transition-all duration-300 card-shadow-soft">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-prosperity-emerald/15">
@@ -93,14 +93,14 @@ const ProsperityWidget = ({
           </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-xl bg-prosperity-secondary/50">
+        <div className="mt-3 grid min-w-0 grid-cols-2 gap-3">
+          <div className="min-w-0 p-3 rounded-xl bg-prosperity-secondary/50">
             <p className="text-[10px] text-muted-foreground mb-1">Receita</p>
-            <p className="text-sm font-semibold text-prosperity-emerald">{formatCurrency(monthlyIncome)}</p>
+            <p className="text-sm font-semibold text-prosperity-emerald break-words">{formatCurrency(monthlyIncome)}</p>
           </div>
-          <div className="p-3 rounded-xl bg-prosperity-secondary/50">
+          <div className="min-w-0 p-3 rounded-xl bg-prosperity-secondary/50">
             <p className="text-[10px] text-muted-foreground mb-1">Despesas</p>
-            <p className="text-sm font-semibold text-destructive">{formatCurrency(monthlyExpenses)}</p>
+            <p className="text-sm font-semibold text-destructive break-words">{formatCurrency(monthlyExpenses)}</p>
           </div>
         </div>
 
@@ -116,7 +116,7 @@ const ProsperityWidget = ({
   }
 
   return (
-    <div className="bg-prosperity-card border border-prosperity-border/70 rounded-2xl p-4 md:p-5 transition-all duration-300 card-shadow-soft">
+    <div className="min-w-0 bg-prosperity-card border border-prosperity-border/70 rounded-2xl p-4 md:p-5 transition-all duration-300 card-shadow-soft">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
@@ -200,16 +200,16 @@ const ProsperityWidget = ({
       )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-prosperity-border/70">
-        <div className="p-3 rounded-xl bg-prosperity-secondary/50">
+      <div className="grid min-w-0 grid-cols-2 gap-3 pt-3 border-t border-prosperity-border/70">
+        <div className="min-w-0 p-3 rounded-xl bg-prosperity-secondary/50">
           <p className="text-[10px] text-muted-foreground mb-1">Receita mensal</p>
-          <p className="text-base font-semibold text-prosperity-emerald">
+          <p className="text-sm sm:text-base font-semibold text-prosperity-emerald break-words">
             {formatCurrency(monthlyIncome)}
           </p>
         </div>
-        <div className="p-3 rounded-xl bg-prosperity-secondary/50">
+        <div className="min-w-0 p-3 rounded-xl bg-prosperity-secondary/50">
           <p className="text-[10px] text-muted-foreground mb-1">Sobra do mês</p>
-          <p className={`text-base font-semibold ${surplus >= 0 ? "text-prosperity-gold" : "text-destructive"}`}>
+          <p className={`text-sm sm:text-base font-semibold break-words ${surplus >= 0 ? "text-prosperity-gold" : "text-destructive"}`}>
             {surplus >= 0 ? "+" : ""}{formatCurrency(surplus)}
           </p>
         </div>

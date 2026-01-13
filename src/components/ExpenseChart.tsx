@@ -31,15 +31,15 @@ const ExpenseChart = ({ data = [], period = 30, periodLabel, fitHeight = false }
     <div
       className={
         fitHeight
-          ? "relative overflow-hidden rounded-xl bg-card border border-border/70 shadow-sm p-4 h-full flex flex-col"
-          : "relative overflow-hidden rounded-xl bg-card border border-border/70 shadow-sm p-4"
+          ? "relative min-w-0 overflow-hidden rounded-xl bg-card border border-border/70 shadow-sm p-4 h-full flex flex-col"
+          : "relative min-w-0 overflow-hidden rounded-xl bg-card border border-border/70 shadow-sm p-4"
       }
     >
       {/* Subtle gradient accent */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
 
-      <div className={fitHeight ? "relative z-10 h-full flex flex-col" : "relative z-10"}>
-        <div className="flex justify-between items-start gap-2 mb-3">
+      <div className={fitHeight ? "relative z-10 h-full min-w-0 flex flex-col" : "relative z-10 min-w-0"}>
+        <div className="flex min-w-0 justify-between items-start gap-2 mb-3">
           <div>
             <h3 className="text-sm font-medium">Despesas por categoria</h3>
             <p className="text-[11px] text-muted-foreground mt-0.5">
