@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useTheme } from "next-themes";
 
 interface AppLogoProps {
   size?: number;
@@ -7,33 +8,35 @@ interface AppLogoProps {
 }
 
 const AppLogo = ({ size = 32, className, color }: AppLogoProps) => {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  // Para ficar 1:1 com o ícone do app instalado (PWA), usamos o mesmo asset.
+  // O `color` fica sem efeito aqui por ser um PNG.
+  void color;
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={cn("shrink-0", className)}
+    <span
+      className={cn(
+        "inline-flex shrink-0 overflow-hidden rounded-[22%] bg-[#0B1217]",
+        // No tema escuro, a borda branca geralmente é um halo de antialiasing.
+        // Recortar + dar um leve zoom remove o halo sem mudar o ícone.
+        isDark && "ring-1 ring-white/10",
+        className,
+      )}
+      style={{ width: size, height: size }}
+      aria-label="FinTrack"
     >
-      {/* Incomplete circle that morphs into upward arrow */}
-      <path
-        d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C16.268 4 9.59 8.732 6.5 15.5"
-        stroke={color || "currentColor"}
-        strokeWidth="4"
-        strokeLinecap="round"
-        fill="none"
+      <img
+        src="/pwa-512x512.png"
+        width={size}
+        height={size}
+        alt=""
+        className={cn("block h-full w-full", isDark && "scale-[1.03]")}
+        loading="eager"
+        decoding="async"
+        draggable={false}
       />
-      {/* Arrow tip pointing upward from the break */}
-      <path
-        d="M6.5 15.5L12 10M6.5 15.5L2 10"
-        stroke={color || "currentColor"}
-        strokeWidth="4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-    </svg>
+    </span>
   );
 };
 
