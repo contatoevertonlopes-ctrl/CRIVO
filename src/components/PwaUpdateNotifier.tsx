@@ -8,6 +8,7 @@ export function PwaUpdateNotifier() {
   const { toast, dismiss } = useToast();
   const toastIdRef = useRef<string | null>(null);
   const hasShownRef = useRef(false);
+  const hasAutoReloadedThisSessionRef = useRef(false);
 
   useEffect(() => {
     let updateInterval: number | undefined;
@@ -46,17 +47,38 @@ export function PwaUpdateNotifier() {
 
       },
       onNeedRefresh() {
+        // "Sempre na última versão": aplica o update e recarrega automaticamente.
+        // Observação: o SW pode atualizar em background, mas o código JS em memória só muda com reload.
+        // Proteção anti-loop: se por algum motivo já recarregamos nesta sessão, cai no modo "prompt".
+        if (!hasAutoReloadedThisSessionRef.current) {
+          hasAutoReloadedThisSessionRef.current = true;
+
+          try {
+            const key = "pwa:autoReloaded";
+            const alreadyReloaded = sessionStorage.getItem(key) === "1";
+
+            if (!alreadyReloaded) {
+              sessionStorage.setItem(key, "1");
+              updateSW(true);
+              return;
+            }
+          } catch {
+            // sessionStorage pode falhar em alguns contextos (ex: modo privado).
+            updateSW(true);
+            return;
+          }
+        }
+
         if (hasShownRef.current) return;
         hasShownRef.current = true;
 
         const shown = toast({
           title: "Nova versão disponível",
-          description: "Clique em Atualizar para carregar a versão mais recente.",
+          description: "Atualize para carregar a versão mais recente.",
           action: (
             <ToastAction
               altText="Atualizar aplicativo"
               onClick={() => {
-                // Fecha o toast antes de atualizar, para evitar UI travada.
                 if (toastIdRef.current) dismiss(toastIdRef.current);
                 updateSW(true);
               }}
