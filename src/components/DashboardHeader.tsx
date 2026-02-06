@@ -1,3 +1,4 @@
+import NotificationBell from "./NotificationBell";
 import NotificationsDropdown from "./NotificationsDropdown";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useSharedHousehold } from "@/hooks/useSharedHousehold";
@@ -133,6 +134,7 @@ const DashboardHeader = ({
       {/* Actions - Removed ModeToggle, only show on desktop */}
       <div className="flex items-center gap-2 flex-wrap">
         <ThemeToggle />
+        <NotificationBell />
         <NotificationsDropdown />
         
         <Select
