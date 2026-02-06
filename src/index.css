@@ -230,10 +230,17 @@ All colors MUST be HSL.
     background: transparent;
   }
 
-  body {
+  html, body {
     @apply bg-background text-foreground font-sans;
     font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     background: hsl(var(--background));
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   /* Date input calendar icon styling */
