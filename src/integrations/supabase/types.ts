@@ -457,6 +457,51 @@ export type Database = {
         }
         Relationships: []
       }
+      "N8N Fila de Mensagem": {
+        Row: {
+          created_at: string
+          id: number
+          id_mensagem: string | null
+          mensagem: string | null
+          telefone: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          id_mensagem?: string | null
+          mensagem?: string | null
+          telefone?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          id_mensagem?: string | null
+          mensagem?: string | null
+          telefone?: number | null
+        }
+        Relationships: []
+      }
+      "N8N Historico de Mensagem": {
+        Row: {
+          created_at: string
+          id: number
+          mensagem: Json | null
+          session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          mensagem?: Json | null
+          session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          mensagem?: Json | null
+          session_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           app_mode: string | null
