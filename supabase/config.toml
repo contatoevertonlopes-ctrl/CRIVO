@@ -35,3 +35,12 @@ verify_jwt = false
 
 [functions.check-notifications]
 verify_jwt = false
+
+[functions.get-vapid-key]
+verify_jwt = false
+
+[functions.subscribe-push]
+verify_jwt = false
+
+[functions.send-push]
+verify_jwt = false
