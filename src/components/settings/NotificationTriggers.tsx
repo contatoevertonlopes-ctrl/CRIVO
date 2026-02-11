@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useNotifications } from "@/hooks/useNotifications";
 import { useAppMode } from "@/contexts/AppModeContext";
 import { 
   Bell, Plus, Trash2, AlertTriangle, TrendingDown, 
@@ -36,11 +36,10 @@ const NotificationTriggers = () => {
   const { toast } = useToast();
   const { mode } = useAppMode();
   const { 
-    isSupported, 
-    permission, 
-    requestPermission, 
-    sendTestNotification 
-  } = usePushNotifications();
+    isPushSupported: isSupported, 
+    pushPermission: permission, 
+    subscribeToPush: requestPermission,
+  } = useNotifications();
   
   const [triggers, setTriggers] = useState<Trigger[]>([]);
   const [sundaySummaryEnabled, setSundaySummaryEnabled] = useState(false);
@@ -86,7 +85,22 @@ const NotificationTriggers = () => {
   };
 
   const handleTestNotification = () => {
-    sendTestNotification(mode);
+    if (!("Notification" in window) || Notification.permission !== "granted") {
+      toast({ title: "Ative as notificações primeiro", variant: "destructive" });
+      return;
+    }
+    const title = mode === "survival"
+      ? "📊 Resumo Semanal - Modo Sobrevivência"
+      : "🚀 Resumo Semanal - Modo Prosperidade";
+    const body = mode === "survival"
+      ? "Você resistiu! Esta semana suas reservas aumentaram em 2 dias."
+      : "Semana de crescimento! Você aportou R$ 1.250,00 rumo à sua liberdade financeira.";
+    try {
+      new window.Notification(title, { body, icon: "/pwa-192x192.png", tag: "sunday-summary" });
+      toast({ title: "Notificação enviada!", description: "Confira a notificação." });
+    } catch {
+      toast({ title: "Erro ao enviar notificação", variant: "destructive" });
+    }
   };
 
   const addCategoryTrigger = () => {

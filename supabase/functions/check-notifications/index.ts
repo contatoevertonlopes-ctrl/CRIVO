@@ -187,7 +187,7 @@ serve(async (req) => {
       }
     }
 
-    // 4. Insert all notifications
+    // 4. Insert all notifications and send push
     if (notificationsToCreate.length > 0) {
       logStep("Creating notifications", { count: notificationsToCreate.length });
 
@@ -202,6 +202,31 @@ serve(async (req) => {
         logStep("Notifications created successfully", { 
           count: insertedNotifications?.length || 0 
         });
+
+        // Send Web Push to each user
+        const uniqueUserIds = [...new Set(notificationsToCreate.map(n => n.user_id))];
+        for (const userId of uniqueUserIds) {
+          const userNotifs = notificationsToCreate.filter(n => n.user_id === userId);
+          const firstNotif = userNotifs[0];
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/send-push`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${supabaseServiceKey}`,
+              },
+              body: JSON.stringify({
+                user_id: userId,
+                title: firstNotif.title,
+                body: firstNotif.message,
+                url: firstNotif.link || "/",
+                tag: firstNotif.type,
+              }),
+            });
+          } catch (pushErr) {
+            logStep("Push send failed", { userId, error: String(pushErr) });
+          }
+        }
       }
     } else {
       logStep("No new notifications to create");
