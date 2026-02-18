@@ -424,7 +424,7 @@ const Index = () => {
       {isEditingLayout && <OverlayGrip />}
       <CardContent className="p-5 h-full flex flex-col overflow-hidden">
         <div className="flex items-center justify-between shrink-0">
-          <p className="text-sm font-semibold text-foreground">Meus cartões</p>
+          <p className="text-sm font-semibold text-foreground">Meus Cartões</p>
           <Button variant="ghost" size="sm" className="dashboard-no-drag h-8 px-2 text-xs" onClick={() => navigate("/cards")}>Ver</Button>
         </div>
 
