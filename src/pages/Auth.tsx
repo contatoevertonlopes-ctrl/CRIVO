@@ -39,19 +39,21 @@ const Auth = () => {
     return state?.from?.pathname || "/";
   }, [location.state]);
 
-  // 1) Detecta fluxo de recovery (?type=recovery...) e
+  // 1) Detecta fluxo de recovery via evento PASSWORD_RECOVERY do Supabase
+  //    (o SDK lê o hash #access_token=...&type=recovery automaticamente)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsRecovery(true);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
   // 2) Se já estiver logado, decide para onde vai (onboarding ou app)
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const type = params.get("type");
-
-    if (type === "recovery") {
-      setIsRecovery(true);
-      return;
-    }
-
     const checkOnboardingStatus = async () => {
-      if (!user) return;
+      if (!user || isRecovery) return;
 
       const { data: profile, error } = await supabase
         .from("profiles")
@@ -74,7 +76,7 @@ const Auth = () => {
     };
 
     checkOnboardingStatus();
-  }, [location.search, navigate, redirectAfterAuth, user]);
+  }, [navigate, redirectAfterAuth, user, isRecovery]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
@@ -369,7 +371,7 @@ const Auth = () => {
                                 try {
                                   const { error } = await supabase.auth.resetPasswordForEmail(email, {
                                     redirectTo: `${window.location.origin}/auth`,
-                                  } as any);
+                                  });
 
                                   if (error) {
                                     toast({
