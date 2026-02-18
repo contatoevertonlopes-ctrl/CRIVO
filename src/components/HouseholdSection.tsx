@@ -150,7 +150,7 @@ const HouseholdSection = () => {
 
   if (loading) {
     return (
-      <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-card border border-secondary shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-4 sm:p-6">
+      <div className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-4 sm:p-6">
         <div className="flex items-center gap-2 mb-4">
           <Users className="w-5 h-5 text-primary" />
           <h2 className="text-base sm:text-lg font-semibold">Espaço Compartilhado</h2>
@@ -163,7 +163,7 @@ const HouseholdSection = () => {
   }
 
   return (
-    <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-bl from-background to-card border border-primary/30 shadow-[0_18px_45px_rgba(3,7,18,0.65)] p-4 sm:p-6">
+    <div className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-4 sm:p-6">
       <div className="flex items-center gap-2 mb-4">
         <Users className="w-5 h-5 text-primary" />
         <h2 className="text-base sm:text-lg font-semibold">Espaço Compartilhado</h2>

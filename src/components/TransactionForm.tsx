@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { RefreshCw, Lock, Tag, ListOrdered, CreditCard, Landmark, Wallet, AlertCircle, ThumbsUp, ThumbsDown, ChevronRight } from "lucide-react";
+import { RefreshCw, Lock, Tag, ListOrdered, CreditCard, Landmark, Wallet, AlertCircle, ChevronRight, Calendar } from "lucide-react";
 import { useBankAccounts } from "@/hooks/useBankAccounts";
 import { useCards } from "@/hooks/useCards";
 import { cn } from "@/lib/utils";
@@ -120,13 +120,15 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
     }
   }, [requiresBankAccount, requiresCard, accounts, cards]);
 
-  // Compact mode: keep status automatic when not paid.
+  // Compact mode: auto-compute status from date only if not manually set to pagamento_concluido.
+  const [statusManuallySet, setStatusManuallySet] = React.useState(false);
   useEffect(() => {
     if (!isCompact) return;
-    if (isPaid) return;
+    if (statusManuallySet) return;
+    if (formData.status === "pagamento_concluido") return;
     const nextStatus = computeUnpaidStatus(formData.date);
     if (formData.status !== nextStatus) {
-      setFormData({ ...formData, status: nextStatus, paid_date: "" });
+      setFormData({ ...formData, status: nextStatus });
     }
   }, [isCompact, formData.date]);
 
@@ -160,11 +162,9 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
 
     // Normalize compact-mode fields before validating
     const normalizedCategory = (formData.category || "").trim() || (isCompact ? "Outros" : "");
-    const normalizedStatus = isCompact
-      ? (isPaid ? "pagamento_concluido" : computeUnpaidStatus(formData.date))
-      : formData.status;
-    const normalizedPaidDate = isCompact
-      ? (normalizedStatus === "pagamento_concluido" ? (formData.paid_date || todayStr) : "")
+    const normalizedStatus = formData.status || (isCompact ? computeUnpaidStatus(formData.date) : "em_aberto");
+    const normalizedPaidDate = normalizedStatus === "pagamento_concluido"
+      ? (formData.paid_date || todayStr)
       : formData.paid_date;
 
     // Validate all fields
@@ -197,22 +197,6 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
     }
 
     onSubmit();
-  };
-
-  const setPaidState = (paid: boolean) => {
-    if (!paid) {
-      setFormData({
-        ...formData,
-        status: computeUnpaidStatus(formData.date),
-        paid_date: "",
-      });
-      return;
-    }
-    setFormData({
-      ...formData,
-      status: "pagamento_concluido",
-      paid_date: formData.paid_date || todayStr,
-    });
   };
 
   const repeatMode: "none" | "recurring" | "installment" =
@@ -279,99 +263,137 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
       </div>
       {isCompact ? (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label className={cn("text-sm", errors.amount && "text-destructive")}>
-                {isInstallment ? "Valor Total" : "Valor"} <span className="text-destructive">*</span>
-              </Label>
-
-              <div className="flex items-center gap-2">
-                <div className="flex-1">
-                  <CurrencyInput
-                    value={formData.amount}
-                    onValueChange={(v) => setFormData({ ...formData, amount: v })}
-                    placeholder="0,00"
-                    inputClassName={cn(
-                      errors.amount && "border-destructive focus-visible:ring-destructive",
-                      "h-12 text-xl font-semibold tracking-tight"
-                    )}
-                    onBlur={() => handleBlur("amount")}
-                  />
-                </div>
-
-                <ToggleGroup
-                  type="single"
-                  variant="outline"
-                  size="sm"
-                  className="gap-1"
-                  value={isPaid ? "paid" : "unpaid"}
-                  onValueChange={(v) => {
-                    if (!v) return;
-                    setPaidState(v === "paid");
-                  }}
-                >
-                  <ToggleGroupItem value="unpaid" aria-label="Não pago" className="h-12 w-12 p-0 rounded-xl">
-                    <ThumbsDown className={cn("w-5 h-5", !isPaid && "fill-current")} />
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="paid" aria-label="Pago" className="h-12 w-12 p-0 rounded-xl">
-                    <ThumbsUp className={cn("w-5 h-5", isPaid && "fill-current")} />
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </div>
-
-              {errors.amount && (
-                <p className="text-xs text-destructive flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" />
-                  Valor inválido
-                </p>
+          {/* Valor */}
+          <div className="space-y-1.5">
+            <Label className={cn("text-sm", errors.amount && "text-destructive")}>
+              {isInstallment ? "Valor Total" : "Valor"} <span className="text-destructive">*</span>
+            </Label>
+            <CurrencyInput
+              value={formData.amount}
+              onValueChange={(v) => setFormData({ ...formData, amount: v })}
+              placeholder="0,00"
+              inputClassName={cn(
+                errors.amount && "border-destructive focus-visible:ring-destructive",
+                "h-12 text-xl font-semibold tracking-tight"
               )}
-            </div>
+              onBlur={() => handleBlur("amount")}
+            />
+            {errors.amount && (
+              <p className="text-xs text-destructive flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                Valor inválido
+              </p>
+            )}
+          </div>
 
+          {/* Data de Vencimento + Data de Pagamento */}
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-sm">{isInstallment ? "Data 1ª Parcela" : "Data"}</Label>
+              <Label className="text-sm flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                {isInstallment ? "Data 1ª Parcela" : "Vencimento"}
+              </Label>
               <Input
                 type="date"
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="h-12 text-base"
+                className="h-10 text-sm"
               />
             </div>
-
             <div className="space-y-1.5">
-              <Label className={cn("text-sm", errors.category && "text-destructive")}>
-                Categoria <span className="text-muted-foreground">(opcional)</span>
+              <Label className="text-sm flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                Data de Pagamento
               </Label>
-              <CategoryPicker
-                value={(formData.category || "").trim() || "Outros"}
-                onValueChange={(v) => {
-                  setFormData({ ...formData, category: v });
-                  setTouched((prev) => ({ ...prev, category: true }));
-                }}
-                trigger={
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-between items-center h-12 px-3",
-                      errors.category && "border-destructive focus-visible:ring-destructive"
-                    )}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div
-                        className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: selectedCategory?.color ?? "#22C55E" }}
-                      >
-                        {SelectedCategoryIcon ? <SelectedCategoryIcon className="h-5 w-5 text-white" /> : null}
-                      </div>
-                      <span className="text-base leading-none truncate">
-                        {selectedCategory?.name ?? ((formData.category || "").trim() || "Outros")}
-                      </span>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                  </Button>
-                }
+              <Input
+                type="date"
+                value={formData.paid_date}
+                onChange={(e) => setFormData({ ...formData, paid_date: e.target.value })}
+                className="h-10 text-sm"
               />
             </div>
+          </div>
+
+          {/* Status + Tag */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-sm">Status</Label>
+              <Select
+                value={formData.status || computeUnpaidStatus(formData.date)}
+                onValueChange={(v) => {
+                  setStatusManuallySet(true);
+                  setFormData({
+                    ...formData,
+                    status: v,
+                    paid_date: v === "pagamento_concluido" ? (formData.paid_date || todayStr) : formData.paid_date,
+                  });
+                }}
+              >
+                <SelectTrigger className="h-10 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="em_aberto">Em aberto</SelectItem>
+                  <SelectItem value="a_vencer">A vencer</SelectItem>
+                  <SelectItem value="vencido">Vencido</SelectItem>
+                  <SelectItem value="pagamento_concluido">Pago</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">Classificação</Label>
+              <Select
+                value={formData.tag || "none"}
+                onValueChange={(v) => setFormData({ ...formData, tag: v === "none" ? "" : v })}
+              >
+                <SelectTrigger className="h-10 text-sm">
+                  <SelectValue placeholder="Nenhuma" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhuma</SelectItem>
+                  <SelectItem value="fixa">Fixa</SelectItem>
+                  <SelectItem value="variavel">Variável</SelectItem>
+                  <SelectItem value="esporadica">Esporádica</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Categoria */}
+          <div className="space-y-1.5">
+            <Label className={cn("text-sm", errors.category && "text-destructive")}>
+              Categoria <span className="text-muted-foreground text-xs">(opcional)</span>
+            </Label>
+            <CategoryPicker
+              value={(formData.category || "").trim() || "Outros"}
+              onValueChange={(v) => {
+                setFormData({ ...formData, category: v });
+                setTouched((prev) => ({ ...prev, category: true }));
+              }}
+              trigger={
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-between items-center h-11 px-3",
+                    errors.category && "border-destructive focus-visible:ring-destructive"
+                  )}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div
+                      className="h-7 w-7 shrink-0 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: selectedCategory?.color ?? "#22C55E" }}
+                    >
+                      {SelectedCategoryIcon ? <SelectedCategoryIcon className="h-4 w-4 text-white" /> : null}
+                    </div>
+                    <span className="text-sm leading-none truncate">
+                      {selectedCategory?.name ?? ((formData.category || "").trim() || "Outros")}
+                    </span>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                </Button>
+              }
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -2,6 +2,13 @@ import { useMemo } from "react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import TransactionCard from "./TransactionCard";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { 
   ShoppingCart, 
   Home, 
@@ -207,6 +214,25 @@ const TransactionTimeline = ({
                 
                 return (
                   <div key={transaction.id} className="flex items-center gap-3 p-3 md:p-4 hover:bg-secondary/30 transition-colors">
+                    {/* Member Avatar (shared households only) */}
+                    {showMember && memberInfo && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="shrink-0">
+                            <Avatar className="w-7 h-7 ring-1 ring-border/40">
+                              <AvatarImage src={memberInfo.avatar || undefined} />
+                              <AvatarFallback className="text-[10px] bg-primary/20 text-primary">
+                                {memberInfo.initials}
+                              </AvatarFallback>
+                            </Avatar>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">
+                            <p>{memberInfo.name}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+
                     {/* Category Icon */}
                     <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
                       transaction.type === "income" 

@@ -74,12 +74,10 @@ export const useHousehold = () => {
 
             if (!raw) return member;
 
-            // Legacy/back-compat
+            // Legacy/back-compat: already a full URL
             if (/^https?:\/\//i.test(raw)) return member;
 
-            // Only sign current user's avatar (others won't have permission under private policy)
-            if (member.user_id !== user.id) return { ...member, avatar_url: null };
-
+            // Generate a signed URL for any household member (policy allows same-household reads)
             const { data: signed, error } = await supabase.storage
               .from("avatars")
               .createSignedUrl(raw, 60 * 60 * 24 * 7);

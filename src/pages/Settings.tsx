@@ -294,7 +294,7 @@ const Settings = () => {
               
               <form onSubmit={handleUpdateProfile} className="space-y-4">
                 <div className="flex items-center gap-4 mb-4">
-                  <Avatar className="w-16 h-16">
+                  <Avatar className="w-16 h-16 ring-2 ring-border/40 shrink-0">
                     {avatarPreview ? (
                       <AvatarImage src={avatarPreview} />
                     ) : avatarRemoveRequested ? (
@@ -306,17 +306,20 @@ const Settings = () => {
                     )}
                   </Avatar>
 
-                  <div className="flex flex-col gap-2">
-                    <input id="avatar" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-                    <label htmlFor="avatar" className="inline-flex items-center gap-2 px-3 py-1 rounded-md border border-border/50 bg-secondary cursor-pointer text-sm">
-                      Escolher foto
-                    </label>
-                    {avatarFile && <div className="text-xs text-muted-foreground">{avatarFile.name}</div>}
-                    <div className="flex gap-2">
+                  <div className="flex flex-col gap-1.5 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <input id="avatar" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                      <label
+                        htmlFor="avatar"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border/60 bg-secondary hover:bg-secondary/80 cursor-pointer text-sm font-medium transition-colors"
+                      >
+                        Escolher foto
+                      </label>
                       <Button
                         type="button"
                         size="sm"
                         variant="outline"
+                        className="text-muted-foreground hover:text-destructive hover:border-destructive/50"
                         onClick={() => {
                           setAvatarFile(null);
                           setAvatarPreview(null);
@@ -326,6 +329,9 @@ const Settings = () => {
                         Remover
                       </Button>
                     </div>
+                    {avatarFile && (
+                      <p className="text-xs text-muted-foreground truncate max-w-[200px]">{avatarFile.name}</p>
+                    )}
                   </div>
                 </div>
                 {showCropper && selectedImageSrc && (

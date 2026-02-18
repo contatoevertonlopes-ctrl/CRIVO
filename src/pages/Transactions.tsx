@@ -25,6 +25,10 @@ import AddTransactionCompactDialog from "@/components/AddTransactionCompactDialo
 import Sidebar from "@/components/Sidebar";
 import ImportTransactionsDialog from "@/components/ImportTransactionsDialog";
 import TransactionCard from "@/components/TransactionCard";
+import { useSharedHousehold } from "@/hooks/useSharedHousehold";
+import { useHousehold } from "@/hooks/useHousehold";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import StatusSelector from "@/components/StatusSelector";
 import TransactionPagination from "@/components/TransactionPagination";
 import BulkEditDialog from "@/components/BulkEditDialog";
@@ -62,6 +66,8 @@ interface TransactionRowProps {
   isSelected?: boolean;
   onToggleSelect?: (id: string) => void;
   selectionMode?: boolean;
+  memberInfo?: { name: string; initials: string; avatar: string | null };
+  showMember?: boolean;
 }
 
 const TransactionRow = ({ 
@@ -74,7 +80,9 @@ const TransactionRow = ({
   formatCurrency,
   isSelected,
   onToggleSelect,
-  selectionMode
+  selectionMode,
+  memberInfo,
+  showMember
 }: TransactionRowProps) => (
   <tr className={`border-b border-secondary/50 hover:bg-secondary/30 transition-colors ${isSelected ? "bg-primary/10" : ""}`}>
     {selectionMode && (
@@ -84,6 +92,27 @@ const TransactionRow = ({
           onCheckedChange={() => onToggleSelect?.(transaction.id)}
           className="data-[state=checked]:bg-primary"
         />
+      </td>
+    )}
+    {showMember && (
+      <td className="py-2 px-3">
+        {memberInfo && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <Avatar className="w-7 h-7 ring-1 ring-border/40">
+                  <AvatarImage src={memberInfo.avatar || undefined} />
+                  <AvatarFallback className="text-[10px] bg-primary/20 text-primary">
+                    {memberInfo.initials}
+                  </AvatarFallback>
+                </Avatar>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{memberInfo.name}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </td>
     )}
     <td className="py-4 px-4 whitespace-nowrap">{formatDate(transaction.date)}</td>
@@ -165,6 +194,8 @@ const Transactions = () => {
   const { user, loading: authLoading } = useAuth();
   const { subscribed, loading: subLoading } = useSubscription();
   const { householdId } = useHouseholdId();
+  const { isShared } = useSharedHousehold();
+  const { members } = useHousehold();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { transactions, isLoading: transactionsLoading, refetch: refetchTransactions } = useTransactions();
@@ -521,6 +552,16 @@ const Transactions = () => {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr + "T00:00:00");
     return date.toLocaleDateString("pt-BR");
+  };
+
+  const showMember = isShared && members.length > 1;
+
+  const getMemberInfo = (userId: string) => {
+    const member = members.find((m) => m.user_id === userId);
+    if (!member) return { name: "Usuário", initials: "U", avatar: null };
+    const name = member.full_name || "Usuário";
+    const initials = name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    return { name, initials, avatar: member.avatar_url };
   };
 
   const formatCurrency = (value: number) => {
@@ -1192,6 +1233,8 @@ const Transactions = () => {
                           onDelete={handleDelete}
                           onDuplicate={handleDuplicate}
                           onStatusChange={fetchTransactions}
+                          memberInfo={getMemberInfo(transaction.user_id || "")}
+                          showMember={showMember}
                         />
                       ))}
                       <TransactionPagination
@@ -1228,6 +1271,8 @@ const Transactions = () => {
                               onDelete={handleDelete}
                               onDuplicate={handleDuplicate}
                               onStatusChange={fetchTransactions}
+                              memberInfo={getMemberInfo(transaction.user_id || "")}
+                              showMember={showMember}
                             />
                           ))}
                         </div>
@@ -1259,6 +1304,9 @@ const Transactions = () => {
                               className="data-[state=checked]:bg-primary"
                             />
                           </th>
+                        )}
+                        {showMember && (
+                          <th className="py-4 px-3 w-10"></th>
                         )}
                         <th 
                           className="text-left py-4 px-4 font-medium cursor-pointer hover:text-foreground transition-colors select-none"
@@ -1322,6 +1370,8 @@ const Transactions = () => {
                               setSelectedTransactions(newSelected);
                             }}
                             selectionMode={selectionMode}
+                            memberInfo={getMemberInfo(transaction.user_id || "")}
+                            showMember={showMember}
                           />
                         ))
                       ) : (
@@ -1334,7 +1384,7 @@ const Transactions = () => {
                                 className="bg-secondary/40 border-b border-secondary cursor-pointer hover:bg-secondary/60 transition-colors"
                                 onClick={() => toggleGroupCollapse(key)}
                               >
-                                <td colSpan={9} className="py-3 px-4">
+                                <td colSpan={showMember ? 10 : 9} className="py-3 px-4">
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                       <ChevronRight className={`w-4 h-4 transition-transform ${isCollapsed ? "" : "rotate-90"}`} />
@@ -1374,6 +1424,8 @@ const Transactions = () => {
                                     setSelectedTransactions(newSelected);
                                   }}
                                   selectionMode={selectionMode}
+                                  memberInfo={getMemberInfo(transaction.user_id || "")}
+                                  showMember={showMember}
                                 />
                               ))}
                             </React.Fragment>
