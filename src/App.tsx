@@ -9,6 +9,7 @@ import { AppModeProvider } from "@/contexts/AppModeContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { PwaUpdateNotifier } from "@/components/PwaUpdateNotifier";
 import { LocationSync } from "@/components/LocationSync";
+import { useVersionCheck } from "@/hooks/useVersionCheck";
 import Home from "./pages/Home";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
@@ -37,7 +38,11 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
+const App = () => {
+  // Opção 5: detecta build novo via localStorage e força reload limpando caches
+  useVersionCheck();
+
+  return (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AuthProvider>
@@ -80,6 +85,7 @@ const App = () => (
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;

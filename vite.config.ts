@@ -10,6 +10,10 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+  define: {
+    // Injetado em cada build para que useVersionCheck detecte mudanças no localStorage
+    __APP_BUILD_ID__: JSON.stringify(new Date().toISOString()),
+  },
   plugins: [
     react(),
     mode === "development" && componentTagger(),

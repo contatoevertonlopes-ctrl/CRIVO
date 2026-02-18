@@ -49,24 +49,12 @@ export function PwaUpdateNotifier() {
       onNeedRefresh() {
         // "Sempre na última versão": aplica o update e recarrega automaticamente.
         // Observação: o SW pode atualizar em background, mas o código JS em memória só muda com reload.
-        // Proteção anti-loop: se por algum motivo já recarregamos nesta sessão, cai no modo "prompt".
+        // A proteção contra loop é feita apenas pelo ref em memória — sessionStorage não é usado
+        // pois ele persiste durante reloads e bloquearia updates legítimos em sessões longas.
         if (!hasAutoReloadedThisSessionRef.current) {
           hasAutoReloadedThisSessionRef.current = true;
-
-          try {
-            const key = "pwa:autoReloaded";
-            const alreadyReloaded = sessionStorage.getItem(key) === "1";
-
-            if (!alreadyReloaded) {
-              sessionStorage.setItem(key, "1");
-              updateSW(true);
-              return;
-            }
-          } catch {
-            // sessionStorage pode falhar em alguns contextos (ex: modo privado).
-            updateSW(true);
-            return;
-          }
+          updateSW(true);
+          return;
         }
 
         if (hasShownRef.current) return;
