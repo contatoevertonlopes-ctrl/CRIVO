@@ -369,8 +369,13 @@ const Auth = () => {
                               onClick={async () => {
                                 setResetLoading(true);
                                 try {
+                                  // Garante que o redirectTo aponta sempre para /auth
+                                  // e usa a URL de produção se não estiver em localhost
+                                  const origin = window.location.origin;
+                                  const redirectTo = `${origin}/auth`;
+
                                   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                                    redirectTo: `${window.location.origin}/auth`,
+                                    redirectTo,
                                   });
 
                                   if (error) {

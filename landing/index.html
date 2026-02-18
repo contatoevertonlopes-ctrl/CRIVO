@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="FinTrack — Controle financeiro moderno para você e sua equipe. Acompanhe gastos, fluxo de caixa e muito mais." />
+  <meta property="og:title" content="FinTrack — Controle financeiro inteligente" />
+  <meta property="og:description" content="Gerencie suas finanças com clareza. Gastos, cartões, metas e relatórios em um só lugar." />
+  <title>FinTrack — Controle Financeiro Inteligente</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Lucide Icons (CDN) -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+
+  <!-- Main stylesheet -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- =============================================
+       NAVBAR
+  ============================================== -->
+  <header class="navbar" id="navbar">
+    <div class="container navbar__inner">
+
+      <!-- Logo -->
+      <a href="/" class="navbar__logo" aria-label="FinTrack — página inicial">
+        <span class="logo-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="28" height="28" rx="8" fill="url(#logoGrad)"/>
+            <path d="M8 20V14M12 20V10M16 20V12M20 20V8" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="logoGrad" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#22c55e"/>
+                <stop offset="1" stop-color="#16a34a"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </span>
+        <span class="logo-text">FinTrack</span>
+      </a>
+
+      <!-- Desktop nav links -->
+      <nav class="navbar__links" aria-label="Menu principal">
+        <a href="#features" class="nav-link">Recursos</a>
+        <a href="#plans" class="nav-link">Planos</a>
+        <a href="#about" class="nav-link">Sobre</a>
+      </nav>
+
+      <!-- Auth buttons -->
+      <div class="navbar__actions">
+        <a href="/login" class="btn btn--ghost">Entrar</a>
+        <a href="/register" class="btn btn--primary">Criar conta</a>
+      </div>
+
+      <!-- Mobile hamburger -->
+      <button class="hamburger" id="hamburger" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <!-- Mobile drawer -->
+    <div class="mobile-menu" id="mobile-menu" role="dialog" aria-label="Menu mobile" hidden>
+      <nav class="mobile-menu__links" aria-label="Menu mobile">
+        <a href="#features" class="nav-link" data-close-menu>Recursos</a>
+        <a href="#plans" class="nav-link" data-close-menu>Planos</a>
+        <a href="#about" class="nav-link" data-close-menu>Sobre</a>
+      </nav>
+      <div class="mobile-menu__actions">
+        <a href="/login" class="btn btn--ghost btn--full" data-close-menu>Entrar</a>
+        <a href="/register" class="btn btn--primary btn--full" data-close-menu>Criar conta</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- =============================================
+         HERO SECTION
+    ============================================== -->
+    <section class="hero" id="home" aria-labelledby="hero-headline">
+      <div class="container hero__inner">
+
+        <!-- Text content -->
+        <div class="hero__content reveal">
+          <span class="badge">✦ Novo · Controle total das suas finanças</span>
+
+          <h1 class="hero__headline" id="hero-headline">
+            Suas finanças,<br/>
+            finalmente <span class="text-green">organizadas.</span>
+          </h1>
+
+          <p class="hero__subtitle">
+            O FinTrack reúne gastos, cartões, metas e relatórios em um painel limpo e intuitivo —
+            para você tomar decisões financeiras com confiança.
+          </p>
+
+          <div class="hero__cta">
+            <a href="/register" class="btn btn--primary btn--lg">
+              Começar grátis
+              <i data-lucide="arrow-right" class="btn-icon"></i>
+            </a>
+            <a href="/login" class="btn btn--outline btn--lg">Já tenho conta</a>
+          </div>
+
+          <p class="hero__note">Sem cartão de crédito. Grátis para sempre no plano básico.</p>
+        </div>
+
+        <!-- Dashboard illustration -->
+        <div class="hero__visual reveal reveal--right">
+          <div class="dashboard-preview" aria-hidden="true">
+
+            <!-- Top bar -->
+            <div class="dp-topbar">
+              <div class="dp-dot dp-dot--red"></div>
+              <div class="dp-dot dp-dot--yellow"></div>
+              <div class="dp-dot dp-dot--green"></div>
+              <span class="dp-title">FinTrack Dashboard</span>
+            </div>
+
+            <!-- Metric cards row -->
+            <div class="dp-metrics">
+              <div class="dp-metric dp-metric--green">
+                <span class="dp-metric__label">Receitas</span>
+                <span class="dp-metric__value">R$ 8.540</span>
+                <span class="dp-metric__trend dp-metric__trend--up">▲ 12%</span>
+              </div>
+              <div class="dp-metric">
+                <span class="dp-metric__label">Despesas</span>
+                <span class="dp-metric__value">R$ 3.210</span>
+                <span class="dp-metric__trend dp-metric__trend--down">▼ 4%</span>
+              </div>
+              <div class="dp-metric">
+                <span class="dp-metric__label">Saldo</span>
+                <span class="dp-metric__value">R$ 5.330</span>
+                <span class="dp-metric__trend dp-metric__trend--up">▲ 20%</span>
+              </div>
+            </div>
+
+            <!-- Chart bars -->
+            <div class="dp-chart">
+              <div class="dp-chart__bars">
+                <div class="dp-bar" style="--h:45%"></div>
+                <div class="dp-bar" style="--h:65%"></div>
+                <div class="dp-bar" style="--h:50%"></div>
+                <div class="dp-bar dp-bar--active" style="--h:80%"></div>
+                <div class="dp-bar" style="--h:60%"></div>
+                <div class="dp-bar" style="--h:70%"></div>
+                <div class="dp-bar" style="--h:55%"></div>
+              </div>
+              <div class="dp-chart__labels">
+                <span>Ago</span><span>Set</span><span>Out</span><span>Nov</span><span>Dez</span><span>Jan</span><span>Fev</span>
+              </div>
+            </div>
+
+            <!-- Transaction list -->
+            <div class="dp-transactions">
+              <div class="dp-tx">
+                <span class="dp-tx__dot dp-tx__dot--green"></span>
+                <span class="dp-tx__name">Salário</span>
+                <span class="dp-tx__amount dp-tx__amount--green">+ R$ 5.000</span>
+              </div>
+              <div class="dp-tx">
+                <span class="dp-tx__dot"></span>
+                <span class="dp-tx__name">Supermercado</span>
+                <span class="dp-tx__amount">- R$ 420</span>
+              </div>
+              <div class="dp-tx">
+                <span class="dp-tx__dot"></span>
+                <span class="dp-tx__name">Netflix</span>
+                <span class="dp-tx__amount">- R$ 55</span>
+              </div>
+            </div>
+
+          </div><!-- /.dashboard-preview -->
+
+          <!-- Floating badges -->
+          <div class="floating-badge floating-badge--1" aria-hidden="true">
+            <i data-lucide="trending-up"></i>
+            <span>Patrimônio crescendo</span>
+          </div>
+          <div class="floating-badge floating-badge--2" aria-hidden="true">
+            <i data-lucide="shield-check"></i>
+            <span>Dados seguros</span>
+          </div>
+        </div>
+
+      </div><!-- /.container -->
+
+      <!-- Decorative blobs -->
+      <div class="hero-blob hero-blob--1" aria-hidden="true"></div>
+      <div class="hero-blob hero-blob--2" aria-hidden="true"></div>
+    </section>
+
+    <!-- =============================================
+         FEATURES / BENEFITS
+    ============================================== -->
+    <section class="features" id="features" aria-labelledby="features-heading">
+      <div class="container">
+
+        <div class="section-header reveal">
+          <span class="section-badge">Recursos</span>
+          <h2 class="section-title" id="features-heading">
+            Tudo que você precisa<br/>para controlar suas finanças
+          </h2>
+          <p class="section-subtitle">
+            Do lançamento manual à análise automática — o FinTrack cobre todo o ciclo financeiro.
+          </p>
+        </div>
+
+        <div class="features__grid">
+
+          <!-- Card 1 -->
+          <article class="feature-card reveal">
+            <div class="feature-card__icon feature-card__icon--green">
+              <i data-lucide="wallet"></i>
+            </div>
+            <h3 class="feature-card__title">Controle de gastos</h3>
+            <p class="feature-card__desc">
+              Categorize e acompanhe cada centavo. Veja exatamente para onde seu dinheiro está indo e corte desperdícios com facilidade.
+            </p>
+          </article>
+
+          <!-- Card 2 -->
+          <article class="feature-card reveal">
+            <div class="feature-card__icon feature-card__icon--blue">
+              <i data-lucide="bar-chart-2"></i>
+            </div>
+            <h3 class="feature-card__title">Fluxo de caixa</h3>
+            <p class="feature-card__desc">
+              Visualize entradas e saídas em gráficos interativos por período. Antecipe tendências e planeje com segurança.
+            </p>
+          </article>
+
+          <!-- Card 3 -->
+          <article class="feature-card reveal">
+            <div class="feature-card__icon feature-card__icon--purple">
+              <i data-lucide="credit-card"></i>
+            </div>
+            <h3 class="feature-card__title">Gestão de cartões</h3>
+            <p class="feature-card__desc">
+              Acompanhe o limite, fatura e gastos de todos os seus cartões de crédito e débito em um único painel.
+            </p>
+          </article>
+
+          <!-- Card 4 -->
+          <article class="feature-card reveal">
+            <div class="feature-card__icon feature-card__icon--amber">
+              <i data-lucide="sparkles"></i>
+            </div>
+            <h3 class="feature-card__title">Relatórios inteligentes</h3>
+            <p class="feature-card__desc">
+              Relatórios automáticos mensais com insights sobre seus hábitos, metas batidas e oportunidades de economia.
+            </p>
+          </article>
+
+        </div><!-- /.features__grid -->
+      </div>
+    </section>
+
+    <!-- =============================================
+         HOW IT WORKS
+    ============================================== -->
+    <section class="how-it-works" id="about" aria-labelledby="how-heading">
+      <div class="container">
+
+        <div class="section-header reveal">
+          <span class="section-badge">Como funciona</span>
+          <h2 class="section-title" id="how-heading">
+            Em 3 passos você já está<br/>no controle
+          </h2>
+        </div>
+
+        <div class="steps">
+
+          <div class="step reveal">
+            <div class="step__number" aria-hidden="true">01</div>
+            <div class="step__content">
+              <div class="step__icon">
+                <i data-lucide="user-plus"></i>
+              </div>
+              <h3 class="step__title">Crie sua conta</h3>
+              <p class="step__desc">
+                Cadastre-se em menos de 2 minutos. Sem burocracia, sem cartão de crédito.
+              </p>
+            </div>
+          </div>
+
+          <div class="step-connector" aria-hidden="true"></div>
+
+          <div class="step reveal">
+            <div class="step__number" aria-hidden="true">02</div>
+            <div class="step__content">
+              <div class="step__icon">
+                <i data-lucide="link-2"></i>
+              </div>
+              <h3 class="step__title">Conecte suas contas</h3>
+              <p class="step__desc">
+                Adicione suas contas bancárias, cartões e configure suas categorias personalizadas.
+              </p>
+            </div>
+          </div>
+
+          <div class="step-connector" aria-hidden="true"></div>
+
+          <div class="step reveal">
+            <div class="step__number" aria-hidden="true">03</div>
+            <div class="step__content">
+              <div class="step__icon">
+                <i data-lucide="trending-up"></i>
+              </div>
+              <h3 class="step__title">Acompanhe seus resultados</h3>
+              <p class="step__desc">
+                Visualize seu progresso financeiro, bata metas e tome decisões baseadas em dados reais.
+              </p>
+            </div>
+          </div>
+
+        </div><!-- /.steps -->
+      </div>
+    </section>
+
+    <!-- =============================================
+         PLANS (stub section for nav link)
+    ============================================== -->
+    <section class="plans" id="plans" aria-labelledby="plans-heading">
+      <div class="container">
+
+        <div class="section-header reveal">
+          <span class="section-badge">Planos</span>
+          <h2 class="section-title" id="plans-heading">Simples e transparente</h2>
+          <p class="section-subtitle">Comece grátis. Faça upgrade quando precisar de mais.</p>
+        </div>
+
+        <div class="plans__grid">
+
+          <!-- Free plan -->
+          <div class="plan-card reveal">
+            <div class="plan-card__header">
+              <h3 class="plan-card__name">Básico</h3>
+              <div class="plan-card__price">
+                <span class="plan-card__currency">R$</span>
+                <span class="plan-card__amount">0</span>
+                <span class="plan-card__period">/mês</span>
+              </div>
+            </div>
+            <ul class="plan-card__features">
+              <li><i data-lucide="check"></i> Até 3 contas bancárias</li>
+              <li><i data-lucide="check"></i> Lançamentos ilimitados</li>
+              <li><i data-lucide="check"></i> Relatório mensal</li>
+              <li><i data-lucide="check"></i> App mobile</li>
+            </ul>
+            <a href="/register" class="btn btn--outline btn--full">Começar grátis</a>
+          </div>
+
+          <!-- Pro plan -->
+          <div class="plan-card plan-card--featured reveal">
+            <div class="plan-card__badge">Mais popular</div>
+            <div class="plan-card__header">
+              <h3 class="plan-card__name">Pro</h3>
+              <div class="plan-card__price">
+                <span class="plan-card__currency">R$</span>
+                <span class="plan-card__amount">29</span>
+                <span class="plan-card__period">/mês</span>
+              </div>
+            </div>
+            <ul class="plan-card__features">
+              <li><i data-lucide="check"></i> Contas ilimitadas</li>
+              <li><i data-lucide="check"></i> Relatórios avançados</li>
+              <li><i data-lucide="check"></i> Gestão de cartões</li>
+              <li><i data-lucide="check"></i> Metas financeiras</li>
+              <li><i data-lucide="check"></i> Suporte prioritário</li>
+            </ul>
+            <a href="/register" class="btn btn--primary btn--full">Assinar Pro</a>
+          </div>
+
+          <!-- Family plan -->
+          <div class="plan-card reveal">
+            <div class="plan-card__header">
+              <h3 class="plan-card__name">Família</h3>
+              <div class="plan-card__price">
+                <span class="plan-card__currency">R$</span>
+                <span class="plan-card__amount">49</span>
+                <span class="plan-card__period">/mês</span>
+              </div>
+            </div>
+            <ul class="plan-card__features">
+              <li><i data-lucide="check"></i> Até 6 membros</li>
+              <li><i data-lucide="check"></i> Tudo do Pro</li>
+              <li><i data-lucide="check"></i> Painel familiar</li>
+              <li><i data-lucide="check"></i> Metas compartilhadas</li>
+            </ul>
+            <a href="/register" class="btn btn--outline btn--full">Assinar Família</a>
+          </div>
+
+        </div><!-- /.plans__grid -->
+      </div>
+    </section>
+
+    <!-- =============================================
+         CTA FINAL
+    ============================================== -->
+    <section class="cta-section" aria-labelledby="cta-heading">
+      <div class="container">
+        <div class="cta-card reveal">
+          <div class="cta-card__blob" aria-hidden="true"></div>
+          <span class="section-badge section-badge--white">Comece hoje</span>
+          <h2 class="cta-card__title" id="cta-heading">
+            Seus próximos 12 meses<br/>
+            podem ser completamente diferentes.
+          </h2>
+          <p class="cta-card__subtitle">
+            Decida agora ter mais clareza, mais controle e mais paz.<br/>
+            É grátis para começar.
+          </p>
+          <a href="/register" class="btn btn--white btn--lg cta-card__btn">
+            Criar conta gratuita
+            <i data-lucide="arrow-right" class="btn-icon"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =============================================
+       FOOTER
+  ============================================== -->
+  <footer class="footer" role="contentinfo">
+    <div class="container footer__inner">
+
+      <div class="footer__brand">
+        <a href="/" class="navbar__logo footer__logo" aria-label="FinTrack">
+          <span class="logo-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="28" height="28" rx="8" fill="url(#logoGrad2)"/>
+              <path d="M8 20V14M12 20V10M16 20V12M20 20V8" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="logoGrad2" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#22c55e"/>
+                  <stop offset="1" stop-color="#16a34a"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </span>
+          <span class="logo-text">FinTrack</span>
+        </a>
+        <p class="footer__tagline">Controle financeiro inteligente para o dia a dia.</p>
+      </div>
+
+      <nav class="footer__links" aria-label="Links do footer">
+        <div class="footer__col">
+          <h4 class="footer__col-title">Produto</h4>
+          <a href="#features">Recursos</a>
+          <a href="#plans">Planos</a>
+          <a href="#about">Como funciona</a>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__col-title">Conta</h4>
+          <a href="/login">Entrar</a>
+          <a href="/register">Criar conta</a>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__col-title">Legal</h4>
+          <a href="#">Privacidade</a>
+          <a href="#">Termos de uso</a>
+        </div>
+      </nav>
+
+    </div>
+
+    <div class="footer__bottom">
+      <p>&copy; <span id="year"></span> FinTrack. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+
+  <!-- Main script -->
+  <script src="script.js"></script>
+</body>
+</html>

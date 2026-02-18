@@ -1,542 +1,808 @@
-import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAppMode } from "@/contexts/AppModeContext";
-import AppLogo from "@/components/AppLogo";
-import CashflowChart from "@/components/CashflowChart";
-import ExpenseChart from "@/components/ExpenseChart";
-import ModeToggle from "@/components/ModeToggle";
-import ProsperityWidget from "@/components/ProsperityWidget";
-import SurvivalWidget from "@/components/SurvivalWidget";
-import ThemeToggle from "@/components/ThemeToggle";
-import { Button } from "@/components/ui/button";
+/**
+ * Landing.tsx — FinTrack public landing page
+ * Route: /landing (or configure as / for unauthenticated users)
+ *
+ * Stack: React + TypeScript + Tailwind CSS + lucide-react
+ * No external dependencies beyond what the project already uses.
+ */
+
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
-  BarChart3,
+  BarChart2,
   Check,
-  ChevronRight,
   CreditCard,
-  Download,
-  LineChart,
-  Lock,
-  PiggyBank,
+  LinkIcon,
+  Menu,
+  ShieldCheck,
   Sparkles,
-  Target,
+  TrendingUp,
+  UserPlus,
   Wallet,
-  Zap,
+  X,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
+/* ─────────────────────────────────────────────
+   Sub-components
+───────────────────────────────────────────── */
+
+/** Inline SVG logo mark */
+const LogoMark = ({ size = 28 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 28 28"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+  >
+    <rect width="28" height="28" rx="8" fill="url(#lg1)" />
+    <path
+      d="M8 20V14M12 20V10M16 20V12M20 20V8"
+      stroke="white"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+    />
+    <defs>
+      <linearGradient id="lg1" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#22c55e" />
+        <stop offset="1" stopColor="#16a34a" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
+/** Reusable section badge pill */
+const SectionBadge = ({
+  children,
+  light = false,
+}: {
+  children: React.ReactNode;
+  light?: boolean;
+}) => (
+  <span
+    className={cn(
+      "inline-block px-3.5 py-1 rounded-full text-xs font-semibold uppercase tracking-widest mb-4",
+      light
+        ? "bg-white/20 text-white"
+        : "bg-green-100 text-green-700"
+    )}
+  >
+    {children}
+  </span>
+);
+
+/** Hook: adds `is-visible` class to .reveal elements via IntersectionObserver */
+function useScrollReveal() {
+  useEffect(() => {
+    const els = document.querySelectorAll<HTMLElement>(".reveal");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("is-visible");
+            observer.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+    );
+    els.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+}
+
+/* ─────────────────────────────────────────────
+   Main component
+───────────────────────────────────────────── */
 const Landing = () => {
   const navigate = useNavigate();
-  const { mode } = useAppMode();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
 
-  const demoCashflow = useMemo(
-    () => [
-      { month: "Ago", receitas: 11800, despesas: 7340 },
-      { month: "Set", receitas: 12600, despesas: 8120 },
-      { month: "Out", receitas: 12450, despesas: 7650 },
-      { month: "Nov", receitas: 13200, despesas: 7920 },
-      { month: "Dez", receitas: 14100, despesas: 8640 },
-      { month: "Jan", receitas: 14800, despesas: 6380 },
-    ],
-    [],
-  );
+  useScrollReveal();
 
-  const demoExpenses = useMemo(
-    () => [
-      { name: "Casa", value: 2120 },
-      { name: "Alimentação", value: 1030 },
-      { name: "Mobilidade", value: 680 },
-      { name: "Lazer", value: 420 },
-    ],
-    [],
-  );
+  /* Navbar shadow on scroll */
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 12);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-  const features = useMemo(
-    () => [
-      {
-        title: "Visão clara do dinheiro",
-        description:
-          "Dashboards prontos pra ação: fluxo de caixa, categorias e evolução mês a mês — sem planilhas.",
-        icon: BarChart3,
-      },
-      {
-        title: "Rotina simples (e rápida)",
-        description:
-          "Registre em segundos, importe em lote e mantenha tudo organizado com uma experiência consistente.",
-        icon: ZapLike,
-      },
-      {
-        title: "Metas e prioridades",
-        description:
-          "Acompanhe objetivos e ajuste o plano com alertas e indicadores que te ajudam a decidir melhor.",
-        icon: Target,
-      },
-      {
-        title: "Privacidade em primeiro lugar",
-        description:
-          "Você controla o que registra e compartilha. Interface segura e pensada para uso diário.",
-        icon: Lock,
-      },
-    ],
-    [],
-  );
+  /* Close mobile menu on outside click */
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
 
-  const steps = useMemo(
-    () => [
-      {
-        title: "1) Registre ou importe",
-        description: "Adicione transações rapidamente ou traga seus dados via CSV.",
-        icon: Wallet,
-      },
-      {
-        title: "2) Enxergue padrões",
-        description: "Categorias, tendências e comparativos por período em poucos cliques.",
-        icon: LineChart,
-      },
-      {
-        title: "3) Tome decisões",
-        description: "Defina metas e acompanhe o progresso com indicadores fáceis de entender.",
-        icon: PiggyBank,
-      },
-    ],
-    [],
-  );
+  /* Lock body scroll when menu is open */
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [menuOpen]);
 
-  const highlights = useMemo(
-    () => [
-      {
-        label: "Fluxo mensal",
-        value: "R$ 8.420",
-        note: "+12% vs. mês anterior",
-      },
-      {
-        label: "Gastos essenciais",
-        value: "42%",
-        note: "Categorias fixas e contas",
-      },
-      {
-        label: "Meta de reserva",
-        value: "68%",
-        note: "Progresso semanal",
-      },
-    ],
-    [],
-  );
+  /* Smooth-scroll to section anchor */
+  const scrollTo = (id: string) => {
+    setMenuOpen(false);
+    const el = document.getElementById(id);
+    if (!el) return;
+    const offset = (navRef.current?.offsetHeight ?? 68) + 16;
+    window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - offset, behavior: "smooth" });
+  };
 
-  const faqs = useMemo(
-    () => [
-      {
-        q: "Preciso colocar cartão para começar?",
-        a: "Não. Você pode criar conta e explorar o app. Planos e upgrades ficam na tela de Planos.",
-      },
-      {
-        q: "Dá para instalar como app (PWA)?",
-        a: "Sim. Use a opção “Instalar” e fixe no celular ou desktop para acesso rápido.",
-      },
-      {
-        q: "O que eu ganho com os planos?",
-        a: "Acesso a recursos premium e melhorias de produtividade. Veja os detalhes na página de planos.",
-      },
-    ],
-    [],
-  );
+  const goToAuth = (tab?: string) => navigate(tab ? `/auth?tab=${tab}` : "/auth");
 
-  const goAuth = () => navigate("/auth");
-  const goPlans = () => navigate("/plans");
-  const goInstall = () => navigate("/install");
-
+  /* ── Render ───────────────────────────────── */
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
-      <Background />
+    <>
+      {/* ── Scroll-reveal keyframe (injected once) ── */}
+      <style>{`
+        .reveal{opacity:0;transform:translateY(28px);transition:opacity .6s cubic-bezier(.4,0,.2,1),transform .6s cubic-bezier(.4,0,.2,1)}
+        .reveal--right{transform:translateX(28px)}
+        .reveal.is-visible{opacity:1;transform:translate(0,0)}
+        @keyframes floatBadge{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+        .float-1{animation:floatBadge 3s ease-in-out infinite}
+        .float-2{animation:floatBadge 3s ease-in-out infinite 1.5s}
+        @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+        .slide-down{animation:slideDown .22s ease}
+      `}</style>
 
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl min-w-0 items-center justify-between px-4 sm:px-6 lg:px-8">
-          <button
-            type="button"
-            onClick={() => navigate("/")}
-            className="flex min-w-0 items-center gap-3 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            aria-label="Ir para a página inicial"
-          >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-              <AppLogo size={26} className="text-primary-foreground" />
-            </div>
-            <div className="hidden min-w-0 flex-col sm:flex">
-              <span className="text-sm uppercase tracking-[0.28em] text-muted-foreground">FinTrack</span>
-              <span className="truncate font-['Space_Grotesk'] text-lg font-semibold">Club Finance Track</span>
-            </div>
-          </button>
+      <div className="min-h-screen bg-white font-sans antialiased overflow-x-hidden">
 
-          <nav className="hidden min-w-0 items-center gap-8 text-sm md:flex" aria-label="Navegação da landing">
-            <a
-              className="rounded-md px-2 py-1.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary/60"
-              href="#visao"
-            >
-              Visão geral
-            </a>
-            <a
-              className="rounded-md px-2 py-1.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary/60"
-              href="#como-funciona"
-            >
-              Como funciona
-            </a>
-            <a
-              className="rounded-md px-2 py-1.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary/60"
-              href="#insights"
-            >
-              Insights
-            </a>
-            <a
-              className="rounded-md px-2 py-1.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary/60"
-              href="#planos"
-            >
-              Planos
-            </a>
-          </nav>
+        {/* ════════════════════════════════════════
+            NAVBAR
+        ════════════════════════════════════════ */}
+        <header
+          ref={navRef}
+          className={cn(
+            "fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 transition-shadow duration-200",
+            scrolled && "shadow-md"
+          )}
+        >
+          <div className="max-w-6xl mx-auto px-6 h-[68px] flex items-center gap-8">
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="hidden lg:block">
-              <ModeToggle />
-            </div>
-            <ThemeToggle className="hidden sm:flex" />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={goInstall}
-              className="hidden sm:inline-flex gap-2"
+            {/* Logo */}
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              className="flex items-center gap-2.5 flex-shrink-0 hover:opacity-80 transition-opacity"
+              aria-label="FinTrack — topo"
             >
-              <Download className="h-4 w-4" />
-              Instalar
-            </Button>
-            <Button variant="ghost" size="sm" onClick={goAuth}>
-              Entrar
-            </Button>
-            <Button size="sm" onClick={goAuth}>
-              Criar conta
-            </Button>
+              <LogoMark />
+              <span className="text-lg font-extrabold bg-gradient-to-br from-green-600 to-green-400 bg-clip-text text-transparent">
+                FinTrack
+              </span>
+            </button>
+
+            {/* Desktop nav links */}
+            <nav className="hidden md:flex items-center gap-1 ml-auto" aria-label="Menu principal">
+              {[
+                { label: "Recursos", id: "features" },
+                { label: "Planos", id: "plans" },
+                { label: "Como funciona", id: "how" },
+              ].map(({ label, id }) => (
+                <button
+                  key={id}
+                  onClick={() => scrollTo(id)}
+                  className="px-3.5 py-1.5 text-[0.9375rem] font-medium text-gray-500 rounded-full
+                             hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
+
+            {/* Desktop auth buttons */}
+            <div className="hidden md:flex items-center gap-2 flex-shrink-0">
+              <Button variant="ghost" className="rounded-full font-semibold" onClick={() => goToAuth()}>
+                Entrar
+              </Button>
+              <Button
+                className="rounded-full bg-green-500 hover:bg-green-600 text-white font-semibold shadow-none
+                           hover:shadow-[0_4px_20px_rgba(34,197,94,.35)] transition-all"
+                onClick={() => goToAuth("register")}
+              >
+                Criar conta
+              </Button>
+            </div>
+
+            {/* Hamburger */}
+            <button
+              className="md:hidden ml-auto p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((v) => !v)}
+            >
+              {menuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
           </div>
-        </div>
-      </header>
 
-      <main className="pt-28">
-        <section className="relative">
-          <div className="mx-auto grid max-w-7xl min-w-0 items-center gap-12 px-4 pb-14 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
-            <div className="min-w-0">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/75 px-4 py-1 text-xs font-medium text-muted-foreground">
-                <Sparkles className="h-4 w-4 text-primary" />
-                Controle financeiro moderno e adaptativo
-              </div>
-
-              <h1 className="mt-5 font-['Space_Grotesk'] text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
-                Clareza para decidir. Simplicidade para executar.
-              </h1>
-
-              <p className="mt-5 max-w-xl font-['Manrope'] text-base text-muted-foreground sm:text-lg">
-                Registre transações, acompanhe categorias e veja seu fluxo de caixa com um painel feito para o dia a dia.
-                Menos fricção, mais ação.
-              </p>
-
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Button size="lg" onClick={goAuth} className="gap-2">
-                  Começar agora
-                  <ArrowRight className="h-4 w-4" />
+          {/* Mobile drawer */}
+          {menuOpen && (
+            <div className="md:hidden slide-down border-t border-gray-100 bg-white px-6 pb-6 pt-4 flex flex-col gap-2">
+              {[
+                { label: "Recursos", id: "features" },
+                { label: "Planos", id: "plans" },
+                { label: "Como funciona", id: "how" },
+              ].map(({ label, id }) => (
+                <button
+                  key={id}
+                  onClick={() => scrollTo(id)}
+                  className="text-left px-3 py-2.5 text-base font-medium text-gray-600 rounded-lg
+                             hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                >
+                  {label}
+                </button>
+              ))}
+              <div className="flex flex-col gap-2 mt-2">
+                <Button variant="outline" className="w-full rounded-full font-semibold" onClick={() => goToAuth()}>
+                  Entrar
                 </Button>
-                <Button size="lg" variant="outline" onClick={goPlans} className="gap-2">
-                  Ver planos
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-                <Button size="lg" variant="secondary" onClick={goInstall} className="gap-2 sm:hidden">
-                  Instalar
-                  <Download className="h-4 w-4" />
+                <Button
+                  className="w-full rounded-full bg-green-500 hover:bg-green-600 text-white font-semibold"
+                  onClick={() => goToAuth("register")}
+                >
+                  Criar conta
                 </Button>
               </div>
+            </div>
+          )}
+        </header>
 
-              <div className="mt-10 grid gap-4 sm:grid-cols-3">
-                {[
-                  { title: "Importação", desc: "CSV e lote" },
-                  { title: "Metas", desc: "progresso visível" },
-                  { title: "Relatórios", desc: "com clareza" },
-                ].map((item) => (
-                  <div key={item.title} className="rounded-2xl border border-border/60 bg-card/60 p-4">
-                    <p className="text-sm font-semibold">{item.title}</p>
-                    <p className="text-xs text-muted-foreground">{item.desc}</p>
+        <main>
+
+          {/* ════════════════════════════════════════
+              HERO
+          ════════════════════════════════════════ */}
+          <section
+            id="home"
+            className="relative overflow-hidden pt-[calc(68px+80px)] pb-24
+                       bg-gradient-to-br from-white to-green-50"
+          >
+            {/* Decorative blobs */}
+            <div className="absolute -top-32 -right-24 w-[520px] h-[520px] rounded-full
+                            bg-green-400/10 blur-[80px] pointer-events-none" />
+            <div className="absolute -bottom-16 -left-20 w-[320px] h-[320px] rounded-full
+                            bg-blue-400/8 blur-[80px] pointer-events-none" />
+
+            <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 items-center gap-16 relative">
+
+              {/* ── Text ── */}
+              <div className="reveal">
+                <span className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border
+                                 border-green-200 text-green-700 text-[0.8125rem] font-semibold
+                                 rounded-full shadow-sm mb-6">
+                  ✦ Novo · Controle total das suas finanças
+                </span>
+
+                <h1 className="text-[clamp(2.25rem,5.5vw,3.5rem)] font-extrabold leading-[1.1]
+                               tracking-tight text-gray-900 mb-5">
+                  Suas finanças,<br />
+                  finalmente{" "}
+                  <span className="bg-gradient-to-r from-green-600 to-green-400 bg-clip-text text-transparent">
+                    organizadas.
+                  </span>
+                </h1>
+
+                <p className="text-lg text-gray-500 leading-relaxed mb-9 max-w-[480px]">
+                  O FinTrack reúne gastos, cartões, metas e relatórios em um painel limpo
+                  e intuitivo — para você tomar decisões financeiras com confiança.
+                </p>
+
+                <div className="flex flex-wrap gap-3 mb-5">
+                  <Button
+                    size="lg"
+                    className="rounded-full bg-green-500 hover:bg-green-600 text-white font-semibold
+                               hover:shadow-[0_4px_20px_rgba(34,197,94,.35)] transition-all gap-2"
+                    onClick={() => goToAuth("register")}
+                  >
+                    Começar grátis <ArrowRight size={16} />
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="rounded-full border-green-500 text-green-700 hover:bg-green-50 font-semibold"
+                    onClick={() => goToAuth()}
+                  >
+                    Já tenho conta
+                  </Button>
+                </div>
+
+                <p className="text-[0.8125rem] text-gray-400">
+                  Sem cartão de crédito. Grátis para sempre no plano básico.
+                </p>
+              </div>
+
+              {/* ── Dashboard preview ── */}
+              <div className="reveal reveal--right relative flex justify-center">
+                <DashboardPreview />
+
+                {/* Floating badges */}
+                <div className="float-1 absolute -bottom-4 -left-4 sm:-left-8
+                                hidden sm:flex items-center gap-2 px-3.5 py-2
+                                bg-white border border-gray-200 rounded-full shadow-md
+                                text-[0.8125rem] font-semibold text-green-700 whitespace-nowrap z-10">
+                  <TrendingUp size={15} className="text-green-500" />
+                  Patrimônio crescendo
+                </div>
+                <div className="float-2 absolute top-6 -right-4 sm:-right-6
+                                hidden sm:flex items-center gap-2 px-3.5 py-2
+                                bg-white border border-gray-200 rounded-full shadow-md
+                                text-[0.8125rem] font-semibold text-gray-800 whitespace-nowrap z-10">
+                  <ShieldCheck size={15} className="text-blue-500" />
+                  Dados seguros
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          {/* ════════════════════════════════════════
+              FEATURES / BENEFITS
+          ════════════════════════════════════════ */}
+          <section id="features" className="py-24 bg-white">
+            <div className="max-w-6xl mx-auto px-6">
+
+              <div className="text-center max-w-xl mx-auto mb-16 reveal">
+                <SectionBadge>Recursos</SectionBadge>
+                <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-extrabold text-gray-900 leading-tight mb-4">
+                  Tudo que você precisa<br />para controlar suas finanças
+                </h2>
+                <p className="text-[1.0625rem] text-gray-500 leading-relaxed">
+                  Do lançamento manual à análise automática — o FinTrack cobre todo o ciclo financeiro.
+                </p>
+              </div>
+
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {FEATURES.map((f, i) => (
+                  <article
+                    key={f.title}
+                    className={cn(
+                      "reveal border border-gray-200 rounded-2xl p-8 bg-white shadow-sm",
+                      "hover:-translate-y-1 hover:shadow-lg hover:border-green-200 transition-all duration-200"
+                    )}
+                    style={{ transitionDelay: `${i * 80}ms` }}
+                  >
+                    <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center mb-5", f.iconBg)}>
+                      <f.icon size={22} className={f.iconColor} />
+                    </div>
+                    <h3 className="text-[1.0625rem] font-bold text-gray-900 mb-2">{f.title}</h3>
+                    <p className="text-[0.9375rem] text-gray-500 leading-relaxed">{f.desc}</p>
+                  </article>
+                ))}
+              </div>
+
+            </div>
+          </section>
+
+          {/* ════════════════════════════════════════
+              HOW IT WORKS
+          ════════════════════════════════════════ */}
+          <section id="how" className="py-24 bg-gray-50">
+            <div className="max-w-6xl mx-auto px-6">
+
+              <div className="text-center max-w-xl mx-auto mb-16 reveal">
+                <SectionBadge>Como funciona</SectionBadge>
+                <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-extrabold text-gray-900 leading-tight">
+                  Em 3 passos você já está<br />no controle
+                </h2>
+              </div>
+
+              <div className="flex flex-col md:flex-row items-start justify-center gap-4 md:gap-0">
+                {STEPS.map((step, i) => (
+                  <>
+                    <div
+                      key={step.title}
+                      className="reveal flex-1 max-w-sm md:max-w-none text-center group"
+                      style={{ transitionDelay: `${i * 120}ms` }}
+                    >
+                      {/* Big background number */}
+                      <p className="text-[4rem] font-black text-green-100 leading-none mb-[-8px]
+                                    group-hover:text-green-200 transition-colors">
+                        0{i + 1}
+                      </p>
+                      <div className="border border-gray-200 rounded-2xl p-7 bg-white shadow-sm
+                                      group-hover:-translate-y-1 group-hover:shadow-md transition-all duration-200">
+                        <div className="w-12 h-12 bg-green-100 text-green-600 rounded-xl
+                                        flex items-center justify-center mx-auto mb-4">
+                          <step.icon size={22} />
+                        </div>
+                        <h3 className="text-[1.0625rem] font-bold text-gray-900 mb-2">{step.title}</h3>
+                        <p className="text-[0.9375rem] text-gray-500 leading-relaxed">{step.desc}</p>
+                      </div>
+                    </div>
+
+                    {/* Connector between steps */}
+                    {i < STEPS.length - 1 && (
+                      <div
+                        key={`conn-${i}`}
+                        className="hidden md:block self-center mt-10 mx-3 flex-shrink-0
+                                   w-14 h-0.5 opacity-60"
+                        style={{
+                          background:
+                            "repeating-linear-gradient(90deg,#86efac 0,#86efac 6px,transparent 6px,transparent 12px)",
+                        }}
+                      />
+                    )}
+                  </>
+                ))}
+              </div>
+
+            </div>
+          </section>
+
+          {/* ════════════════════════════════════════
+              PLANS
+          ════════════════════════════════════════ */}
+          <section id="plans" className="py-24 bg-white">
+            <div className="max-w-6xl mx-auto px-6">
+
+              <div className="text-center max-w-xl mx-auto mb-16 reveal">
+                <SectionBadge>Planos</SectionBadge>
+                <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-extrabold text-gray-900 leading-tight mb-4">
+                  Simples e transparente
+                </h2>
+                <p className="text-[1.0625rem] text-gray-500">
+                  Comece grátis. Faça upgrade quando precisar de mais.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6 items-start">
+                {PLANS.map((plan, i) => (
+                  <div
+                    key={plan.name}
+                    className={cn(
+                      "reveal relative rounded-3xl p-9 border transition-all duration-200",
+                      plan.featured
+                        ? "bg-gradient-to-br from-green-600 to-green-700 border-transparent text-white shadow-[0_12px_40px_rgba(22,163,74,.4)] md:scale-[1.03]"
+                        : "bg-white border-gray-200 shadow-sm hover:-translate-y-1 hover:shadow-lg"
+                    )}
+                    style={{ transitionDelay: `${i * 80}ms` }}
+                  >
+                    {plan.featured && (
+                      <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-400
+                                       text-white text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
+                        Mais popular
+                      </span>
+                    )}
+
+                    <p className={cn("text-sm font-semibold mb-2", plan.featured ? "text-green-100" : "text-gray-500")}>
+                      {plan.name}
+                    </p>
+                    <div className="flex items-baseline gap-1 mb-6">
+                      <span className={cn("text-lg font-bold", plan.featured ? "text-green-100" : "text-gray-400")}>R$</span>
+                      <span className={cn("text-5xl font-extrabold tracking-tight leading-none",
+                        plan.featured ? "text-white" : "text-gray-900")}>
+                        {plan.price}
+                      </span>
+                      <span className={cn("text-sm", plan.featured ? "text-green-200" : "text-gray-400")}>/mês</span>
+                    </div>
+
+                    <ul className="space-y-3 mb-8">
+                      {plan.features.map((f) => (
+                        <li key={f} className={cn("flex items-center gap-2.5 text-[0.9375rem]",
+                          plan.featured ? "text-white/90" : "text-gray-600")}>
+                          <Check size={15} className={plan.featured ? "text-green-200" : "text-green-500"} />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+
+                    <Button
+                      className={cn(
+                        "w-full rounded-full font-semibold transition-all",
+                        plan.featured
+                          ? "bg-white text-green-700 hover:bg-green-50"
+                          : "border-green-500 text-green-700 hover:bg-green-50"
+                      )}
+                      variant={plan.featured ? "default" : "outline"}
+                      onClick={() => goToAuth("register")}
+                    >
+                      {plan.cta}
+                    </Button>
                   </div>
                 ))}
               </div>
+
             </div>
+          </section>
 
-            <div className="w-full min-w-0 lg:justify-self-end">
-              <div className="w-full rounded-[32px] border border-border/70 bg-card/70 p-6 shadow-2xl backdrop-blur lg:max-w-[520px]">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Preview real do sistema</p>
-                    <p className="mt-1 text-lg font-semibold">Gráficos e widgets</p>
-                  </div>
-                  <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-primary/10 px-3 py-1 text-xs text-primary">
-                    <Zap className="h-3.5 w-3.5" />
-                    demo
-                  </div>
-                </div>
+          {/* ════════════════════════════════════════
+              CTA FINAL
+          ════════════════════════════════════════ */}
+          <section className="py-24 bg-gray-50">
+            <div className="max-w-6xl mx-auto px-6">
+              <div className="reveal relative overflow-hidden rounded-3xl
+                              bg-gradient-to-br from-green-600 to-green-700
+                              text-center px-8 py-20
+                              shadow-[0_20px_60px_rgba(22,163,74,.35)]">
 
-                <div className="mt-5 grid min-w-0 gap-4">
-                  <div className="min-w-0">
-                    <CashflowChart data={demoCashflow} periodLabel="Últimos 6 meses" />
-                  </div>
+                {/* Decorative circle */}
+                <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full
+                                bg-white/5 pointer-events-none" />
 
-                  <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-                    <div className="min-w-0">
-                      <ExpenseChart data={demoExpenses} period={30} periodLabel="30 dias" />
-                    </div>
-                    <div className="min-w-0 overflow-hidden rounded-xl border border-border/70 bg-card p-2 shadow-sm">
-                      {mode === "survival" ? (
-                        <SurvivalWidget
-                          currentBalance={4200}
-                          dailyExpenseAverage={165}
-                          essentialExpenseAverage={120}
-                        />
-                      ) : (
-                        <ProsperityWidget monthlyIncome={14800} monthlyExpenses={6380} variant="full" />
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>Dica do sistema</span>
-                      <span className="text-primary">ativa</span>
-                    </div>
-                    <p className="mt-2 text-sm">
-                      “Revise assinaturas: economia estimada de <span className="font-semibold">R$ 89</span>/mês.”
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">Exemplo ilustrativo com dados de demonstração.</p>
-                  </div>
-                </div>
+                <SectionBadge light>Comece hoje</SectionBadge>
+                <h2 className="text-[clamp(1.75rem,4vw,2.75rem)] font-extrabold text-white leading-tight mb-4">
+                  Seus próximos 12 meses<br />
+                  podem ser completamente diferentes.
+                </h2>
+                <p className="text-[1.0625rem] text-white/75 leading-relaxed mb-10">
+                  Decida agora ter mais clareza, mais controle e mais paz.<br />
+                  É grátis para começar.
+                </p>
+                <Button
+                  size="lg"
+                  className="rounded-full bg-white text-green-700 hover:bg-green-50 font-semibold gap-2
+                             shadow-none hover:shadow-[0_4px_20px_rgba(255,255,255,.3)] transition-all"
+                  onClick={() => goToAuth("register")}
+                >
+                  Criar conta gratuita <ArrowRight size={16} />
+                </Button>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section id="visao" className="scroll-mt-24 py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl">
-              <p className="text-xs uppercase tracking-[0.28em] text-muted-foreground">Visão geral</p>
-              <h2 className="mt-3 font-['Space_Grotesk'] text-3xl font-semibold sm:text-4xl">
-                Elegante, funcional e com foco no que importa.
-              </h2>
-              <p className="mt-4 font-['Manrope'] text-base text-muted-foreground sm:text-lg">
-                Uma experiência de finanças pessoais que se adapta ao seu momento — e te dá o próximo passo com clareza.
+        </main>
+
+        {/* ════════════════════════════════════════
+            FOOTER
+        ════════════════════════════════════════ */}
+        <footer className="bg-gray-900 text-gray-400 pt-16">
+          <div className="max-w-6xl mx-auto px-6 pb-12 border-b border-white/8
+                          grid md:grid-cols-[1fr_auto] gap-12">
+
+            <div className="max-w-[280px]">
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                className="flex items-center gap-2.5 hover:opacity-80 transition-opacity mb-3"
+              >
+                <LogoMark size={24} />
+                <span className="text-lg font-extrabold bg-gradient-to-br from-green-400 to-green-300
+                                 bg-clip-text text-transparent">
+                  FinTrack
+                </span>
+              </button>
+              <p className="text-[0.9375rem] text-gray-500 leading-relaxed">
+                Controle financeiro inteligente para o dia a dia.
               </p>
             </div>
 
-            <div className="mt-10 grid gap-6 md:grid-cols-2">
-              {features.map((f) => (
-                <div key={f.title} className="rounded-3xl border border-border/60 bg-card/60 p-6">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10">
-                      <f.icon className="h-5 w-5 text-primary" />
-                    </div>
-                    <h3 className="text-lg font-semibold">{f.title}</h3>
-                  </div>
-                  <p className="mt-3 text-sm text-muted-foreground">{f.description}</p>
+            <nav className="flex flex-wrap gap-12" aria-label="Links do footer">
+              {FOOTER_LINKS.map((col) => (
+                <div key={col.title} className="flex flex-col gap-2.5">
+                  <h4 className="text-[0.8125rem] font-bold text-gray-200 uppercase tracking-widest mb-1">
+                    {col.title}
+                  </h4>
+                  {col.links.map((link) =>
+                    link.action ? (
+                      <button
+                        key={link.label}
+                        onClick={link.action}
+                        className="text-[0.9375rem] text-gray-500 hover:text-white text-left transition-colors"
+                      >
+                        {link.label}
+                      </button>
+                    ) : (
+                      <span key={link.label} className="text-[0.9375rem] text-gray-500 cursor-default">
+                        {link.label}
+                      </span>
+                    )
+                  )}
                 </div>
               ))}
-            </div>
+            </nav>
           </div>
-        </section>
 
-        <section id="como-funciona" className="scroll-mt-24 bg-secondary/30 py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl">
-              <p className="text-xs uppercase tracking-[0.28em] text-muted-foreground">Como funciona</p>
-              <h2 className="mt-3 font-['Space_Grotesk'] text-3xl font-semibold sm:text-4xl">
-                Do registro ao insight em minutos.
-              </h2>
-              <p className="mt-4 font-['Manrope'] text-base text-muted-foreground sm:text-lg">
-                Um fluxo simples para você manter consistência (sem depender de motivação).
-              </p>
-            </div>
-
-            <div className="mt-10 grid gap-6 md:grid-cols-3">
-              {steps.map((s) => (
-                <div key={s.title} className="rounded-3xl border border-border/60 bg-background/70 p-6">
-                  <s.icon className="h-6 w-6 text-primary" />
-                  <h3 className="mt-4 text-lg font-semibold">{s.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{s.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="insights" className="scroll-mt-24 py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-              <div>
-                <p className="text-xs uppercase tracking-[0.28em] text-muted-foreground">Insights</p>
-                <h2 className="mt-3 font-['Space_Grotesk'] text-3xl font-semibold sm:text-4xl">
-                  Dados que viram decisões.
-                </h2>
-                <p className="mt-4 font-['Manrope'] text-base text-muted-foreground sm:text-lg">
-                  Entenda para onde o dinheiro vai, identifique vazamentos e acompanhe metas de forma objetiva.
-                </p>
-
-                <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  {[
-                    {
-                      title: "Vazamentos invisíveis",
-                      desc: "Recorrências, taxas e gastos pequenos que viram bola de neve.",
-                    },
-                    {
-                      title: "Progresso de metas",
-                      desc: "Impacto semanal e ajuste de ritmo com previsibilidade.",
-                    },
-                    {
-                      title: "Previsão de caixa",
-                      desc: "Simule compromissos antes do vencimento.",
-                    },
-                    {
-                      title: "Alertas acionáveis",
-                      desc: "Sugestões práticas baseadas no seu padrão de uso.",
-                    },
-                  ].map((card) => (
-                    <div key={card.title} className="rounded-2xl border border-border/60 bg-card/60 p-4">
-                      <p className="text-sm font-semibold">{card.title}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{card.desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-[28px] border border-border/60 bg-card/70 p-6 shadow-xl">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold">Destaques</p>
-                  <span className="text-xs text-muted-foreground">últimos 30 dias</span>
-                </div>
-                <div className="mt-4 grid gap-4">
-                  {highlights.map((h) => (
-                    <div key={h.label} className="rounded-2xl border border-border/60 bg-background/70 p-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">{h.label}</span>
-                        <span className="text-sm font-semibold">{h.value}</span>
-                      </div>
-                      <p className="mt-2 text-xs text-muted-foreground">{h.note}</p>
-                    </div>
-                  ))}
-
-                  <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Lock className="h-4 w-4 text-primary" />
-                      Privacidade e proteção
-                    </div>
-                    <p className="mt-3 text-sm text-muted-foreground">
-                      Seus dados ficam protegidos, e você controla o que registra e compartilha.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="planos" className="scroll-mt-24 pb-20 pt-4">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col justify-between gap-8 rounded-[32px] border border-border/60 bg-card/70 p-8 shadow-xl md:flex-row md:items-center">
-              <div className="max-w-2xl">
-                <p className="text-xs uppercase tracking-[0.28em] text-muted-foreground">Comece agora</p>
-                <h2 className="mt-3 font-['Space_Grotesk'] text-3xl font-semibold sm:text-4xl">
-                  Pronto para dar o próximo passo?
-                </h2>
-                <p className="mt-3 font-['Manrope'] text-base text-muted-foreground sm:text-lg">
-                  Crie sua conta e experimente o painel completo. Se quiser, compare opções na página de planos.
-                </p>
-
-                <div className="mt-5 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                  {[
-                    "Setup em minutos",
-                    "Plano flexível",
-                    "Suporte humano",
-                    "Sem cartão agora",
-                  ].map((item) => (
-                    <div key={item} className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-primary" />
-                      <span>{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
-                <Button size="lg" onClick={goAuth} className="gap-2">
-                  Criar conta
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-                <Button size="lg" variant="outline" onClick={goPlans} className="gap-2">
-                  Ver planos
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-                <Button size="lg" variant="secondary" onClick={goInstall} className="gap-2">
-                  Instalar
-                  <Download className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="mt-10 grid gap-6 lg:grid-cols-3">
-              {faqs.map((item) => (
-                <div key={item.q} className="rounded-3xl border border-border/60 bg-card/60 p-6">
-                  <p className="text-sm font-semibold">{item.q}</p>
-                  <p className="mt-2 text-sm text-muted-foreground">{item.a}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <footer className="border-t border-border/60 py-10">
-          <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 text-sm text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                <AppLogo size={22} className="text-primary-foreground" />
-              </div>
-              <span className="font-semibold text-foreground">Club Finance Track</span>
-            </div>
-            <span>© {new Date().getFullYear()} Club Finance Track. Todos os direitos reservados.</span>
+          <div className="text-center py-6 text-[0.875rem] text-gray-600">
+            &copy; {new Date().getFullYear()} FinTrack. Todos os direitos reservados.
           </div>
         </footer>
-      </main>
+
+      </div>
+    </>
+  );
+};
+
+export default Landing;
+
+/* ─────────────────────────────────────────────
+   Dashboard Preview component (hero visual)
+───────────────────────────────────────────── */
+const DashboardPreview = () => {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setMounted(true), 500); return () => clearTimeout(t); }, []);
+
+  const bars = [45, 65, 50, 80, 60, 70, 55];
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-[20px] shadow-2xl p-5
+                    w-full max-w-[440px] relative z-[1]">
+
+      {/* macOS-style top bar */}
+      <div className="flex items-center gap-1.5 mb-5">
+        <span className="w-2.5 h-2.5 rounded-full bg-[#ff6058]" />
+        <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+        <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+        <span className="ml-2 text-[0.6875rem] font-semibold text-gray-400 tracking-wide">
+          FinTrack Dashboard
+        </span>
+      </div>
+
+      {/* Metrics */}
+      <div className="grid grid-cols-3 gap-2.5 mb-5">
+        {[
+          { label: "Receitas", value: "R$ 8.540", trend: "▲ 12%", up: true, green: true },
+          { label: "Despesas", value: "R$ 3.210", trend: "▼ 4%", up: false, green: false },
+          { label: "Saldo", value: "R$ 5.330", trend: "▲ 20%", up: true, green: false },
+        ].map((m) => (
+          <div
+            key={m.label}
+            className={cn(
+              "rounded-xl p-3 border flex flex-col gap-1",
+              m.green ? "bg-green-50 border-green-100" : "bg-gray-50 border-gray-200"
+            )}
+          >
+            <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-gray-400">
+              {m.label}
+            </span>
+            <span className="text-[0.875rem] font-bold text-gray-900">{m.value}</span>
+            <span className={cn("text-[0.625rem] font-semibold", m.up ? "text-green-600" : "text-red-500")}>
+              {m.trend}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Chart */}
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4">
+        <div className="flex items-end gap-1.5 h-[70px] mb-2">
+          {bars.map((h, i) => (
+            <div
+              key={i}
+              className={cn(
+                "flex-1 rounded-t transition-all duration-700 ease-out",
+                i === 3 ? "bg-green-500" : "bg-gray-200"
+              )}
+              style={{ height: mounted ? `${h}%` : "0%" }}
+            />
+          ))}
+        </div>
+        <div className="flex gap-1.5">
+          {["Ago", "Set", "Out", "Nov", "Dez", "Jan", "Fev"].map((m) => (
+            <span key={m} className="flex-1 text-center text-[0.5625rem] text-gray-400">{m}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* Transactions */}
+      <div className="flex flex-col gap-2">
+        {[
+          { dot: "bg-green-500", name: "Salário", amount: "+ R$ 5.000", green: true },
+          { dot: "bg-gray-300", name: "Supermercado", amount: "- R$ 420", green: false },
+          { dot: "bg-gray-300", name: "Netflix", amount: "- R$ 55", green: false },
+        ].map((tx) => (
+          <div key={tx.name} className="flex items-center gap-2.5 px-2.5 py-2
+                                        bg-gray-50 border border-gray-200 rounded-lg">
+            <span className={cn("w-2 h-2 rounded-full flex-shrink-0", tx.dot)} />
+            <span className="flex-1 text-[0.8125rem] font-medium text-gray-900">{tx.name}</span>
+            <span className={cn("text-[0.8125rem] font-semibold",
+              tx.green ? "text-green-600" : "text-gray-500")}>
+              {tx.amount}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
 
-function Background() {
-  return (
-    <div className="pointer-events-none absolute inset-0 -z-10">
-      <div className="absolute -top-40 right-0 h-[520px] w-[520px] rounded-full bg-primary/10 blur-[120px]" />
-      <div className="absolute -bottom-32 left-0 h-[420px] w-[420px] rounded-full bg-secondary/80 blur-[140px]" />
-      <div className="absolute inset-0 bg-[radial-gradient(1200px_600px_at_10%_-20%,rgba(56,189,248,0.18),transparent),radial-gradient(800px_400px_at_90%_20%,rgba(14,165,233,0.12),transparent)]" />
-    </div>
-  );
-}
+/* ─────────────────────────────────────────────
+   Static data
+───────────────────────────────────────────── */
+const FEATURES = [
+  {
+    icon: Wallet,
+    iconBg: "bg-green-100",
+    iconColor: "text-green-600",
+    title: "Controle de gastos",
+    desc: "Categorize e acompanhe cada centavo. Veja exatamente para onde seu dinheiro vai.",
+  },
+  {
+    icon: BarChart2,
+    iconBg: "bg-blue-100",
+    iconColor: "text-blue-500",
+    title: "Fluxo de caixa",
+    desc: "Visualize entradas e saídas em gráficos por período. Antecipe tendências.",
+  },
+  {
+    icon: CreditCard,
+    iconBg: "bg-purple-100",
+    iconColor: "text-purple-500",
+    title: "Gestão de cartões",
+    desc: "Limite, fatura e gastos de todos os seus cartões em um único painel.",
+  },
+  {
+    icon: Sparkles,
+    iconBg: "bg-amber-100",
+    iconColor: "text-amber-500",
+    title: "Relatórios inteligentes",
+    desc: "Insights automáticos mensais sobre hábitos, metas e oportunidades de economia.",
+  },
+] as const;
 
-function MiniChart() {
-  return (
-    <svg className="mt-3 h-16 w-full" viewBox="0 0 280 64" fill="none" aria-hidden="true">
-      <path
-        d="M0 44C28 38 44 40 64 32C86 22 110 20 132 28C154 36 172 46 192 38C214 30 232 14 280 10"
-        stroke="hsl(var(--primary))"
-        strokeWidth="2"
-      />
-      <path
-        d="M0 54C28 48 44 52 64 42C86 32 110 32 132 38C154 44 172 50 192 46C214 42 232 26 280 22"
-        stroke="hsl(var(--muted-foreground))"
-        strokeWidth="1.5"
-        opacity="0.35"
-      />
-    </svg>
-  );
-}
+const STEPS = [
+  {
+    icon: UserPlus,
+    title: "Crie sua conta",
+    desc: "Cadastre-se em menos de 2 minutos. Sem burocracia, sem cartão de crédito.",
+  },
+  {
+    icon: LinkIcon,
+    title: "Conecte suas contas",
+    desc: "Adicione contas bancárias, cartões e configure suas categorias personalizadas.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Acompanhe seus resultados",
+    desc: "Visualize progresso, bata metas e tome decisões baseadas em dados reais.",
+  },
+] as const;
 
-function ZapLike(props: { className?: string }) {
-  return <Zap className={props.className} />;
-}
+const PLANS = [
+  {
+    name: "Básico",
+    price: "0",
+    featured: false,
+    cta: "Começar grátis",
+    features: ["Até 3 contas bancárias", "Lançamentos ilimitados", "Relatório mensal", "App mobile"],
+  },
+  {
+    name: "Pro",
+    price: "29",
+    featured: true,
+    cta: "Assinar Pro",
+    features: ["Contas ilimitadas", "Relatórios avançados", "Gestão de cartões", "Metas financeiras", "Suporte prioritário"],
+  },
+  {
+    name: "Família",
+    price: "49",
+    featured: false,
+    cta: "Assinar Família",
+    features: ["Até 6 membros", "Tudo do Pro", "Painel familiar", "Metas compartilhadas"],
+  },
+] as const;
 
-export default Landing;
+// Footer link actions defined inside component to capture navigate; workaround: use window
+const FOOTER_LINKS = [
+  {
+    title: "Produto",
+    links: [
+      { label: "Recursos", action: () => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" }) },
+      { label: "Planos", action: () => document.getElementById("plans")?.scrollIntoView({ behavior: "smooth" }) },
+      { label: "Como funciona", action: () => document.getElementById("how")?.scrollIntoView({ behavior: "smooth" }) },
+    ],
+  },
+  {
+    title: "Conta",
+    links: [
+      { label: "Entrar", action: () => (window.location.href = "/auth") },
+      { label: "Criar conta", action: () => (window.location.href = "/auth?tab=register") },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { label: "Privacidade" },
+      { label: "Termos de uso" },
+    ],
+  },
+] as const;
