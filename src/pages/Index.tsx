@@ -306,8 +306,8 @@ const Index = () => {
       }
     >
       {isEditingLayout && <OverlayGrip />}
-      <CardContent className="p-5 h-full">
-        <div className="flex items-start justify-between gap-3">
+      <CardContent className="p-5 h-full flex flex-col overflow-hidden">
+        <div className="flex items-start justify-between gap-3 shrink-0">
           <div>
             <p className="text-xs text-muted-foreground">Visão geral</p>
             <p className="text-lg font-semibold text-foreground">Saldo geral</p>
@@ -360,12 +360,12 @@ const Index = () => {
       }
     >
       {isEditingLayout && <OverlayGrip />}
-      <CardContent className="p-5 h-full">
-        <div className="flex items-center justify-between">
+      <CardContent className="p-5 h-full flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between shrink-0">
           <p className="text-sm font-semibold text-foreground">Minhas contas</p>
           <Button variant="ghost" size="sm" className="dashboard-no-drag h-8 px-2 text-xs" onClick={() => navigate("/accounts")}>Ver</Button>
         </div>
-        <div className="mt-3 space-y-2.5">
+        <div className="mt-3 space-y-2.5 overflow-y-auto min-h-0">
           {topAccounts.length === 0 ? (
             <p className="text-xs text-muted-foreground">Nenhuma conta cadastrada</p>
           ) : (
@@ -419,18 +419,18 @@ const Index = () => {
       }
     >
       {isEditingLayout && <OverlayGrip />}
-      <CardContent className="p-5 h-full">
-        <div className="flex items-center justify-between">
+      <CardContent className="p-5 h-full flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between shrink-0">
           <p className="text-sm font-semibold text-foreground">Meus cartões</p>
           <Button variant="ghost" size="sm" className="dashboard-no-drag h-8 px-2 text-xs" onClick={() => navigate("/cards")}>Ver</Button>
         </div>
 
-        <div className="mt-3 space-y-3">
+        <div className="mt-3 flex flex-col gap-3 overflow-hidden">
           {cards.length === 0 ? (
             <p className="text-xs text-muted-foreground">Nenhum cartão cadastrado</p>
           ) : (
             <>
-              <div className="rounded-xl border border-border/50 bg-background/40 p-3">
+              <div className="rounded-xl border border-border/50 bg-background/40 p-3 shrink-0">
                 <div className="flex items-center justify-between">
                   <p className="text-[11px] text-muted-foreground">Fatura do mês</p>
                   <p className="text-[12px] font-semibold tabular-nums text-foreground">{formatCurrency(totalCurrentCardBill)}</p>
@@ -441,7 +441,7 @@ const Index = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 overflow-y-auto min-h-0">
                 {cards.slice(0, 3).map((c) => (
                   <div
                     key={c.id}
@@ -500,15 +500,15 @@ const Index = () => {
       }
     >
       {isEditingLayout && <OverlayGrip />}
-      <CardContent className="p-5 h-full">
-        <div className="flex items-start justify-between">
+      <CardContent className="p-5 h-full flex flex-col overflow-hidden">
+        <div className="flex items-start justify-between shrink-0">
           <div>
             <p className="text-xs text-muted-foreground">{getPeriodLabel()}</p>
             <p className="text-sm font-semibold text-foreground">A pagar</p>
           </div>
           <p className="text-xs text-muted-foreground">{metrics.pendingCount} pendentes</p>
         </div>
-        <div className="mt-3 space-y-2">
+        <div className="mt-3 space-y-2 overflow-y-auto min-h-0 flex-1">
           {pendingExpenses.length === 0 ? (
             <p className="text-xs text-muted-foreground">Nada pendente no período</p>
           ) : (
@@ -523,8 +523,8 @@ const Index = () => {
             ))
           )}
         </div>
-        <div className="mt-4">
-          <Button variant="outline" size="sm" className="dashboard-no-drag w-full" onClick={() => navigate("/transactions")}>Ver lançamentos</Button>
+        <div className="mt-4 shrink-0">
+          <Button variant="outline" size="sm" className="dashboard-no-drag w-full" onClick={() => navigate("/transactions?type=expense&status=pending")}>Ver lançamentos</Button>
         </div>
       </CardContent>
     </Card>
@@ -542,15 +542,15 @@ const Index = () => {
       }
     >
       {isEditingLayout && <OverlayGrip />}
-      <CardContent className="p-5 h-full">
-        <div className="flex items-start justify-between">
+      <CardContent className="p-5 h-full flex flex-col overflow-hidden">
+        <div className="flex items-start justify-between shrink-0">
           <div>
             <p className="text-xs text-muted-foreground">{getPeriodLabel()}</p>
             <p className="text-sm font-semibold text-foreground">A receber</p>
           </div>
           <p className="text-xs text-muted-foreground">{pendingIncomes.length} itens</p>
         </div>
-        <div className="mt-3 space-y-2">
+        <div className="mt-3 space-y-2 overflow-y-auto min-h-0 flex-1">
           {pendingIncomes.length === 0 ? (
             <p className="text-xs text-muted-foreground">Nada pendente no período</p>
           ) : (
@@ -565,8 +565,8 @@ const Index = () => {
             ))
           )}
         </div>
-        <div className="mt-4">
-          <Button variant="outline" size="sm" className="dashboard-no-drag w-full" onClick={() => navigate("/transactions")}>Ver lançamentos</Button>
+        <div className="mt-4 shrink-0">
+          <Button variant="outline" size="sm" className="dashboard-no-drag w-full" onClick={() => navigate("/transactions?type=income&status=pending")}>Ver lançamentos</Button>
         </div>
       </CardContent>
     </Card>
@@ -758,22 +758,22 @@ const Index = () => {
                 setDraftLayouts({ lg: normalizeLgLayout(all.lg) });
               }}
             >
-              <div key="balance" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0"}>{BalanceCard}</div>
+              <div key="balance" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0 overflow-hidden"}>{BalanceCard}</div>
               {modules.bankAccounts && (
-                <div key="accounts" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0"}>{AccountsCard}</div>
+                <div key="accounts" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0 overflow-hidden"}>{AccountsCard}</div>
               )}
               {modules.creditCards && (
-                <div key="cards" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0"}>{CardsCard}</div>
+                <div key="cards" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0 overflow-hidden"}>{CardsCard}</div>
               )}
-              <div key="pay" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0"}>{PayCard}</div>
-              <div key="receive" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0"}>{ReceiveCard}</div>
-              <div key="cashflow" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0"}>{CashflowWidget}</div>
-              <div key="expense" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0"}>{ExpenseWidget}</div>
+              <div key="pay" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0 overflow-hidden"}>{PayCard}</div>
+              <div key="receive" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0 overflow-hidden"}>{ReceiveCard}</div>
+              <div key="cashflow" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0 overflow-hidden"}>{CashflowWidget}</div>
+              <div key="expense" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0 overflow-hidden"}>{ExpenseWidget}</div>
               {showGoalsWidget && (
-                <div key="goals" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0"}>{GoalsWidget}</div>
+                <div key="goals" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0 overflow-hidden"}>{GoalsWidget}</div>
               )}
               {showPlansWidget && (
-                <div key="plans" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0"}>{PlansWidget}</div>
+                <div key="plans" className={isEditingLayout ? "min-h-0 overflow-hidden rounded-2xl ring-1 ring-primary/20" : "min-h-0 overflow-hidden"}>{PlansWidget}</div>
               )}
             </ResponsiveGridLayout>
           </section>

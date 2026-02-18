@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useHouseholdId } from "@/hooks/useHouseholdId";
@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -165,14 +166,15 @@ const Transactions = () => {
   const { subscribed, loading: subLoading } = useSubscription();
   const { householdId } = useHouseholdId();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { transactions, isLoading: transactionsLoading, refetch: refetchTransactions } = useTransactions();
   const { categories: predefinedCategories } = useTransactionCategories();
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [tagFilter, setTagFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string[]>(searchParams.get("type") ? [searchParams.get("type")!] : []);
+  const [statusFilter, setStatusFilter] = useState<string[]>(searchParams.get("status") ? [searchParams.get("status")!] : []);
+  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
+  const [tagFilter, setTagFilter] = useState<string[]>([]);
   const [periodFilter, setPeriodFilter] = useState<string>("this_month");
   const [customDateFrom, setCustomDateFrom] = useState("");
   const [customDateTo, setCustomDateTo] = useState("");
@@ -216,20 +218,27 @@ const Transactions = () => {
       );
     }
 
-    if (typeFilter !== "all") {
-      filtered = filtered.filter((t) => t.type === typeFilter);
+    if (typeFilter.length > 0) {
+      filtered = filtered.filter((t) => typeFilter.includes(t.type));
     }
 
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((t) => t.status === statusFilter);
+    if (statusFilter.length > 0) {
+      filtered = filtered.filter((t) => {
+        return statusFilter.some((sf) => {
+          if (sf === "pending") {
+            return ["em_aberto", "a_vencer", "vencido", "pending"].includes(t.status);
+          }
+          return t.status === sf;
+        });
+      });
     }
 
-    if (categoryFilter !== "all") {
-      filtered = filtered.filter((t) => t.category === categoryFilter);
+    if (categoryFilter.length > 0) {
+      filtered = filtered.filter((t) => categoryFilter.includes(t.category));
     }
 
-    if (tagFilter !== "all") {
-      filtered = filtered.filter((t) => t.tag === tagFilter);
+    if (tagFilter.length > 0) {
+      filtered = filtered.filter((t) => t.tag != null && tagFilter.includes(t.tag));
     }
 
     // Period filter
@@ -309,7 +318,7 @@ const Transactions = () => {
 
     setFilteredTransactions(filtered);
     setCurrentPage(1); // Reset to page 1 when filters change
-  }, [transactions, search, typeFilter, statusFilter, categoryFilter, tagFilter, periodFilter, customDateFrom, customDateTo, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed, sortOrder]);
+  }, [transactions, search, typeFilter, statusFilter, categoryFilter, tagFilter, periodFilter, customDateFrom, customDateTo, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed, sortOrder]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const categories = useMemo(() => {
     const map = new Map<string, string>();
@@ -739,64 +748,55 @@ const Transactions = () => {
 
                       <div className="space-y-1.5">
                         <Label className="text-xs text-muted-foreground">Tipo</Label>
-                        <Select value={typeFilter} onValueChange={setTypeFilter}>
-                          <SelectTrigger className="h-10 text-sm">
-                            <SelectValue placeholder="Tipo" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Todos</SelectItem>
-                            <SelectItem value="income">Entradas</SelectItem>
-                            <SelectItem value="expense">Saídas</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <MultiSelect
+                          options={[
+                            { value: "income", label: "Entradas" },
+                            { value: "expense", label: "Saídas" },
+                          ]}
+                          selected={typeFilter}
+                          onChange={setTypeFilter}
+                          allLabel="Todos"
+                        />
                       </div>
 
                       <div className="space-y-1.5">
                         <Label className="text-xs text-muted-foreground">Status</Label>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                          <SelectTrigger className="h-10 text-sm">
-                            <SelectValue placeholder="Status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Todos</SelectItem>
-                            <SelectItem value="em_aberto">Em aberto</SelectItem>
-                            <SelectItem value="a_vencer">A vencer</SelectItem>
-                            <SelectItem value="vencido">Vencido</SelectItem>
-                            <SelectItem value="pagamento_concluido">Pago</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <MultiSelect
+                          options={[
+                            { value: "pending", label: "Pendentes" },
+                            { value: "em_aberto", label: "Em aberto" },
+                            { value: "a_vencer", label: "A vencer" },
+                            { value: "vencido", label: "Vencido" },
+                            { value: "pagamento_concluido", label: "Pago" },
+                          ]}
+                          selected={statusFilter}
+                          onChange={setStatusFilter}
+                          allLabel="Todos"
+                        />
                       </div>
 
                       <div className="space-y-1.5 col-span-2">
                         <Label className="text-xs text-muted-foreground">Categoria</Label>
-                        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                          <SelectTrigger className="h-10 text-sm">
-                            <SelectValue placeholder="Categoria" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Todas</SelectItem>
-                            {categories.map((cat) => (
-                              <SelectItem key={cat} value={cat}>
-                                {cat}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <MultiSelect
+                          options={categories.map((cat) => ({ value: cat, label: cat }))}
+                          selected={categoryFilter}
+                          onChange={setCategoryFilter}
+                          allLabel="Todas"
+                        />
                       </div>
 
                       <div className="space-y-1.5 col-span-2">
                         <Label className="text-xs text-muted-foreground">Tag</Label>
-                        <Select value={tagFilter} onValueChange={setTagFilter}>
-                          <SelectTrigger className="h-10 text-sm">
-                            <SelectValue placeholder="Tag" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Todas</SelectItem>
-                            <SelectItem value="fixa">Fixa</SelectItem>
-                            <SelectItem value="variavel">Variável</SelectItem>
-                            <SelectItem value="esporadica">Esporádica</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <MultiSelect
+                          options={[
+                            { value: "fixa", label: "Fixa" },
+                            { value: "variavel", label: "Variável" },
+                            { value: "esporadica", label: "Esporádica" },
+                          ]}
+                          selected={tagFilter}
+                          onChange={setTagFilter}
+                          allLabel="Todas"
+                        />
                       </div>
                     </div>
 
@@ -951,20 +951,22 @@ const Transactions = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-6 md:gap-4">
-              <div className="col-span-2 md:col-span-1 space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Buscar</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10 h-10 text-sm"
-                  />
-                </div>
+            {/* Buscar — linha inteira */}
+            <div className="space-y-1.5 mb-3">
+              <Label className="text-xs text-muted-foreground">Buscar</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10 h-10 text-sm"
+                />
               </div>
+            </div>
 
+            {/* Filtros — todos em uma linha */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 lg:gap-4">
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Agrupar</Label>
                 <Select value={groupBy} onValueChange={(v) => setGroupBy(v as "none" | "month" | "category")}>
@@ -997,64 +999,55 @@ const Transactions = () => {
 
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Tipo</Label>
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger className="h-10 text-sm">
-                    <SelectValue placeholder="Tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="income">Entradas</SelectItem>
-                    <SelectItem value="expense">Saídas</SelectItem>
-                  </SelectContent>
-                </Select>
+                <MultiSelect
+                  options={[
+                    { value: "income", label: "Entradas" },
+                    { value: "expense", label: "Saídas" },
+                  ]}
+                  selected={typeFilter}
+                  onChange={setTypeFilter}
+                  allLabel="Todos"
+                />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Status</Label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="h-10 text-sm">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="em_aberto">Em aberto</SelectItem>
-                    <SelectItem value="a_vencer">A vencer</SelectItem>
-                    <SelectItem value="vencido">Vencido</SelectItem>
-                    <SelectItem value="pagamento_concluido">Pago</SelectItem>
-                  </SelectContent>
-                </Select>
+                <MultiSelect
+                  options={[
+                    { value: "pending", label: "Pendentes" },
+                    { value: "em_aberto", label: "Em aberto" },
+                    { value: "a_vencer", label: "A vencer" },
+                    { value: "vencido", label: "Vencido" },
+                    { value: "pagamento_concluido", label: "Pago" },
+                  ]}
+                  selected={statusFilter}
+                  onChange={setStatusFilter}
+                  allLabel="Todos"
+                />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Categoria</Label>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="h-10 text-sm">
-                    <SelectValue placeholder="Categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <MultiSelect
+                  options={categories.map((cat) => ({ value: cat, label: cat }))}
+                  selected={categoryFilter}
+                  onChange={setCategoryFilter}
+                  allLabel="Todas"
+                />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Tag</Label>
-                <Select value={tagFilter} onValueChange={setTagFilter}>
-                  <SelectTrigger className="h-10 text-sm">
-                    <SelectValue placeholder="Tag" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    <SelectItem value="fixa">Fixa</SelectItem>
-                    <SelectItem value="variavel">Variável</SelectItem>
-                    <SelectItem value="esporadica">Esporádica</SelectItem>
-                  </SelectContent>
-                </Select>
+                <MultiSelect
+                  options={[
+                    { value: "fixa", label: "Fixa" },
+                    { value: "variavel", label: "Variável" },
+                    { value: "esporadica", label: "Esporádica" },
+                  ]}
+                  selected={tagFilter}
+                  onChange={setTagFilter}
+                  allLabel="Todas"
+                />
               </div>
             </div>
 
