@@ -4,7 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { usePrices } from "@/hooks/usePrices";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, Crown, Settings, CreditCard, Shield, Lock } from "lucide-react";
+import { Check, Loader2, Crown, Settings, CreditCard, Shield, Lock, Zap, CalendarDays } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const Plans = () => {
@@ -17,12 +18,10 @@ const Plans = () => {
     loading,
     createCheckout,
     openCustomerPortal,
-    checkSubscription
   } = useSubscription();
-  const { prices, formatPrice } = usePrices();
-  
+  const { prices, loading: pricesLoading, formatPrice } = usePrices();
+
   const [checkoutLoading, setCheckoutLoading] = useState<"monthly" | "annual" | null>(null);
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("annual");
 
   useEffect(() => {
     if (searchParams.get("success") === "true") {
@@ -32,7 +31,7 @@ const Plans = () => {
     }
   }, [searchParams, navigate]);
 
-  const handleSelectPlan = async (plan: string) => {
+  const handleSelectPlan = async (plan: "free" | "monthly" | "annual") => {
     if (!user) {
       navigate("/auth");
       return;
@@ -41,12 +40,9 @@ const Plans = () => {
       navigate("/");
       return;
     }
-    
-    const priceType = plan === "monthly" ? "monthly" : "annual";
-    setCheckoutLoading(priceType);
-    
+    setCheckoutLoading(plan);
     try {
-      const url = await createCheckout(priceType);
+      const url = await createCheckout(plan);
       if (url) {
         window.location.href = url;
       } else {
@@ -66,11 +62,19 @@ const Plans = () => {
     }
   };
 
+  /** Returns true when this plan is the user's active plan — button will be disabled */
+  const isCurrentPlan = (plan: "free" | "monthly" | "annual") => {
+    if (plan === "free" && !subscribed) return true;
+    if (plan === "monthly" && subscribed && planType === "monthly") return true;
+    if (plan === "annual"  && subscribed && planType === "annual")  return true;
+    return false;
+  };
+
   const freeFeatures = [
     "Dashboard financeiro básico",
     "Até 50 transações/mês",
     "Relatórios simples",
-    "1 conta bancária"
+    "1 conta bancária",
   ];
 
   const premiumFeatures = [
@@ -81,32 +85,25 @@ const Plans = () => {
     "Dashboard completo",
     "Contas ilimitadas",
     "Previsões de fluxo de caixa",
-    "Backup automático na nuvem"
+    "Backup automático na nuvem",
   ];
-
-  const isCurrentPlan = (plan: string) => {
-    if (plan === "free" && !subscribed) return true;
-    if (plan === "monthly" && subscribed && planType === "monthly") return true;
-    if (plan === "annual" && subscribed && planType === "annual") return true;
-    return false;
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/95 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
+      <div className="max-w-5xl mx-auto">
+
+        {/* ── Header ── */}
         <div className="text-center mb-8 sm:mb-12">
           <div className="flex items-center justify-center gap-3 mb-6">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/80 flex items-center justify-center font-bold text-xl sm:text-2xl text-primary-foreground shadow-lg">
               CF
             </div>
           </div>
-          
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">
             Desbloqueie seu potencial financeiro
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto mb-6">
-            Escolha o plano que melhor se adapta à sua jornada. 
+            Escolha o plano que melhor se adapta à sua jornada.
             Cancele quando quiser, sem compromisso.
           </p>
 
@@ -120,36 +117,7 @@ const Plans = () => {
           )}
         </div>
 
-        {/* Billing Toggle */}
-        {!subscribed && (
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <button
-              onClick={() => setBillingCycle("monthly")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                billingCycle === "monthly"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
-              }`}
-            >
-              Mensal
-            </button>
-            <button
-              onClick={() => setBillingCycle("annual")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-                billingCycle === "annual"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
-              }`}
-            >
-              Anual
-              <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
-                -{prices.annual.savings}%
-              </span>
-            </button>
-          </div>
-        )}
-
-        {/* Manage Subscription Button */}
+        {/* ── Manage subscription (only when subscribed) ── */}
         {subscribed && (
           <div className="flex justify-center mb-8">
             <Button variant="outline" onClick={handleManageSubscription} className="gap-2">
@@ -159,12 +127,14 @@ const Plans = () => {
           </div>
         )}
 
-        {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Free Plan */}
-          <div className={`relative overflow-hidden rounded-2xl sm:rounded-3xl bg-card border ${
-            isCurrentPlan("free") ? "border-primary/60" : "border-border"
-          } p-6 sm:p-8 transition-all hover:border-primary/40`}>
+        {/* ── Plans grid: Free · Monthly · Annual ── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8 items-start">
+
+          {/* Free */}
+          <div className={cn(
+            "relative overflow-hidden rounded-2xl sm:rounded-3xl bg-card border p-6 sm:p-8 transition-all hover:border-primary/40",
+            isCurrentPlan("free") ? "border-primary/60" : "border-border",
+          )}>
             {isCurrentPlan("free") && (
               <div className="absolute top-4 right-4">
                 <span className="text-xs px-3 py-1 rounded-full bg-primary/20 border border-primary/50 text-primary">
@@ -172,122 +142,168 @@ const Plans = () => {
                 </span>
               </div>
             )}
-            
             <div className="relative z-10">
               <h3 className="text-lg sm:text-xl font-semibold mb-2">Plano Básico</h3>
-              <div className="flex items-baseline gap-1 mb-4">
+              <div className="flex items-baseline gap-1 mb-1">
                 <span className="text-3xl sm:text-4xl font-bold">R$ 0</span>
                 <span className="text-sm text-muted-foreground">/ mês</span>
               </div>
+              <p className="text-xs text-muted-foreground mb-4 h-4">Sempre gratuito</p>
               <p className="text-sm text-muted-foreground mb-6">
                 Perfeito para começar a organizar suas finanças.
               </p>
-              
-              <Button 
-                variant="outline" 
-                className="w-full mb-6" 
-                onClick={() => handleSelectPlan("free")} 
+              <Button
+                variant="outline"
+                className="w-full mb-6"
+                onClick={() => handleSelectPlan("free")}
                 disabled={isCurrentPlan("free")}
               >
                 {isCurrentPlan("free") ? "Plano atual" : "Continuar grátis"}
               </Button>
-
               <ul className="space-y-3">
-                {freeFeatures.map((feature, i) => (
+                {freeFeatures.map((f, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm">
                     <Check className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                    <span className="text-muted-foreground">{feature}</span>
+                    <span className="text-muted-foreground">{f}</span>
                   </li>
                 ))}
               </ul>
             </div>
           </div>
 
-          {/* Premium Plan */}
-          <div className={`relative overflow-hidden rounded-2xl sm:rounded-3xl bg-card border-2 ${
-            isCurrentPlan(billingCycle) ? "border-primary" : "border-primary/60"
-          } shadow-[0_0_60px_rgba(34,197,94,0.15)] p-6 sm:p-8 transition-all`}>
-            <div className="absolute inset-[-40%] bg-[radial-gradient(circle_at_0%_0%,rgba(34,197,94,0.08),transparent_55%)] pointer-events-none"></div>
-            
-            {/* Popular badge */}
+          {/* Monthly */}
+          <div className={cn(
+            "relative overflow-hidden rounded-2xl sm:rounded-3xl bg-card border-2 p-6 sm:p-8 transition-all",
+            isCurrentPlan("monthly") ? "border-primary" : "border-primary/40",
+          )}>
+            <div className="absolute inset-[-40%] bg-[radial-gradient(circle_at_0%_0%,rgba(34,197,94,0.06),transparent_55%)] pointer-events-none" />
             <div className="absolute top-4 right-4">
               <span className="text-xs px-3 py-1 rounded-full bg-primary/20 border border-primary/50 text-primary flex items-center gap-1">
-                <Crown className="w-3 h-3" />
-                {isCurrentPlan(billingCycle) ? "Seu plano" : "Mais popular"}
+                <Zap className="w-3 h-3" />
+                {isCurrentPlan("monthly") ? "Seu plano" : "Flexível"}
               </span>
             </div>
-            
             <div className="relative z-10">
-              <h3 className="text-lg sm:text-xl font-semibold mb-2">Plano Premium</h3>
-              
-              {billingCycle === "monthly" ? (
-                <>
-                  <div className="flex items-baseline gap-1 mb-1">
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">Pro Mensal</h3>
+              <div className="flex items-baseline gap-1 mb-1">
+                {pricesLoading ? (
+                  <span className="h-10 w-28 rounded-lg bg-muted animate-pulse inline-block" />
+                ) : (
+                  <>
                     <span className="text-3xl sm:text-4xl font-bold">R$ {formatPrice(prices.monthly.amount)}</span>
                     <span className="text-sm text-muted-foreground">/ mês</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Cobrança mensal • Cancele quando quiser
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-baseline gap-1 mb-1">
-                    <span className="text-3xl sm:text-4xl font-bold">R$ {formatPrice(prices.annual.amount)}</span>
-                    <span className="text-sm text-muted-foreground">/ ano</span>
-                  </div>
-                  <p className="text-xs text-primary mb-4">
-                    Equivale a R$ {formatPrice(prices.annual.monthlyEquivalent)}/mês • Economize {prices.annual.savings}%
-                  </p>
-                </>
-              )}
-              
-              <p className="text-sm text-muted-foreground mb-6">
-                Tudo que você precisa para dominar suas finanças.
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mb-4 h-4">
+                Cobrança mensal • Cancele quando quiser
               </p>
-              
-              <Button 
-                className="w-full mb-6 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg hover:shadow-xl transition-all" 
-                onClick={() => handleSelectPlan(billingCycle)} 
-                disabled={checkoutLoading !== null || isCurrentPlan(billingCycle)}
+              <p className="text-sm text-muted-foreground mb-6">
+                Tudo que você precisa, com flexibilidade total.
+              </p>
+              <Button
+                className="w-full mb-6 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg hover:shadow-xl transition-all"
+                onClick={() => handleSelectPlan("monthly")}
+                disabled={checkoutLoading !== null || isCurrentPlan("monthly") || loading}
               >
-                {checkoutLoading ? (
+                {checkoutLoading === "monthly" ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
-                ) : isCurrentPlan(billingCycle) ? (
+                ) : isCurrentPlan("monthly") ? (
                   "Plano atual"
                 ) : (
                   <>
                     <CreditCard className="w-4 h-4 mr-2" />
-                    Assinar agora
+                    Assinar mensal
                   </>
                 )}
               </Button>
-
               <ul className="space-y-3">
-                {premiumFeatures.map((feature, i) => (
+                {premiumFeatures.map((f, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm">
                     <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                    <span>{feature}</span>
+                    <span>{f}</span>
                   </li>
                 ))}
               </ul>
             </div>
           </div>
-        </div>
 
-        {/* Trust Signals */}
+          {/* Annual — featured */}
+          <div className={cn(
+            "relative overflow-hidden rounded-2xl sm:rounded-3xl bg-card border-2 p-6 sm:p-8 transition-all shadow-[0_0_60px_rgba(34,197,94,0.15)]",
+            isCurrentPlan("annual") ? "border-primary" : "border-primary/60",
+          )}>
+            <div className="absolute inset-[-40%] bg-[radial-gradient(circle_at_0%_0%,rgba(34,197,94,0.09),transparent_55%)] pointer-events-none" />
+            <div className="absolute top-4 right-4">
+              <span className="text-xs px-3 py-1 rounded-full bg-primary/20 border border-primary/50 text-primary flex items-center gap-1">
+                <Crown className="w-3 h-3" />
+                {isCurrentPlan("annual") ? "Seu plano" : "Mais popular"}
+              </span>
+            </div>
+            <div className="relative z-10">
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">Pro Anual</h3>
+              <div className="flex items-baseline gap-1 mb-1">
+                {pricesLoading ? (
+                  <span className="h-10 w-28 rounded-lg bg-muted animate-pulse inline-block" />
+                ) : (
+                  <>
+                    <span className="text-3xl sm:text-4xl font-bold">R$ {formatPrice(prices.annual.amount)}</span>
+                    <span className="text-sm text-muted-foreground">/ ano</span>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-primary mb-4 h-4">
+                {pricesLoading ? (
+                  <span className="h-3 w-44 rounded bg-muted animate-pulse inline-block" />
+                ) : (
+                  <>≈ R$ {formatPrice(prices.annual.monthlyEquivalent)}/mês · Economize {prices.annual.savings}%</>
+                )}
+              </p>
+              <p className="text-sm text-muted-foreground mb-6">
+                Máxima economia para quem quer comprometimento.
+              </p>
+              <Button
+                className="w-full mb-6 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg hover:shadow-xl transition-all"
+                onClick={() => handleSelectPlan("annual")}
+                disabled={checkoutLoading !== null || isCurrentPlan("annual") || loading}
+              >
+                {checkoutLoading === "annual" ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : isCurrentPlan("annual") ? (
+                  "Plano atual"
+                ) : (
+                  <>
+                    <CalendarDays className="w-4 h-4 mr-2" />
+                    Assinar anual
+                  </>
+                )}
+              </Button>
+              <ul className="space-y-3">
+                {[...premiumFeatures, "2 meses grátis"].map((f, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm">
+                    <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+        </div>{/* /.grid */}
+
+        {/* ── Trust signals ── */}
         <div className="bg-card/50 rounded-2xl border border-border p-6 mb-8">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-center">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Lock className="w-4 h-4 text-primary" />
               <span>Pagamento 100% seguro</span>
             </div>
-            <div className="hidden sm:block w-px h-4 bg-border"></div>
+            <div className="hidden sm:block w-px h-4 bg-border" />
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Shield className="w-4 h-4 text-primary" />
               <span>Cancelamento fácil a qualquer momento</span>
             </div>
-            <div className="hidden sm:block w-px h-4 bg-border"></div>
+            <div className="hidden sm:block w-px h-4 bg-border" />
             <div className="flex items-center gap-3">
               <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-4 opacity-60" />
               <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-5 opacity-60" />
@@ -299,15 +315,16 @@ const Plans = () => {
           </p>
         </div>
 
-        {/* Back link */}
+        {/* ── Back link ── */}
         <div className="text-center">
-          <button 
-            onClick={() => navigate(user ? "/" : "/landing")} 
+          <button
+            onClick={() => navigate(user ? "/" : "/landing")}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             ← {user ? "Voltar para o dashboard" : "Voltar para o início"}
           </button>
         </div>
+
       </div>
     </div>
   );

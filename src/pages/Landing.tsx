@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   BarChart2,
@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { usePrices } from "@/hooks/usePrices";
 
 /* ─────────────────────────────────────────────
    Sub-components
@@ -103,6 +104,7 @@ const Landing = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const navRef = useRef<HTMLElement>(null);
+  const { prices, loading: pricesLoading, formatPrice } = usePrices();
 
   useScrollReveal();
 
@@ -457,7 +459,7 @@ const Landing = () => {
               </div>
 
               <div className="grid md:grid-cols-3 gap-6 items-start">
-                {PLANS.map((plan, i) => (
+                {buildPlans(prices, formatPrice, pricesLoading).map((plan, i) => (
                   <div
                     key={plan.name}
                     className={cn(
@@ -478,14 +480,34 @@ const Landing = () => {
                     <p className={cn("text-sm font-semibold mb-2", plan.featured ? "text-green-100" : "text-gray-500")}>
                       {plan.name}
                     </p>
-                    <div className="flex items-baseline gap-1 mb-6">
-                      <span className={cn("text-lg font-bold", plan.featured ? "text-green-100" : "text-gray-400")}>R$</span>
-                      <span className={cn("text-5xl font-extrabold tracking-tight leading-none",
-                        plan.featured ? "text-white" : "text-gray-900")}>
-                        {plan.price}
-                      </span>
-                      <span className={cn("text-sm", plan.featured ? "text-green-200" : "text-gray-400")}>/mês</span>
+
+                    {/* Price — skeleton while loading */}
+                    <div className="flex items-baseline gap-1 mb-1">
+                      {pricesLoading && plan.priceType !== "free" ? (
+                        <span className="h-12 w-28 rounded-lg bg-gray-200 animate-pulse inline-block" />
+                      ) : (
+                        <>
+                          <span className={cn("text-lg font-bold", plan.featured ? "text-green-100" : "text-gray-400")}>R$</span>
+                          <span className={cn("text-5xl font-extrabold tracking-tight leading-none",
+                            plan.featured ? "text-white" : "text-gray-900")}>
+                            {plan.price}
+                          </span>
+                          <span className={cn("text-sm", plan.featured ? "text-green-200" : "text-gray-400")}>
+                            {plan.period}
+                          </span>
+                        </>
+                      )}
                     </div>
+
+                    {/* Sub-label (savings badge for annual) */}
+                    {plan.subLabel && (
+                      <p className={cn("text-xs mb-6", plan.featured ? "text-green-200" : "text-green-600 font-medium")}>
+                        {pricesLoading ? (
+                          <span className="h-3 w-40 rounded bg-gray-200 animate-pulse inline-block" />
+                        ) : plan.subLabel}
+                      </p>
+                    )}
+                    {!plan.subLabel && <div className="mb-6" />}
 
                     <ul className="space-y-3 mb-8">
                       {plan.features.map((f) => (
@@ -757,29 +779,81 @@ const STEPS = [
   },
 ] as const;
 
-const PLANS = [
-  {
-    name: "Básico",
-    price: "0",
-    featured: false,
-    cta: "Começar grátis",
-    features: ["Até 3 contas bancárias", "Lançamentos ilimitados", "Relatório mensal", "App mobile"],
-  },
-  {
-    name: "Pro",
-    price: "29",
-    featured: true,
-    cta: "Assinar Pro",
-    features: ["Contas ilimitadas", "Relatórios avançados", "Gestão de cartões", "Metas financeiras", "Suporte prioritário"],
-  },
-  {
-    name: "Família",
-    price: "49",
-    featured: false,
-    cta: "Assinar Família",
-    features: ["Até 6 membros", "Tudo do Pro", "Painel familiar", "Metas compartilhadas"],
-  },
+/* ─────────────────────────────────────────────
+   Dynamic plan builder — prices come from Stripe via usePrices
+───────────────────────────────────────────── */
+interface PlanCard {
+  name: string;
+  priceType: "free" | "monthly" | "annual";
+  price: string;
+  period: string;
+  subLabel?: string;
+  featured: boolean;
+  cta: string;
+  features: readonly string[];
+}
+
+const FREE_FEATURES = [
+  "Dashboard financeiro básico",
+  "Até 50 transações/mês",
+  "Relatórios simples",
+  "1 conta bancária",
 ] as const;
+
+const PRO_FEATURES = [
+  "Importação ilimitada de CSV",
+  "Modos Adaptativos Avançados",
+  "Relatórios PDF profissionais",
+  "Suporte prioritário",
+  "Dashboard completo",
+  "Contas ilimitadas",
+  "Previsões de fluxo de caixa",
+  "Backup automático na nuvem",
+] as const;
+
+const ANNUAL_FEATURES = [...PRO_FEATURES, "2 meses grátis"] as const;
+
+function buildPlans(
+  prices: ReturnType<typeof usePrices>["prices"],
+  formatPrice: (n: number) => string,
+  loading: boolean,
+): PlanCard[] {
+  const monthly = loading ? "--" : formatPrice(prices.monthly.amount);
+  const annual  = loading ? "--" : formatPrice(prices.annual.amount);
+  const monthlyEq = loading ? "--" : formatPrice(prices.annual.monthlyEquivalent);
+  const savings = prices.annual.savings;
+
+  return [
+    {
+      name: "Básico",
+      priceType: "free",
+      price: "0",
+      period: "/mês",
+      featured: false,
+      cta: "Começar grátis",
+      features: FREE_FEATURES,
+    },
+    {
+      name: "Pro Mensal",
+      priceType: "monthly",
+      price: monthly,
+      period: "/mês",
+      featured: false,
+      cta: "Assinar mensal",
+      features: PRO_FEATURES,
+    },
+    {
+      name: "Pro Anual",
+      priceType: "annual",
+      price: annual,
+      period: "/ano",
+      subLabel: loading ? undefined : `≈ R$ ${monthlyEq}/mês · Economize ${savings}%`,
+      featured: true,
+      cta: "Assinar anual",
+      features: ANNUAL_FEATURES,
+    },
+  ];
+}
 
 // Footer link actions defined inside component to capture navigate; workaround: use window
 const FOOTER_LINKS = [
