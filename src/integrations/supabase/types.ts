@@ -698,6 +698,82 @@ export type Database = {
         }
         Relationships: []
       }
+      recurring_series: {
+        Row: {
+          id: string
+          user_id: string
+          household_id: string | null
+          description: string
+          amount: number
+          category: string
+          type: string
+          interval: string
+          start_date: string
+          tag: string | null
+          payment_method: string | null
+          bank_account_id: string | null
+          card_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          household_id?: string | null
+          description: string
+          amount: number
+          category: string
+          type: string
+          interval?: string
+          start_date: string
+          tag?: string | null
+          payment_method?: string | null
+          bank_account_id?: string | null
+          card_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          household_id?: string | null
+          description?: string
+          amount?: number
+          category?: string
+          type?: string
+          interval?: string
+          start_date?: string
+          tag?: string | null
+          payment_method?: string | null
+          bank_account_id?: string | null
+          card_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_series_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_series_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_series_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number
@@ -715,6 +791,7 @@ export type Database = {
           parent_transaction_id: string | null
           payment_method: string | null
           recurring_interval: string | null
+          recurring_series_id: string | null
           status: string
           tag: string | null
           type: string
@@ -737,6 +814,7 @@ export type Database = {
           parent_transaction_id?: string | null
           payment_method?: string | null
           recurring_interval?: string | null
+          recurring_series_id?: string | null
           status?: string
           tag?: string | null
           type: string
@@ -759,6 +837,7 @@ export type Database = {
           parent_transaction_id?: string | null
           payment_method?: string | null
           recurring_interval?: string | null
+          recurring_series_id?: string | null
           status?: string
           tag?: string | null
           type?: string
@@ -799,6 +878,13 @@ export type Database = {
             columns: ["parent_transaction_id"]
             isOneToOne: false
             referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_recurring_series_id_fkey"
+            columns: ["recurring_series_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_series"
             referencedColumns: ["id"]
           },
         ]

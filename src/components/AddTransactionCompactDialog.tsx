@@ -23,6 +23,7 @@ import TransactionForm, { type TransactionFormData } from "@/components/Transact
 import { toast } from "sonner";
 import { addDays, addMonths, addWeeks } from "date-fns";
 import { getNextRecurringDate, getRecurringGenerationCount } from "@/utils/recurringGeneration";
+import { createRecurringSeries as createRecurringSeriesInDb } from "@/hooks/useRecurringSeries";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AddTransactionCompactDialogProps {
@@ -212,73 +213,40 @@ const AddTransactionCompactDialog = ({
   }) => {
     if (!user) throw new Error("Missing user");
 
-    const { data: inserted, error: insertError } = await supabase
-      .from("transactions")
-      .insert({
-        user_id: user.id,
-        household_id: householdId,
-        description: root.description,
-        amount: root.amount,
-        category: root.category,
-        type: root.type,
-        status: root.status,
-        date: root.date,
-        is_recurring: true,
-        recurring_interval: root.recurring_interval,
-        tag: root.tag,
-        paid_date: root.paid_date,
-        payment_method: root.payment_method,
-        bank_account_id: root.bank_account_id,
-        card_id: root.card_id,
-      })
-      .select("id")
-      .single();
-
-    if (insertError) throw insertError;
-    const rootId = inserted?.id as string | undefined;
-    if (!rootId) throw new Error("Failed to create recurring transaction");
-
-    // Set parent_transaction_id = root id for easier dedupe/grouping
-    const { error: parentError } = await supabase
-      .from("transactions")
-      .update({ parent_transaction_id: rootId })
-      .eq("id", rootId);
-    if (parentError) throw parentError;
-
-    const generationCount = getRecurringGenerationCount(root.recurring_interval);
+    const interval = root.recurring_interval as "weekly" | "biweekly" | "monthly" | "yearly";
+    const generationCount = getRecurringGenerationCount(interval);
     const baseDate = new Date(root.date + "T00:00:00");
 
-    const future = [] as any[];
-    for (let i = 1; i < generationCount; i++) {
-      const nextDate = getNextRecurringDate(baseDate, i, root.recurring_interval);
-      const nextDateStr = nextDate.toISOString().split("T")[0];
-      const nextStatus = computeUnpaidStatus(nextDateStr);
-      future.push({
+    const occurrences = Array.from({ length: generationCount }, (_, i) => {
+      const d = getNextRecurringDate(baseDate, i, interval);
+      const dateStr = d.toISOString().split("T")[0];
+      const isFirst = i === 0;
+      return {
+        date: dateStr,
+        status: isFirst ? root.status : computeUnpaidStatus(dateStr),
+        paid_date: isFirst ? root.paid_date : null,
+      };
+    });
+
+    return createRecurringSeriesInDb(
+      {
         user_id: user.id,
         household_id: householdId,
         description: root.description,
         amount: root.amount,
         category: root.category,
         type: root.type,
-        status: nextStatus,
-        date: nextDateStr,
-        is_recurring: true,
-        recurring_interval: root.recurring_interval,
-        parent_transaction_id: rootId,
+        interval,
+        start_date: root.date,
         tag: root.tag,
-        paid_date: null,
         payment_method: root.payment_method,
         bank_account_id: root.bank_account_id,
         card_id: root.card_id,
-      });
-    }
-
-    if (future.length > 0) {
-      const { error: futureError } = await supabase.from("transactions").insert(future);
-      if (futureError) throw futureError;
-    }
-
-    return rootId;
+      },
+      occurrences,
+      user.id,
+      householdId,
+    );
   };
 
   const handleAdd = async () => {

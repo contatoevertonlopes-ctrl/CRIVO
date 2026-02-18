@@ -20,6 +20,7 @@ export interface Transaction {
   is_recurring?: boolean;
   recurring_interval?: string | null;
   parent_transaction_id?: string | null;
+  recurring_series_id?: string | null;
   goal_id?: string | null;
   tag?: string | null;
   payment_method?: string | null;
