@@ -210,7 +210,7 @@ const BankAccounts = () => {
           <Button
             size="lg"
             variant="outline"
-            className="rounded-full w-14 h-14 shadow-lg"
+            className="rounded-full w-14 h-14 shadow-float hover:scale-105 active:scale-95 transition-all duration-200 hover:bg-secondary"
             onClick={() => setTransferOpen(true)}
           >
             <ArrowRightLeft className="w-5 h-5" />
@@ -218,7 +218,7 @@ const BankAccounts = () => {
         )}
         <Button
           size="lg"
-          className="rounded-full w-14 h-14 shadow-lg"
+          className="rounded-full w-14 h-14 shadow-float bg-gradient-to-br from-primary to-primary/80 hover:from-primary/95 hover:to-primary/75 hover:scale-105 active:scale-95 transition-all duration-200"
           onClick={() => {
             setEditingAccount(null);
             setDialogOpen(true);

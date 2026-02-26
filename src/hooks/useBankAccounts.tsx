@@ -30,24 +30,24 @@ export const bankAccountKeys = {
 };
 
 // Bank presets with colors
-export const BANK_PRESETS: Record<string, { color: string; icon: string }> = {
-  "Nubank": { color: "#820AD1", icon: "credit-card" },
-  "Inter": { color: "#FF7A00", icon: "landmark" },
-  "Santander": { color: "#CC0000", icon: "landmark" },
-  "Bradesco": { color: "#CC092F", icon: "landmark" },
-  "Itaú": { color: "#003399", icon: "landmark" },
-  "Banco do Brasil": { color: "#FFCC00", icon: "landmark" },
-  "Caixa": { color: "#005CA9", icon: "landmark" },
-  "C6 Bank": { color: "#1A1A1A", icon: "credit-card" },
-  "PicPay": { color: "#21C25E", icon: "wallet" },
-  "Mercado Pago": { color: "#009EE3", icon: "wallet" },
-  "PagBank": { color: "#00AB4E", icon: "wallet" },
-  "Neon": { color: "#00E5FF", icon: "credit-card" },
-  "Next": { color: "#00FF87", icon: "credit-card" },
-  "Original": { color: "#006B3F", icon: "landmark" },
-  "Sicoob": { color: "#003641", icon: "landmark" },
-  "Sicredi": { color: "#00AA4F", icon: "landmark" },
-  "Outro": { color: "#6366f1", icon: "landmark" },
+export const BANK_PRESETS: Record<string, { color: string; icon: string; simpleIconSlug?: string }> = {
+  "Nubank":          { color: "#820AD1", icon: "credit-card", simpleIconSlug: "nubank" },
+  "Inter":           { color: "#FF7A00", icon: "landmark",    simpleIconSlug: "inter" },
+  "Santander":       { color: "#EC0000", icon: "landmark",    simpleIconSlug: "santander" },
+  "Bradesco":        { color: "#CC092F", icon: "landmark",    simpleIconSlug: "bradesco" },
+  "Itaú":           { color: "#003399", icon: "landmark",    simpleIconSlug: "itau" },
+  "Banco do Brasil": { color: "#FFCC00", icon: "landmark",    simpleIconSlug: "bancodibrasil" },
+  "Caixa":           { color: "#005CA9", icon: "landmark",    simpleIconSlug: "caixa" },
+  "C6 Bank":         { color: "#1A1A1A", icon: "credit-card", simpleIconSlug: "c6bank" },
+  "PicPay":          { color: "#21C25E", icon: "wallet",      simpleIconSlug: "picpay" },
+  "Mercado Pago":    { color: "#009EE3", icon: "wallet",      simpleIconSlug: "mercadopago" },
+  "PagBank":         { color: "#00AB4E", icon: "wallet",      simpleIconSlug: "pagbank" },
+  "Neon":            { color: "#FF008C", icon: "credit-card", simpleIconSlug: "neon" },
+  "Next":            { color: "#00FF87", icon: "credit-card", simpleIconSlug: "next" },
+  "Original":        { color: "#006B3F", icon: "landmark" },
+  "Sicoob":          { color: "#003641", icon: "landmark" },
+  "Sicredi":         { color: "#00AA4F", icon: "landmark" },
+  "Outro":           { color: "#6366f1", icon: "landmark" },
 };
 
 export const useBankAccounts = () => {

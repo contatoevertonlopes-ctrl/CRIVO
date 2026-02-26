@@ -63,26 +63,26 @@ const TransactionCard = ({ transaction, onEdit, onDelete, onDuplicate, onStatusC
   const getTagStyle = (tag: string) => {
     switch (tag) {
       case "fixa":
-        return "bg-blue-500/20 text-blue-300";
+        return "bg-blue-500/12 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300 ring-1 ring-blue-500/20";
       case "variavel":
-        return "bg-orange-500/20 text-orange-300";
+        return "bg-orange-500/12 text-orange-600 dark:bg-orange-500/20 dark:text-orange-300 ring-1 ring-orange-500/20";
       case "esporadica":
-        return "bg-purple-500/20 text-purple-300";
+        return "bg-purple-500/12 text-purple-600 dark:bg-purple-500/20 dark:text-purple-300 ring-1 ring-purple-500/20";
       default:
-        return "bg-secondary/50 text-muted-foreground";
+        return "bg-secondary/60 text-muted-foreground ring-1 ring-border/30";
     }
   };
 
   return (
-    <div className="p-4 border-b border-secondary/50 last:border-b-0">
+    <div className="group px-4 py-3.5 border-b border-border/60 last:border-b-0 hover:bg-accent/[0.04] dark:hover:bg-white/[0.025] transition-colors duration-150">
       <div className="flex items-start justify-between gap-3">
         {showMember && memberInfo && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger className="shrink-0">
-                <Avatar className="w-8 h-8">
+                <Avatar className="w-8 h-8 ring-2 ring-border/40">
                   <AvatarImage src={memberInfo.avatar || undefined} />
-                  <AvatarFallback className="text-xs bg-primary/20 text-primary">
+                  <AvatarFallback className="text-xs bg-primary/15 text-primary font-semibold">
                     {memberInfo.initials}
                   </AvatarFallback>
                 </Avatar>
@@ -94,45 +94,45 @@ const TransactionCard = ({ transaction, onEdit, onDelete, onDuplicate, onStatusC
           </TooltipProvider>
         )}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-medium truncate">{transaction.description}</span>
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="font-semibold text-sm truncate text-foreground">{transaction.description}</span>
             {transaction.is_recurring && (
               <RefreshCw className="w-3 h-3 text-primary shrink-0" />
             )}
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap mt-0.5">
             <span>{formatDate(transaction.date)}</span>
-            <span>•</span>
+            <span className="text-border">·</span>
             <span>{transaction.category}</span>
             {transaction.tag && (
               <>
-                <span>•</span>
-                <span className={`px-1.5 py-0.5 rounded text-[10px] ${getTagStyle(transaction.tag)}`}>
+                <span className="text-border">·</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${getTagStyle(transaction.tag)}`}>
                   {getTagLabel(transaction.tag)}
                 </span>
               </>
             )}
             {transaction.paid_date && (
               <>
-                <span>•</span>
-                <span className="text-primary">Pago em {formatDate(transaction.paid_date)}</span>
+                <span className="text-border">·</span>
+                <span className="text-income font-medium">Pago {formatDate(transaction.paid_date)}</span>
               </>
             )}
           </div>
         </div>
         <div className="text-right shrink-0">
-          <p className={`font-bold ${transaction.type === "income" ? "text-primary" : "text-destructive"}`}>
+          <p className={`font-bold text-sm finance-value ${transaction.type === "income" ? "text-income" : "text-expense"}`}>
             {transaction.type === "income" ? "+" : "-"}{formatCurrency(transaction.amount)}
           </p>
         </div>
       </div>
-      
-      <div className="flex items-center justify-between mt-3">
-        <div className="flex items-center gap-2">
-          <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+
+      <div className="flex items-center justify-between mt-2.5">
+        <div className="flex items-center gap-1.5">
+          <span className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${
             transaction.type === "income"
-              ? "bg-primary/14 text-green-200"
-              : "bg-destructive/10 text-red-200"
+              ? "bg-income-muted text-income-muted-foreground"
+              : "bg-expense-muted text-expense-muted-foreground"
           }`}>
             {transaction.type === "income" ? "Entrada" : "Saída"}
           </span>
@@ -143,25 +143,25 @@ const TransactionCard = ({ transaction, onEdit, onDelete, onDuplicate, onStatusC
             size="sm"
           />
         </div>
-        
-        <div className="flex items-center gap-1">
+
+        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
           <button
             onClick={() => onDuplicate(transaction)}
-            className="p-2 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
+            className="p-1.5 rounded-lg hover:bg-primary/12 text-muted-foreground hover:text-primary transition-colors"
           >
-            <Copy className="w-4 h-4" />
+            <Copy className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => onEdit(transaction)}
-            className="p-2 rounded-lg hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors"
+            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
           >
-            <Edit2 className="w-4 h-4" />
+            <Edit2 className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => onDelete(transaction.id)}
-            className="p-2 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+            className="p-1.5 rounded-lg hover:bg-expense-muted text-muted-foreground hover:text-expense transition-colors"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

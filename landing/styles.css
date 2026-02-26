@@ -139,12 +139,12 @@ ul { list-style: none; }
 /* Ghost — transparent */
 .btn--ghost {
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--color-green-600);
   border-color: transparent;
 }
 .btn--ghost:hover {
-  background: var(--color-gray-100);
-  color: var(--text-primary);
+  background: var(--color-green-50);
+  color: var(--color-green-700);
 }
 
 /* Outline */

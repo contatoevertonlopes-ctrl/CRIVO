@@ -18,184 +18,208 @@ All colors MUST be HSL.
   }
 
   :root {
-    /* Light theme (default) */
-    --background: 210 30% 96%;
+    /* Light theme — FinTrack Premium */
+    --background: 220 20% 97%;
     --foreground: 222 47% 11%;
 
-    --card: 210 40% 99%;
+    --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
 
-    --popover: 210 40% 99%;
+    --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 142 76% 45%;
+    /* Primary — rich emerald green */
+    --primary: 152 60% 38%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 28% 92%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 220 18% 94%;
+    --secondary-foreground: 222 40% 22%;
 
-    --muted: 210 28% 92%;
-    --muted-foreground: 215 16% 40%;
+    --muted: 220 18% 94%;
+    --muted-foreground: 215 14% 46%;
 
-    --accent: 142 76% 45%;
+    --accent: 152 60% 38%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --warning: 48 96% 53%;
-    --warning-foreground: 48 96% 10%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 38 80% 12%;
 
-    --border: 214 18% 80%;
-    --input: 214 18% 80%;
-    --ring: 142 76% 45%;
+    --border: 214 18% 88%;
+    --input: 214 18% 88%;
+    --ring: 152 60% 38%;
 
-    --radius: 1rem;
+    --radius: 0.875rem;
 
-    --sidebar-background: 210 40% 99%;
+    --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 142 76% 45%;
+    --sidebar-primary: 152 60% 38%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 28% 92%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214 18% 80%;
-    --sidebar-ring: 142 76% 45%;
+    --sidebar-accent: 220 18% 94%;
+    --sidebar-accent-foreground: 222 40% 22%;
+    --sidebar-border: 214 18% 88%;
+    --sidebar-ring: 152 60% 38%;
+
+    /* Semantic finance tokens — light */
+    --income: 152 60% 38%;
+    --income-foreground: 0 0% 100%;
+    --income-muted: 152 60% 95%;
+    --income-muted-foreground: 152 55% 30%;
+    --expense: 0 72% 52%;
+    --expense-foreground: 0 0% 100%;
+    --expense-muted: 0 72% 96%;
+    --expense-muted-foreground: 0 65% 40%;
 
     /* Custom fintech tokens */
-    --bg-elevated: 210 40% 99%;
-    --bg-card-soft: 210 28% 92%;
-    --accent-glow: 142 76% 45%;
-    --text-muted: 215 16% 40%;
+    --bg-elevated: 0 0% 100%;
+    --bg-card-soft: 220 18% 94%;
+    --accent-glow: 152 60% 38%;
+    --text-muted: 215 14% 46%;
     
-    /* Survival Mode Colors */
-    --survival-background: 210 30% 96%;
-    --survival-card: 210 40% 99%;
-    --survival-border: 214 18% 80%;
-    --survival-primary: 210 100% 52%;
-    --survival-secondary: 210 28% 92%;
-    --survival-emergency: 0 84% 60%;
-    --survival-critical: 25 95% 53%;
-    --survival-warning: 28 92% 50%;
-    --survival-good: 160 84% 45%;
-    --survival-excellent: 160 84% 40%;
-    --survival-muted: 215 16% 40%;
-    --survival-accent: 28 95% 55%;
-    
-    /* Prosperity Mode Colors */
-    --prosperity-background: 210 30% 96%;
-    --prosperity-card: 210 40% 99%;
-    --prosperity-border: 214 18% 80%;
-    --prosperity-primary: 155 75% 45%;
-    --prosperity-secondary: 210 28% 92%;
-    --prosperity-accent: 45 93% 47%;
-    --prosperity-muted: 215 16% 40%;
-    --prosperity-gold: 43 96% 56%;
-    --prosperity-emerald: 155 75% 45%;
-    
+    /* Survival Mode Colors — light */
+    --survival-background: 220 20% 97%;
+    --survival-card: 0 0% 100%;
+    --survival-border: 214 18% 88%;
+    --survival-primary: 210 90% 50%;
+    --survival-secondary: 220 18% 94%;
+    --survival-emergency: 0 72% 52%;
+    --survival-critical: 25 90% 50%;
+    --survival-warning: 38 92% 50%;
+    --survival-good: 152 60% 38%;
+    --survival-excellent: 152 60% 34%;
+    --survival-muted: 215 14% 46%;
+    --survival-accent: 25 88% 52%;
+
+    /* Prosperity Mode Colors — light */
+    --prosperity-background: 220 20% 97%;
+    --prosperity-card: 0 0% 100%;
+    --prosperity-border: 214 18% 88%;
+    --prosperity-primary: 152 60% 38%;
+    --prosperity-secondary: 220 18% 94%;
+    --prosperity-accent: 43 90% 45%;
+    --prosperity-muted: 215 14% 46%;
+    --prosperity-gold: 43 90% 48%;
+    --prosperity-emerald: 152 60% 38%;
+
     /* Gradients */
-    --gradient-primary: radial-gradient(circle at top left, hsl(210 28% 92%), hsl(210 40% 99%));
-    --gradient-elevated: radial-gradient(circle at top, hsl(210 40% 99%), hsl(210 30% 96%));
-    --gradient-accent: linear-gradient(135deg, hsl(142 76% 45%), hsl(142 69% 38%));
-    --gradient-survival: linear-gradient(135deg, hsl(210 28% 92%), hsl(210 30% 96%));
-    --gradient-prosperity: linear-gradient(135deg, hsl(210 28% 92%), hsl(210 30% 96%));
-    
-    /* Shadows */
-    --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.08);
-    --shadow-card: 0 6px 18px rgba(0, 0, 0, 0.08);
-    --shadow-glow-blue: 0 0 30px rgba(59, 130, 246, 0.16);
-    --shadow-glow-green: 0 0 30px rgba(34, 197, 94, 0.16);
-    --shadow-glow-gold: 0 0 30px rgba(234, 179, 8, 0.12);
-    
+    --gradient-primary: radial-gradient(circle at top left, hsl(220 18% 94%), hsl(0 0% 100%));
+    --gradient-elevated: radial-gradient(circle at top, hsl(0 0% 100%), hsl(220 20% 97%));
+    --gradient-accent: linear-gradient(135deg, hsl(152 60% 38%), hsl(152 62% 32%));
+    --gradient-survival: linear-gradient(135deg, hsl(220 18% 94%), hsl(220 20% 97%));
+    --gradient-prosperity: linear-gradient(135deg, hsl(220 18% 94%), hsl(220 20% 97%));
+
+    /* Shadows — light */
+    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04);
+    --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.04);
+    --shadow-glow-blue: 0 0 24px rgba(59, 130, 246, 0.14);
+    --shadow-glow-green: 0 0 24px rgba(22, 163, 100, 0.16);
+    --shadow-glow-gold: 0 0 24px rgba(202, 138, 4, 0.12);
+    --shadow-float: 0 8px 28px rgba(0, 0, 0, 0.12), 0 3px 8px rgba(0, 0, 0, 0.06);
+
     /* Transitions */
     --transition-smooth: all 0.2s ease-out;
   }
 
   .dark {
-    /* Dark theme (previous default) */
-    --background: 222 47% 3%;
-    --foreground: 210 17% 98%;
+    /* Dark theme — FinTrack Premium */
+    --background: 222 28% 8%;
+    --foreground: 210 20% 96%;
 
-    --card: 222 47% 5%;
-    --card-foreground: 210 17% 98%;
+    --card: 222 28% 12%;
+    --card-foreground: 210 20% 96%;
 
-    --popover: 222 47% 5%;
-    --popover-foreground: 210 17% 98%;
+    --popover: 222 28% 11%;
+    --popover-foreground: 210 20% 96%;
 
-    --primary: 142 76% 45%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary — brighter in dark for contrast */
+    --primary: 152 65% 52%;
+    --primary-foreground: 152 80% 10%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 17% 98%;
+    --secondary: 217 26% 18%;
+    --secondary-foreground: 210 20% 88%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 217 26% 18%;
+    --muted-foreground: 215 16% 62%;
 
-    --accent: 142 76% 45%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 152 65% 52%;
+    --accent-foreground: 152 80% 10%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 17% 98%;
+    --destructive: 0 72% 62%;
+    --destructive-foreground: 0 0% 100%;
 
-    --warning: 48 96% 53%;
-    --warning-foreground: 48 96% 10%;
+    --warning: 38 90% 56%;
+    --warning-foreground: 38 80% 10%;
 
-    --border: 217 22% 24%;
-    --input: 217 22% 24%;
-    --ring: 142 76% 45%;
+    --border: 217 22% 26%;
+    --input: 217 22% 26%;
+    --ring: 152 65% 52%;
 
-    --sidebar-background: 222 84% 1%;
-    --sidebar-foreground: 220 9% 46%;
-    --sidebar-primary: 142 76% 45%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 10%;
-    --sidebar-accent-foreground: 210 17% 98%;
-    --sidebar-border: 217 22% 20%;
-    --sidebar-ring: 142 76% 45%;
+    --sidebar-background: 222 30% 6%;
+    --sidebar-foreground: 210 20% 88%;
+    --sidebar-primary: 152 65% 52%;
+    --sidebar-primary-foreground: 152 80% 10%;
+    --sidebar-accent: 217 26% 14%;
+    --sidebar-accent-foreground: 210 20% 96%;
+    --sidebar-border: 217 22% 22%;
+    --sidebar-ring: 152 65% 52%;
+
+    /* Semantic finance tokens — dark */
+    --income: 152 65% 52%;
+    --income-foreground: 152 80% 10%;
+    --income-muted: 152 40% 16%;
+    --income-muted-foreground: 152 60% 60%;
+    --expense: 0 72% 62%;
+    --expense-foreground: 0 0% 100%;
+    --expense-muted: 0 40% 16%;
+    --expense-muted-foreground: 0 70% 68%;
 
     /* Custom fintech tokens */
-    --bg-elevated: 220 39% 6%;
-    --bg-card-soft: 222 84% 1%;
-    --accent-glow: 142 76% 45%;
-    --text-muted: 220 9% 46%;
+    --bg-elevated: 222 28% 14%;
+    --bg-card-soft: 222 28% 12%;
+    --accent-glow: 152 65% 52%;
+    --text-muted: 215 16% 62%;
 
-    /* Survival Mode Colors */
-    --survival-background: 217 50% 4%;
-    --survival-card: 217 45% 7%;
-    --survival-border: 217 25% 26%;
-    --survival-primary: 210 100% 52%;
-    --survival-secondary: 217 40% 12%;
-    --survival-emergency: 0 84% 60%;
-    --survival-critical: 25 95% 53%;
-    --survival-warning: 28 92% 50%;
-    --survival-good: 160 84% 45%;
-    --survival-excellent: 160 84% 40%;
-    --survival-muted: 217 30% 25%;
-    --survival-accent: 28 95% 55%;
+    /* Survival Mode Colors — dark */
+    --survival-background: 222 28% 8%;
+    --survival-card: 220 30% 13%;
+    --survival-border: 217 22% 26%;
+    --survival-primary: 210 88% 58%;
+    --survival-secondary: 217 26% 18%;
+    --survival-emergency: 0 72% 62%;
+    --survival-critical: 25 88% 56%;
+    --survival-warning: 38 90% 56%;
+    --survival-good: 152 65% 52%;
+    --survival-excellent: 152 65% 48%;
+    --survival-muted: 215 16% 62%;
+    --survival-accent: 25 82% 58%;
 
-    /* Prosperity Mode Colors */
-    --prosperity-background: 220 15% 5%;
-    --prosperity-card: 220 15% 8%;
-    --prosperity-border: 220 12% 26%;
-    --prosperity-primary: 155 75% 45%;
-    --prosperity-secondary: 220 12% 12%;
-    --prosperity-accent: 45 93% 47%;
-    --prosperity-muted: 220 10% 22%;
-    --prosperity-gold: 43 96% 56%;
-    --prosperity-emerald: 155 75% 45%;
+    /* Prosperity Mode Colors — dark */
+    --prosperity-background: 222 28% 8%;
+    --prosperity-card: 220 22% 12%;
+    --prosperity-border: 220 18% 26%;
+    --prosperity-primary: 152 65% 52%;
+    --prosperity-secondary: 217 26% 18%;
+    --prosperity-accent: 43 88% 52%;
+    --prosperity-muted: 220 14% 24%;
+    --prosperity-gold: 43 88% 56%;
+    --prosperity-emerald: 152 65% 52%;
 
     /* Gradients */
-    --gradient-primary: radial-gradient(circle at top left, hsl(217 33% 12%), hsl(222 84% 1%));
-    --gradient-elevated: radial-gradient(circle at top, hsl(222 84% 1%), hsl(0 0% 0%));
-    --gradient-accent: linear-gradient(135deg, hsl(142 76% 45%), hsl(142 69% 38%));
-    --gradient-survival: linear-gradient(135deg, hsl(217 50% 6%), hsl(217 40% 4%));
-    --gradient-prosperity: linear-gradient(135deg, hsl(220 15% 7%), hsl(220 15% 4%));
+    --gradient-primary: radial-gradient(circle at top left, hsl(217 26% 16%), hsl(222 28% 8%));
+    --gradient-elevated: radial-gradient(circle at top, hsl(222 28% 12%), hsl(222 28% 8%));
+    --gradient-accent: linear-gradient(135deg, hsl(152 65% 52%), hsl(152 65% 44%));
+    --gradient-survival: linear-gradient(135deg, hsl(220 30% 12%), hsl(222 28% 8%));
+    --gradient-prosperity: linear-gradient(135deg, hsl(220 22% 11%), hsl(222 28% 8%));
 
-    /* Shadows */
-    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.25);
-    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.15);
-    --shadow-glow-blue: 0 0 30px rgba(59, 130, 246, 0.2);
-    --shadow-glow-green: 0 0 30px rgba(34, 197, 94, 0.2);
-    --shadow-glow-gold: 0 0 30px rgba(234, 179, 8, 0.15);
+    /* Shadows — dark */
+    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.40), 0 1px 4px rgba(0, 0, 0, 0.20);
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.15);
+    --shadow-glow-blue: 0 0 24px rgba(59, 130, 246, 0.22);
+    --shadow-glow-green: 0 0 24px rgba(72, 210, 149, 0.20);
+    --shadow-glow-gold: 0 0 24px rgba(234, 179, 8, 0.18);
+    --shadow-float: 0 8px 32px rgba(0, 0, 0, 0.50), 0 3px 10px rgba(0, 0, 0, 0.25);
   }
 }
 
@@ -264,17 +288,36 @@ All colors MUST be HSL.
   .safe-area-pb {
     padding-bottom: env(safe-area-inset-bottom);
   }
-  
+
   .card-shadow-soft {
     box-shadow: var(--shadow-card);
   }
-  
+
+  .shadow-float {
+    box-shadow: var(--shadow-float);
+  }
+
   .glow-survival {
     box-shadow: var(--shadow-glow-blue);
   }
-  
+
   .glow-prosperity {
     box-shadow: var(--shadow-glow-green);
+  }
+
+  /* Financial value typography */
+  .finance-value {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+    letter-spacing: -0.01em;
+  }
+
+  /* Income / expense semantic colors */
+  .text-income {
+    color: hsl(var(--income));
+  }
+  .text-expense {
+    color: hsl(var(--expense));
   }
 
   @keyframes dashboard-edit-wiggle-card {

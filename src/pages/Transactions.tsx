@@ -1483,7 +1483,7 @@ const Transactions = () => {
         trigger={
           <Button
             size="icon"
-            className="fixed bottom-28 right-4 z-50 h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg sm:hidden"
+            className="fixed bottom-28 right-4 z-50 h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/80 hover:from-primary/95 hover:to-primary/75 shadow-float hover:scale-105 active:scale-95 transition-all duration-200 sm:hidden"
           >
             <Plus className="h-6 w-6" />
             <span className="sr-only">Nova transação</span>

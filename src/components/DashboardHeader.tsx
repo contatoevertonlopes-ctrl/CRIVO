@@ -92,16 +92,16 @@ const DashboardHeader = ({
     <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       {/* Title Section */}
       <div className="flex flex-col gap-0.5">
-        <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-2xl font-bold">Dashboard financeiro</h1>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard financeiro</h1>
           {!householdLoading && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold transition-all cursor-default ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-default ${
                     isShared
-                      ? "bg-primary/10 text-primary border border-primary/20"
-                      : "bg-secondary text-muted-foreground border border-border/30"
+                      ? "bg-primary/10 text-primary ring-1 ring-primary/25"
+                      : "bg-secondary text-muted-foreground ring-1 ring-border/40"
                   }`}
                 >
                   {isShared ? (
@@ -125,7 +125,7 @@ const DashboardHeader = ({
             </Tooltip>
           )}
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground font-medium">
           Visão geral do fluxo de caixa
         </p>
       </div>
@@ -139,8 +139,8 @@ const DashboardHeader = ({
           value={getCurrentValue()}
           onValueChange={handlePeriodSelect}
         >
-          <SelectTrigger className="h-10 w-[140px] rounded-lg border-border/50 bg-secondary/60 text-sm text-muted-foreground hover:border-border hover:text-foreground">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary mr-1.5"></span>
+          <SelectTrigger className="h-9 w-[148px] rounded-xl border-border/60 bg-card text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary mr-1.5 shrink-0"></span>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -165,16 +165,16 @@ const DashboardHeader = ({
         <div className="hidden sm:flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="flex items-center gap-2 px-2 py-1 rounded-lg border border-border/30 bg-secondary/50 cursor-pointer">
-                <Avatar className="w-6 h-6">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border/50 bg-card cursor-pointer hover:border-primary/30 hover:bg-secondary/50 transition-all shadow-sm">
+                <Avatar className="w-6 h-6 ring-1 ring-border/40">
                   {profile?.avatarUrl ? (
                     <AvatarImage src={profile.avatarUrl || undefined} />
                   ) : (
-                    <AvatarFallback className="text-xs bg-primary/20 text-primary">{profile.initials}</AvatarFallback>
+                    <AvatarFallback className="text-xs bg-primary/15 text-primary font-semibold">{profile.initials}</AvatarFallback>
                   )}
                 </Avatar>
                 <div className="flex flex-col">
-                  <span className="text-xs font-medium leading-tight">{profile.fullName}</span>
+                  <span className="text-xs font-semibold leading-tight">{profile.fullName}</span>
                   <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">
                     {profile.email}
                   </span>

@@ -24,21 +24,21 @@ const MetricCard = ({ title, value, pill, trend, trendUp = true, icon: Icon, val
   const isSurvival = mode === "survival";
 
   return (
-    <div 
+    <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border p-4 transition-all duration-300 hover:scale-[1.02]",
-        isSurvival 
-          ? "bg-survival-card border-survival-border/70 card-shadow-soft" 
-          : "bg-prosperity-card border-prosperity-border/70 card-shadow-soft"
+        "relative overflow-hidden rounded-2xl border p-4 transition-all duration-200 hover:scale-[1.015] hover:shadow-md card-shadow-soft",
+        isSurvival
+          ? "bg-survival-card border-survival-border/60"
+          : "bg-prosperity-card border-prosperity-border/60"
       )}
     >
       {/* Subtle gradient overlay */}
-      <div 
+      <div
         className={cn(
-          "absolute inset-0 opacity-30",
-          isSurvival 
-            ? "bg-gradient-to-br from-survival-primary/5 to-transparent" 
-            : "bg-gradient-to-br from-prosperity-emerald/5 to-transparent"
+          "absolute inset-0 opacity-20 pointer-events-none",
+          isSurvival
+            ? "bg-gradient-to-br from-survival-primary/8 to-transparent"
+            : "bg-gradient-to-br from-prosperity-emerald/8 to-transparent"
         )}
       />
       
@@ -47,19 +47,19 @@ const MetricCard = ({ title, value, pill, trend, trendUp = true, icon: Icon, val
         <div className="flex items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
             {Icon && (
-              <div 
+              <div
                 className={cn(
                   "w-8 h-8 rounded-xl flex items-center justify-center",
-                  isSurvival 
-                    ? "bg-survival-primary/15" 
-                    : "bg-prosperity-emerald/15"
+                  isSurvival
+                    ? "bg-survival-primary/12 ring-1 ring-survival-primary/20"
+                    : "bg-prosperity-emerald/12 ring-1 ring-prosperity-emerald/20"
                 )}
               >
-                <Icon 
+                <Icon
                   className={cn(
                     "w-4 h-4",
                     isSurvival ? "text-survival-primary" : "text-prosperity-emerald"
-                  )} 
+                  )}
                 />
               </div>
             )}
@@ -80,7 +80,7 @@ const MetricCard = ({ title, value, pill, trend, trendUp = true, icon: Icon, val
         {/* Value */}
         <div
           className={cn(
-            "text-xl lg:text-2xl font-bold tracking-tight mb-2 text-foreground",
+            "text-xl lg:text-2xl font-bold tracking-tight mb-2 text-foreground finance-value",
             valueClassName
           )}
         >
@@ -101,12 +101,12 @@ const MetricCard = ({ title, value, pill, trend, trendUp = true, icon: Icon, val
         {/* Trend */}
         <div
           className={cn(
-            "inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium",
-            trendUp 
-              ? isSurvival 
-                ? "bg-survival-good/15 text-survival-good" 
-                : "bg-prosperity-emerald/15 text-prosperity-emerald"
-              : "bg-destructive/10 text-destructive"
+            "inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold",
+            trendUp
+              ? isSurvival
+                ? "bg-survival-good/15 text-survival-good ring-1 ring-survival-good/20"
+                : "bg-prosperity-emerald/15 text-prosperity-emerald ring-1 ring-prosperity-emerald/20"
+              : "bg-destructive/10 text-destructive ring-1 ring-destructive/20"
           )}
         >
           <span 

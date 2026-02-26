@@ -45,25 +45,25 @@ const Sidebar = () => {
   return (
     <>
       {/* Mobile Header with Hamburger */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur-sm border-b border-sidebar-border px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <AppLogo size={28} className="text-primary" />
-          <span className="font-semibold text-sm">FinTrack</span>
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur-md border-b border-sidebar-border/80 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <AppLogo size={26} className="text-primary shrink-0" />
+          <span className="font-bold text-sm tracking-tight">FinTrack</span>
         </div>
         <button
           onClick={toggle}
-          className="w-10 h-10 rounded-xl bg-secondary/80 flex items-center justify-center hover:bg-secondary transition-colors"
+          className="w-9 h-9 rounded-xl bg-secondary/80 flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
         >
-          {collapsed ? <Menu className="w-5 h-5" /> : <X className="w-5 h-5" />}
+          {collapsed ? <Menu className="w-4 h-4" /> : <X className="w-4 h-4" />}
         </button>
       </div>
 
       {/* Mobile Bottom Tab Bar */}
       <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur-sm border-t border-sidebar-border safe-area-pb"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur-md border-t border-sidebar-border/80 safe-area-pb"
         style={{ paddingLeft: 'env(safe-area-inset-left,0px)', paddingRight: 'env(safe-area-inset-right,0px)' }}
       >
-        <div className="flex items-center justify-around w-full px-1 py-2">
+        <div className="flex items-center justify-around w-full px-1 py-1.5">
           {mobileTabItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
@@ -72,12 +72,21 @@ const Sidebar = () => {
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  "flex-1 min-w-0 flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all",
-                  isActive ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                  "relative flex-1 min-w-0 flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all duration-200 active:scale-95",
+                  isActive
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Icon className="w-[22px] h-[22px] shrink-0" />
-                <span className="hidden xs:block text-[10px] font-semibold truncate w-full text-center leading-tight">
+                {/* Active pill background */}
+                {isActive && (
+                  <span className="absolute inset-x-2 inset-y-1 rounded-xl bg-primary/10 dark:bg-primary/15" />
+                )}
+                <Icon className={cn("relative w-[21px] h-[21px] shrink-0 transition-transform duration-200", isActive && "scale-110")} />
+                <span className={cn(
+                  "relative hidden xs:block text-[10px] truncate w-full text-center leading-tight font-medium",
+                  isActive ? "font-semibold" : "font-normal"
+                )}>
                   {item.label}
                 </span>
               </button>
@@ -111,13 +120,13 @@ const Sidebar = () => {
                       toggle();
                     }}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer transition-all text-left",
+                      "flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all duration-150 text-left active:scale-[0.98]",
                       isActive
-                        ? "bg-primary/15 text-primary border border-primary/30"
-                        : "text-muted-foreground hover:bg-secondary hover:text-foreground border border-transparent"
+                        ? "bg-primary/12 text-primary font-semibold ring-1 ring-primary/20"
+                        : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground border border-transparent"
                     )}
                   >
-                    <Icon className="w-5 h-5 shrink-0" />
+                    <Icon className={cn("w-5 h-5 shrink-0", isActive && "stroke-[2.5px]")} />
                     <span className="text-sm font-medium">{item.label}</span>
                   </button>
                 );
@@ -246,15 +255,15 @@ const Sidebar = () => {
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all text-left",
+                  "flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all duration-150 text-left",
                   collapsed && "justify-center px-2",
                   isActive
-                    ? "bg-primary/15 text-primary border border-primary/30"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground border border-transparent"
+                    ? "bg-primary/12 text-primary font-semibold shadow-sm ring-1 ring-primary/20"
+                    : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground border border-transparent"
                 )}
                 title={collapsed ? item.label : undefined}
               >
-                <Icon className="w-4 h-4 shrink-0" />
+                <Icon className={cn("w-4 h-4 shrink-0", isActive && "stroke-[2.5px]")} />
                 {!collapsed && <span className="text-sm">{item.label}</span>}
               </button>
             );

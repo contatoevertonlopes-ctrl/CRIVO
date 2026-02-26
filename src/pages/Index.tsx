@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAppMode } from "@/contexts/AppModeContext";
 import { useModulePreferences } from "@/hooks/useModulePreferences";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useTheme } from "next-themes";
 import Sidebar from "@/components/Sidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 import CashflowChart from "@/components/CashflowChart";
@@ -16,6 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCards } from "@/hooks/useCards";
 import { useBankAccounts } from "@/hooks/useBankAccounts";
+import BankAvatar from "@/components/BankAvatar";
 import { addMonths, differenceInDays, endOfMonth, format, isSameDay, startOfMonth, subMonths } from "date-fns";
 import { Receipt, TrendingUp } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,6 +30,7 @@ const ResponsiveGridLayout = WidthProvider(Responsive);
 const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { resolvedTheme } = useTheme();
   const today = new Date();
   const [customDateFrom, setCustomDateFrom] = useState<Date | undefined>(startOfMonth(today));
   const [customDateTo, setCustomDateTo] = useState<Date | undefined>(endOfMonth(today));
@@ -114,6 +117,19 @@ const Index = () => {
     if (!rgb) return null;
     const clampedAlpha = Math.max(0, Math.min(1, alpha));
     return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${clampedAlpha})`;
+  };
+
+  // Returns the color adjusted for visibility — lightens very dark colors in dark mode
+  const getAccentColor = (hex: string): string => {
+    const rgb = hexToRgb(hex);
+    if (!rgb) return hex;
+    const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+    if (resolvedTheme === "dark" && luminance < 0.15) {
+      // Blend 65% white so black/very-dark colors become visible
+      const blend = (c: number) => Math.round(c * 0.35 + 255 * 0.65);
+      return `rgb(${blend(rgb.r)}, ${blend(rgb.g)}, ${blend(rgb.b)})`;
+    }
+    return hex;
   };
 
   const storageKey = user ? `dashboard_layout_v1:${user.id}` : null;
@@ -374,33 +390,25 @@ const Index = () => {
             topAccounts.map((a) => (
               <div
                 key={a.id}
-                className="rounded-xl border border-border/50 bg-background/40 p-3"
-                style={(() => {
-                  if (!a.color) return undefined;
-                  const x = rgbaFromHex(a.color, 0.18);
-                  const y = rgbaFromHex(a.color, 0.06);
-                  if (!x || !y) return undefined;
-                  return {
-                    backgroundImage: `linear-gradient(135deg, ${x}, ${y}, transparent 70%)`,
-                  };
-                })()}
+                className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-3 py-2.5 transition-colors"
+                style={a.color ? {
+                  borderLeftColor: getAccentColor(a.color),
+                  borderLeftWidth: "3px",
+                  paddingLeft: "10px",
+                } : undefined}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full border border-border/60 bg-muted shrink-0"
-                        style={a.color ? { backgroundColor: a.color } : undefined}
-                        aria-hidden="true"
-                      />
-                      <p className="text-[12px] font-semibold text-foreground truncate">{a.name}</p>
-                    </div>
-                    <p className="mt-1 text-[10px] text-muted-foreground truncate">{a.bank_name}</p>
-                  </div>
-                  <p className={`text-[12px] font-semibold tabular-nums ${a.balance >= 0 ? "text-prosperity-emerald" : "text-destructive"}`}>
-                    {formatCurrency(a.balance)}
-                  </p>
+                <BankAvatar bankName={a.bank_name || a.name} color={a.color} size={36} />
+                {/* Info */}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-semibold text-foreground truncate leading-tight">{a.name}</p>
+                  <p className="text-[11px] text-muted-foreground truncate mt-0.5">{a.bank_name}</p>
                 </div>
+                {/* Balance */}
+                <p className={`text-[13px] font-semibold tabular-nums shrink-0 ${
+                  a.balance >= 0 ? "text-income" : "text-expense"
+                }`}>
+                  {a.balance < 0 ? "-" : ""}{formatCurrency(Math.abs(a.balance))}
+                </p>
               </div>
             ))
           )}
@@ -433,12 +441,12 @@ const Index = () => {
             <p className="text-xs text-muted-foreground">Nenhum cartão cadastrado</p>
           ) : (
             <>
-              <div className="rounded-xl border border-border/50 bg-background/40 p-3 shrink-0">
+              <div className="rounded-xl border border-border/50 bg-card px-3 py-2.5 shrink-0">
                 <div className="flex items-center justify-between">
                   <p className="text-[11px] text-muted-foreground">Fatura do mês</p>
                   <p className="text-[12px] font-semibold tabular-nums text-foreground">{formatCurrency(totalCurrentCardBill)}</p>
                 </div>
-                <div className="mt-1 flex items-center justify-between">
+                <div className="mt-1.5 flex items-center justify-between">
                   <p className="text-[11px] text-muted-foreground">Limite disponível</p>
                   <p className="text-[12px] font-semibold tabular-nums text-foreground">{formatCurrency(totalAvailableCardLimit)}</p>
                 </div>
@@ -449,39 +457,37 @@ const Index = () => {
                 {cards.slice(0, 3).map((c) => (
                   <div
                     key={c.id}
-                    className="rounded-xl border border-border/50 bg-background/40 p-3"
-                    style={(() => {
-                      if (!c.color) return undefined;
-                      const a = rgbaFromHex(c.color, 0.18);
-                      const b = rgbaFromHex(c.color, 0.06);
-                      if (!a || !b) return undefined;
-                      return {
-                        backgroundImage: `linear-gradient(135deg, ${a}, ${b}, transparent 70%)`,
-                      };
-                    })()}
+                    className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-3 py-2.5 transition-colors"
+                    style={c.color ? {
+                      borderLeftColor: getAccentColor(c.color),
+                      borderLeftWidth: "3px",
+                      paddingLeft: "10px",
+                    } : undefined}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="w-2.5 h-2.5 rounded-full border border-border/60 bg-muted shrink-0"
-                            style={c.color ? { backgroundColor: c.color } : undefined}
-                            aria-hidden="true"
-                          />
-                          <p className="text-[12px] font-semibold text-foreground truncate">{c.name}</p>
-                        </div>
-                        <p className="mt-1 text-[10px] text-muted-foreground">
-                          Limite disponível: <span className="font-medium text-foreground">{formatCurrency(Number(c.availableLimit ?? 0))}</span>
-                        </p>
-                      </div>
-
-                      <div className="text-right">
-                        <p className="text-[10px] text-muted-foreground">Fatura</p>
-                        <p className="text-[12px] font-semibold tabular-nums text-destructive">
-                          {formatCurrency(Number(c.currentBill ?? 0))}
-                        </p>
-                      </div>
+                    <BankAvatar bankName={c.name} color={c.color} size={36} />
+                    {/* Info */}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-semibold text-foreground truncate leading-tight">{c.name}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Limite: <span className="font-medium text-foreground/80">{formatCurrency(Number(c.availableLimit ?? 0))}</span>
+                      </p>
                     </div>
+                    {/* Bill amount — pill when > 0, plain when zero */}
+                    {Number(c.currentBill ?? 0) > 0 ? (
+                      <span
+                        className="text-[12px] font-semibold tabular-nums px-2.5 py-1 rounded-full shrink-0"
+                        style={c.color ? {
+                          backgroundColor: rgbaFromHex(c.color, resolvedTheme === "dark" ? 0.25 : 0.14) ?? undefined,
+                          color: getAccentColor(c.color),
+                        } : undefined}
+                      >
+                        {formatCurrency(Number(c.currentBill))}
+                      </span>
+                    ) : (
+                      <p className="text-[12px] font-semibold tabular-nums text-muted-foreground shrink-0">
+                        {formatCurrency(0)}
+                      </p>
+                    )}
                   </div>
                 ))}
                 </div>
