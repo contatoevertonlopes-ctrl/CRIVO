@@ -1,8 +1,7 @@
 import { useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { useHouseholdId } from "@/hooks/useHouseholdId";
-import { useSharedHousehold } from "@/hooks/useSharedHousehold";
+import { useHouseholdContext } from "@/hooks/useHouseholdContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
