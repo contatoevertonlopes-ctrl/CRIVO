@@ -131,10 +131,9 @@ export const useCards = (options: UseCardsOptions = {}) => {
       return (data as CardTransaction[]) || [];
     },
     enabled: !!user && !householdLoading && options.enabled !== false,
-    staleTime: 0,
+    staleTime: 2 * 60 * 1000, // 2 minutes - card transactions change more often
     gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: true,
-    refetchOnMount: "always",
+    refetchOnWindowFocus: false,
   });
 
   // Calculate cards with bill info
