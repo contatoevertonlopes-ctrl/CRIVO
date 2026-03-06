@@ -16,6 +16,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "@/lib/formatCurrency";
 
 // ── Notification Item ──
 const NotificationItem = ({
