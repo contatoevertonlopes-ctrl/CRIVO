@@ -84,8 +84,7 @@ export const cardKeys = {
  */
 export const useCards = (options: UseCardsOptions = {}) => {
   const { user } = useAuth();
-  const { householdId } = useHouseholdId();
-  const { isShared, loading: householdLoading } = useSharedHousehold();
+  const { householdId, isShared, loading: householdLoading } = useHouseholdContext();
   const queryClient = useQueryClient();
 
   const cardsQueryKey = cardKeys.list(user?.id, householdId, isShared);
