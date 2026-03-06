@@ -16,6 +16,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "@/lib/formatCurrency";
 
 // ── Notification Item ──
 const NotificationItem = ({
@@ -89,9 +90,6 @@ const BillItem = ({
   const isDueToday = bill.daysUntilDue === 0;
   const typeLabel = bill.type === "income" ? "Receber" : "Pagar";
   const typeColor = bill.type === "income" ? "text-primary" : "text-destructive";
-
-  const formatCurrency = (v: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
   const formatDate = (d: string) => {
     const date = new Date(d + "T00:00:00");

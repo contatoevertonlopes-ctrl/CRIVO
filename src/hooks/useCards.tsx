@@ -1,8 +1,7 @@
 import { useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { useHouseholdId } from "@/hooks/useHouseholdId";
-import { useSharedHousehold } from "@/hooks/useSharedHousehold";
+import { useHouseholdContext } from "@/hooks/useHouseholdContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -85,8 +84,7 @@ export const cardKeys = {
  */
 export const useCards = (options: UseCardsOptions = {}) => {
   const { user } = useAuth();
-  const { householdId } = useHouseholdId();
-  const { isShared, loading: householdLoading } = useSharedHousehold();
+  const { householdId, isShared, loading: householdLoading } = useHouseholdContext();
   const queryClient = useQueryClient();
 
   const cardsQueryKey = cardKeys.list(user?.id, householdId, isShared);
@@ -110,8 +108,7 @@ export const useCards = (options: UseCardsOptions = {}) => {
     enabled: !!user && !householdLoading && options.enabled !== false,
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: true,
-    refetchOnMount: "always",
+    refetchOnWindowFocus: false,
   });
 
   // Fetch card transactions
@@ -133,10 +130,9 @@ export const useCards = (options: UseCardsOptions = {}) => {
       return (data as CardTransaction[]) || [];
     },
     enabled: !!user && !householdLoading && options.enabled !== false,
-    staleTime: 0,
+    staleTime: 2 * 60 * 1000, // 2 minutes - card transactions change more often
     gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: true,
-    refetchOnMount: "always",
+    refetchOnWindowFocus: false,
   });
 
   // Calculate cards with bill info

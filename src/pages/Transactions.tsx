@@ -46,6 +46,7 @@ interface Transaction {
   type: "income" | "expense";
   amount: number;
   status: string;
+  user_id?: string;
   is_recurring?: boolean;
   recurring_interval?: string;
   paid_date?: string;

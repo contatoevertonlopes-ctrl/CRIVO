@@ -26,6 +26,8 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          pluggy_account_id: string | null
+          pluggy_item_id: string | null
           updated_at: string
           user_id: string
         }
@@ -40,6 +42,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          pluggy_account_id?: string | null
+          pluggy_item_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -54,6 +58,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          pluggy_account_id?: string | null
+          pluggy_item_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -233,6 +239,7 @@ export type Database = {
           is_active: boolean
           last_four_digits: string | null
           name: string
+          pluggy_account_id: string | null
           updated_at: string
           user_id: string
         }
@@ -248,6 +255,7 @@ export type Database = {
           is_active?: boolean
           last_four_digits?: string | null
           name: string
+          pluggy_account_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -263,6 +271,7 @@ export type Database = {
           is_active?: boolean
           last_four_digits?: string | null
           name?: string
+          pluggy_account_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -564,6 +573,53 @@ export type Database = {
           },
         ]
       }
+      pluggy_connections: {
+        Row: {
+          connector_id: number | null
+          connector_name: string
+          created_at: string
+          household_id: string | null
+          id: string
+          item_id: string
+          last_synced_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          connector_id?: number | null
+          connector_name: string
+          created_at?: string
+          household_id?: string | null
+          id?: string
+          item_id: string
+          last_synced_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          connector_id?: number | null
+          connector_name?: string
+          created_at?: string
+          household_id?: string | null
+          id?: string
+          item_id?: string
+          last_synced_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pluggy_connections_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           app_mode: string | null
@@ -665,6 +721,82 @@ export type Database = {
         }
         Relationships: []
       }
+      recurring_series: {
+        Row: {
+          amount: number
+          bank_account_id: string | null
+          card_id: string | null
+          category: string
+          created_at: string
+          description: string
+          household_id: string | null
+          id: string
+          interval: string
+          payment_method: string | null
+          start_date: string
+          tag: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          bank_account_id?: string | null
+          card_id?: string | null
+          category: string
+          created_at?: string
+          description: string
+          household_id?: string | null
+          id?: string
+          interval?: string
+          payment_method?: string | null
+          start_date: string
+          tag?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          bank_account_id?: string | null
+          card_id?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          household_id?: string | null
+          id?: string
+          interval?: string
+          payment_method?: string | null
+          start_date?: string
+          tag?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_series_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_series_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_series_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -698,82 +830,6 @@ export type Database = {
         }
         Relationships: []
       }
-      recurring_series: {
-        Row: {
-          id: string
-          user_id: string
-          household_id: string | null
-          description: string
-          amount: number
-          category: string
-          type: string
-          interval: string
-          start_date: string
-          tag: string | null
-          payment_method: string | null
-          bank_account_id: string | null
-          card_id: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          household_id?: string | null
-          description: string
-          amount: number
-          category: string
-          type: string
-          interval?: string
-          start_date: string
-          tag?: string | null
-          payment_method?: string | null
-          bank_account_id?: string | null
-          card_id?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          household_id?: string | null
-          description?: string
-          amount?: number
-          category?: string
-          type?: string
-          interval?: string
-          start_date?: string
-          tag?: string | null
-          payment_method?: string | null
-          bank_account_id?: string | null
-          card_id?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "recurring_series_bank_account_id_fkey"
-            columns: ["bank_account_id"]
-            isOneToOne: false
-            referencedRelation: "bank_accounts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "recurring_series_card_id_fkey"
-            columns: ["card_id"]
-            isOneToOne: false
-            referencedRelation: "cards"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "recurring_series_household_id_fkey"
-            columns: ["household_id"]
-            isOneToOne: false
-            referencedRelation: "households"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       transactions: {
         Row: {
           amount: number
@@ -783,6 +839,7 @@ export type Database = {
           created_at: string
           date: string
           description: string
+          external_id: string | null
           goal_id: string | null
           household_id: string | null
           id: string
@@ -792,6 +849,7 @@ export type Database = {
           payment_method: string | null
           recurring_interval: string | null
           recurring_series_id: string | null
+          source: string
           status: string
           tag: string | null
           type: string
@@ -806,6 +864,7 @@ export type Database = {
           created_at?: string
           date?: string
           description: string
+          external_id?: string | null
           goal_id?: string | null
           household_id?: string | null
           id?: string
@@ -815,6 +874,7 @@ export type Database = {
           payment_method?: string | null
           recurring_interval?: string | null
           recurring_series_id?: string | null
+          source?: string
           status?: string
           tag?: string | null
           type: string
@@ -829,6 +889,7 @@ export type Database = {
           created_at?: string
           date?: string
           description?: string
+          external_id?: string | null
           goal_id?: string | null
           household_id?: string | null
           id?: string
@@ -838,6 +899,7 @@ export type Database = {
           payment_method?: string | null
           recurring_interval?: string | null
           recurring_series_id?: string | null
+          source?: string
           status?: string
           tag?: string | null
           type?: string
