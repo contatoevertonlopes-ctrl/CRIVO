@@ -33,9 +33,9 @@ export function useVersionCheck() {
         caches
           .keys()
           .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
-          .then(() => window.location.reload());
+          .then(() => { window.location.reload(); });
       } else {
-        window.location.reload();
+        (window as Window).location.reload();
       }
     } catch {
       // localStorage pode falhar em modo privado ou com storage cheio
