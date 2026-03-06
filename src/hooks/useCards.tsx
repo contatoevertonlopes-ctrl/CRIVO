@@ -108,8 +108,7 @@ export const useCards = (options: UseCardsOptions = {}) => {
     enabled: !!user && !householdLoading && options.enabled !== false,
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: true,
-    refetchOnMount: "always",
+    refetchOnWindowFocus: false,
   });
 
   // Fetch card transactions

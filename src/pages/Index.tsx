@@ -806,7 +806,7 @@ const Index = () => {
             <CashflowChart data={cashflowData} periodLabel={getPeriodLabel()} />
             {showGoalsWidget && <GoalWidget />}
             <ExpenseChart data={expensesByCategory} period={effectivePeriod} periodLabel={getPeriodLabel()} />
-            <PlansCard />
+            {showPlansWidget && <PlansCard />}
           </section>
 
           {/* Charts Row (desktop agora é no grid) */}
