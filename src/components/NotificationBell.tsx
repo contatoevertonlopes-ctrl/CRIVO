@@ -91,9 +91,6 @@ const BillItem = ({
   const typeLabel = bill.type === "income" ? "Receber" : "Pagar";
   const typeColor = bill.type === "income" ? "text-primary" : "text-destructive";
 
-  const { formatCurrency } = await import("@/lib/formatCurrency").then(m => ({ formatCurrency: m.formatCurrency }));
-  // Inline re-import workaround — use direct import at top instead
-
   const formatDate = (d: string) => {
     const date = new Date(d + "T00:00:00");
     return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
