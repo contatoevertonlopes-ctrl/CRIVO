@@ -25,6 +25,7 @@ export interface TransactionFormData {
   date: string;
   is_recurring: boolean;
   recurring_interval: string;
+  frequency: string;
   paid_date: string;
   tag: string;
   is_installment: boolean;
