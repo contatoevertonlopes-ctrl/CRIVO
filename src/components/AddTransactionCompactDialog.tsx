@@ -297,6 +297,7 @@ const AddTransactionCompactDialog = ({
             tag: formData.tag || null,
             is_recurring: false,
             recurring_interval: null,
+            frequency: null,
             paid_date: normalizedPaidDate,
             payment_method: formData.payment_method || null,
             bank_account_id: formData.bank_account_id || null,
