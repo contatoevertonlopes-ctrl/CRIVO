@@ -1016,8 +1016,9 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="weekly">Semanal</SelectItem>
-                    <SelectItem value="monthly">Mensal</SelectItem>
-                    <SelectItem value="yearly">Anual</SelectItem>
+                     <SelectItem value="monthly">Mensal</SelectItem>
+                     <SelectItem value="quarterly">Trimestral</SelectItem>
+                     <SelectItem value="yearly">Anual</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
