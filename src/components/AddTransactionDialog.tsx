@@ -333,6 +333,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             payment_method: paymentMethod || null,
             is_recurring: false,
             recurring_interval: null,
+            frequency: null,
             parent_transaction_id: rootTransactionId,
             bank_account_id: requiresBankAccount ? (selectedBankAccountId || null) : null,
             card_id: requiresCard ? (selectedCardId || null) : null,
