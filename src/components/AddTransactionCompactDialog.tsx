@@ -50,6 +50,7 @@ const getDefaultFormData = (): TransactionFormData => ({
   date: new Date().toISOString().split("T")[0],
   is_recurring: false,
   recurring_interval: "monthly",
+  frequency: "monthly",
   paid_date: "",
   tag: "",
   is_installment: false,
