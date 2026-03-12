@@ -25,6 +25,7 @@ export interface TransactionFormData {
   date: string;
   is_recurring: boolean;
   recurring_interval: string;
+  frequency: string;
   paid_date: string;
   tag: string;
   is_installment: boolean;
@@ -585,10 +586,11 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="weekly">Semanal</SelectItem>
-                          <SelectItem value="biweekly">Quinzenal</SelectItem>
-                          <SelectItem value="monthly">Mensal</SelectItem>
-                          <SelectItem value="yearly">Anual</SelectItem>
+                    <SelectItem value="weekly">Semanal</SelectItem>
+                      <SelectItem value="biweekly">Quinzenal</SelectItem>
+                      <SelectItem value="monthly">Mensal</SelectItem>
+                      <SelectItem value="quarterly">Trimestral</SelectItem>
+                      <SelectItem value="yearly">Anual</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1014,8 +1016,9 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="weekly">Semanal</SelectItem>
-                    <SelectItem value="monthly">Mensal</SelectItem>
-                    <SelectItem value="yearly">Anual</SelectItem>
+                     <SelectItem value="monthly">Mensal</SelectItem>
+                     <SelectItem value="quarterly">Trimestral</SelectItem>
+                     <SelectItem value="yearly">Anual</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

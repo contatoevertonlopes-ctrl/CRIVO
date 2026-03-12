@@ -840,6 +840,7 @@ export type Database = {
           date: string
           description: string
           external_id: string | null
+          frequency: string | null
           goal_id: string | null
           household_id: string | null
           id: string
@@ -847,6 +848,7 @@ export type Database = {
           paid_date: string | null
           parent_transaction_id: string | null
           payment_method: string | null
+          recurrence_processed: boolean | null
           recurring_interval: string | null
           recurring_series_id: string | null
           source: string
@@ -865,6 +867,7 @@ export type Database = {
           date?: string
           description: string
           external_id?: string | null
+          frequency?: string | null
           goal_id?: string | null
           household_id?: string | null
           id?: string
@@ -872,6 +875,7 @@ export type Database = {
           paid_date?: string | null
           parent_transaction_id?: string | null
           payment_method?: string | null
+          recurrence_processed?: boolean | null
           recurring_interval?: string | null
           recurring_series_id?: string | null
           source?: string
@@ -890,6 +894,7 @@ export type Database = {
           date?: string
           description?: string
           external_id?: string | null
+          frequency?: string | null
           goal_id?: string | null
           household_id?: string | null
           id?: string
@@ -897,6 +902,7 @@ export type Database = {
           paid_date?: string | null
           parent_transaction_id?: string | null
           payment_method?: string | null
+          recurrence_processed?: boolean | null
           recurring_interval?: string | null
           recurring_series_id?: string | null
           source?: string
@@ -1030,6 +1036,10 @@ export type Database = {
         Args: { p_closing_day: number; p_purchase_date: string }
         Returns: string
       }
+      calculate_next_due_date: {
+        Args: { current_due_date: string; freq: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1038,6 +1048,7 @@ export type Database = {
         Returns: boolean
       }
       leave_household: { Args: never; Returns: Json }
+      process_recurrence_on_due_date: { Args: never; Returns: undefined }
       user_household_id: { Args: { _user_id: string }; Returns: string }
     }
     Enums: {

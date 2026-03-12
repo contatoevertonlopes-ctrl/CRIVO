@@ -76,6 +76,7 @@ export const createRecurringSeries = async (
     payment_method: data.payment_method,
     is_recurring: true,
     recurring_interval: data.interval,
+    frequency: data.interval,
     recurring_series_id: seriesId,
     bank_account_id: data.bank_account_id,
     card_id: data.card_id,

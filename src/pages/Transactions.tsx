@@ -511,6 +511,7 @@ const Transactions = () => {
       date: editingTransaction.date,
       is_recurring: editingTransaction.is_recurring || false,
       recurring_interval: editingTransaction.recurring_interval || "monthly",
+      frequency: editingTransaction.recurring_interval || "monthly",
       paid_date: editingTransaction.paid_date || "",
       tag: editingTransaction.tag || "",
       is_installment: false,
