@@ -13,7 +13,7 @@ import { differenceInMonths, startOfMonth, format } from "date-fns";
 import { useState, useEffect } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 
-const COMPLETED_STATUSES = ["pagamento_concluido", "paid", "confirmed"];
+const COMPLETED_STATUSES = ["paid", "pagamento_concluido", "confirmed"];
 
 const Reports = () => {
   const { user, loading: authLoading } = useAuth();
