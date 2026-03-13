@@ -95,9 +95,9 @@ const AddTransactionCompactDialog = ({
 
   const computeUnpaidStatus = (dateStr: string) => {
     const d = dateStr || todayStr;
-    if (d > todayStr) return "a_vencer";
-    if (d < todayStr) return "vencido";
-    return "em_aberto";
+    if (d > todayStr) return "upcoming";
+    if (d < todayStr) return "overdue";
+    return "pending";
   };
 
   const resetForm = () => setFormData(getDefaultFormData());
