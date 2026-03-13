@@ -580,7 +580,7 @@ const Transactions = () => {
       t.category,
       t.type === "income" ? "Entrada" : "Saída",
       t.amount.toString(),
-      getStatusLabel(t.status),
+      getStatusLabelLocal(t.status),
     ]);
 
     const csvContent = [headers, ...rows].map((row) => row.join(",")).join("\n");
