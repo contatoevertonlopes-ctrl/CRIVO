@@ -444,7 +444,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
       setCategory("");
       setType("expense");
       setAmount("");
-      setStatus("em_aberto");
+      setStatus("pending");
       setDate(new Date().toISOString().split("T")[0]);
       setPaidDate("");
       setTag("");
