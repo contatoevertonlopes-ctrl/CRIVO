@@ -326,7 +326,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
                   setFormData({
                     ...formData,
                     status: v,
-                    paid_date: v === "pagamento_concluido" ? (formData.paid_date || todayStr) : formData.paid_date,
+                    paid_date: v === "paid" ? (formData.paid_date || todayStr) : formData.paid_date,
                   });
                 }}
               >
