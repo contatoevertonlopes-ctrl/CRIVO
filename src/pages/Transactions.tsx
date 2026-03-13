@@ -525,28 +525,25 @@ const Transactions = () => {
     };
   }, [editingTransaction]);
 
-  const getStatusLabel = (status: string) => {
+  const getStatusLabelLocal = (status: string) => {
+    const normalized = normalizeStatusValue(status);
     const statusMap: Record<string, string> = {
-      em_aberto: "Em aberto",
-      a_vencer: "A vencer",
-      vencido: "Vencido",
-      pagamento_concluido: "Pagamento concluído",
       pending: "Em aberto",
-      confirmed: "Pagamento concluído",
+      upcoming: "A vencer",
+      overdue: "Vencido",
       paid: "Pagamento concluído",
     };
-    return statusMap[status] || status;
+    return statusMap[normalized] || status;
   };
 
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "pagamento_concluido":
-      case "confirmed":
+  const getStatusStyleLocal = (status: string) => {
+    const normalized = normalizeStatusValue(status);
+    switch (normalized) {
       case "paid":
         return "bg-primary/10 text-primary";
-      case "a_vencer":
+      case "upcoming":
         return "bg-warning/10 text-warning";
-      case "vencido":
+      case "overdue":
         return "bg-destructive/10 text-destructive";
       default:
         return "bg-secondary/50 text-muted-foreground";
