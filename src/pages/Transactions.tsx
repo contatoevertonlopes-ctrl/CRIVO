@@ -456,12 +456,14 @@ const Transactions = () => {
     }
   };
 
-  // Normalize legacy status values to valid constraint values
-  const normalizeStatus = (status: string) => {
+  // Normalize legacy status values to canonical English
+  const normalizeStatusValue = (status: string) => {
     const legacyMap: Record<string, string> = {
-      pending: "em_aberto",
-      confirmed: "pagamento_concluido",
-      paid: "pagamento_concluido",
+      em_aberto: "pending",
+      a_vencer: "upcoming",
+      vencido: "overdue",
+      pagamento_concluido: "paid",
+      confirmed: "paid",
     };
     return legacyMap[status] || status;
   };
