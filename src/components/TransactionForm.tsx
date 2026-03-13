@@ -121,13 +121,13 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
     }
   }, [requiresBankAccount, requiresCard, accounts, cards]);
 
-  // Compact mode: auto-compute status from date only if not manually set to pagamento_concluido.
+  // Compact mode: auto-compute status from date only if not manually set to paid.
   const [statusManuallySet, setStatusManuallySet] = React.useState(false);
   useEffect(() => {
     if (!isCompact) return;
     if (statusManuallySet) return;
-    if (formData.status === "pagamento_concluido") return;
-    const nextStatus = computeUnpaidStatus(formData.date);
+    if (formData.status === "paid") return;
+    const nextStatus = computeUnpaidStatusLocal(formData.date);
     if (formData.status !== nextStatus) {
       setFormData({ ...formData, status: nextStatus });
     }
