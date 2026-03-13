@@ -169,7 +169,7 @@ export const useNotifications = (): UseNotificationsReturn => {
       let query = supabase
         .from("transactions")
         .select("id, description, amount, date, type, status")
-        .in("status", ["pending", "em_aberto", "a_vencer"])
+        .in("status", ["pending", "upcoming", "em_aberto", "a_vencer"])
         .gte("date", today.toISOString().split("T")[0])
         .lte("date", nextWeek.toISOString().split("T")[0])
         .order("date", { ascending: true });

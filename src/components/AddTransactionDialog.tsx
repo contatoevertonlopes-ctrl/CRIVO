@@ -491,10 +491,10 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   };
 
   const statusOptions = [
-    { value: "em_aberto", label: "Em aberto" },
-    { value: "a_vencer", label: "A vencer" },
-    { value: "vencido", label: "Vencido" },
-    { value: "pagamento_concluido", label: "Pagamento concluído" },
+    { value: "pending", label: "Em aberto" },
+    { value: "upcoming", label: "A vencer" },
+    { value: "overdue", label: "Vencido" },
+    { value: "paid", label: "Pagamento concluído" },
   ];
 
   return (

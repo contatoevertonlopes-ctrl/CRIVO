@@ -165,7 +165,7 @@ export const QuickAddInput = ({ onTransactionAdded, onFallbackToForm }: QuickAdd
       txDate.setHours(0, 0, 0, 0);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const status = txDate <= today ? "pagamento_concluido" : "em_aberto";
+      const status = txDate <= today ? "paid" : "pending";
 
       const insertPayload: any = {
         user_id: user.id,

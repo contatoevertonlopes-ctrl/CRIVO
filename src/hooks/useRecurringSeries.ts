@@ -113,8 +113,8 @@ export const updateRecurringSeriesTransactions = async (
       ...(patch.amount !== undefined ? { amount: patch.amount } : {}),
     })
     .eq("recurring_series_id", seriesId)
+     .neq("status", "paid")
     .neq("status", "pagamento_concluido")
-    .neq("status", "paid")
     .neq("status", "confirmed")
     .gte("date", todayStr);
 
@@ -131,8 +131,8 @@ export const deleteRecurringSeries = async (seriesId: string, todayStr: string) 
     .from("transactions")
     .delete()
     .eq("recurring_series_id", seriesId)
-    .neq("status", "pagamento_concluido")
     .neq("status", "paid")
+    .neq("status", "pagamento_concluido")
     .neq("status", "confirmed")
     .gte("date", todayStr);
 
