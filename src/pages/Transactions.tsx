@@ -479,7 +479,7 @@ const Transactions = () => {
         amount: transaction.amount,
         category: transaction.category,
         type: transaction.type,
-        status: normalizeStatus(transaction.status),
+        status: normalizeStatusValue(transaction.status),
         date: transaction.date,
         tag: transaction.tag || null,
         is_recurring: transaction.is_recurring || false,
