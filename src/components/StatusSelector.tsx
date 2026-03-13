@@ -1,6 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { normalizeStatus } from "@/lib/statusUtils";
 
 interface StatusSelectorProps {
   transactionId: string;
@@ -10,31 +11,21 @@ interface StatusSelectorProps {
 }
 
 const STATUS_OPTIONS = [
-  { value: "em_aberto", label: "Em aberto" },
-  { value: "a_vencer", label: "A vencer" },
-  { value: "vencido", label: "Vencido" },
-  { value: "pagamento_concluido", label: "Pago" },
+  { value: "pending", label: "Em aberto" },
+  { value: "upcoming", label: "A vencer" },
+  { value: "overdue", label: "Vencido" },
+  { value: "paid", label: "Pago" },
 ];
 
 const StatusSelector = ({ transactionId, currentStatus, onStatusChange, size = "md" }: StatusSelectorProps) => {
-  // Normalize legacy status values
-  const normalizeStatus = (status: string) => {
-    const legacyMap: Record<string, string> = {
-      pending: "em_aberto",
-      confirmed: "pagamento_concluido",
-      paid: "pagamento_concluido",
-    };
-    return legacyMap[status] || status;
-  };
-
   const getStatusStyle = (status: string) => {
     const normalized = normalizeStatus(status);
     switch (normalized) {
-      case "pagamento_concluido":
+      case "paid":
         return "bg-primary/20 border-primary/30 text-primary";
-      case "a_vencer":
+      case "upcoming":
         return "bg-warning/20 border-warning/30 text-warning";
-      case "vencido":
+      case "overdue":
         return "bg-destructive/20 border-destructive/30 text-destructive";
       default:
         return "bg-secondary/50 border-secondary text-muted-foreground";
@@ -48,24 +39,27 @@ const StatusSelector = ({ transactionId, currentStatus, onStatusChange, size = "
         .update({ status: newStatus })
         .eq("id", transactionId);
 
-      if (error) throw error;
-      
-      toast.success("Status atualizado");
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      toast.success("Status atualizado!");
       onStatusChange?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating status:", error);
-      toast.error("Erro ao atualizar status");
+      toast.error(error?.message || "Erro ao atualizar status");
     }
   };
 
   const normalizedStatus = normalizeStatus(currentStatus);
-  const sizeClasses = size === "sm" 
-    ? "h-7 text-[10px] px-2 min-w-[90px]" 
+  const sizeClasses = size === "sm"
+    ? "h-7 text-[10px] px-2 min-w-[90px]"
     : "h-8 text-xs px-2.5 min-w-[100px]";
 
   return (
     <Select value={normalizedStatus} onValueChange={handleStatusChange}>
-      <SelectTrigger 
+      <SelectTrigger
         className={`${sizeClasses} rounded-full border ${getStatusStyle(normalizedStatus)} focus:ring-0 focus:ring-offset-0 [&>svg]:h-3 [&>svg]:w-3`}
       >
         <SelectValue />

@@ -165,7 +165,7 @@ export const QuickAddInput = ({ onTransactionAdded, onFallbackToForm }: QuickAdd
       txDate.setHours(0, 0, 0, 0);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const status = txDate <= today ? "pagamento_concluido" : "em_aberto";
+      const status = txDate <= today ? "paid" : "pending";
 
       const insertPayload: any = {
         user_id: user.id,
@@ -179,7 +179,7 @@ export const QuickAddInput = ({ onTransactionAdded, onFallbackToForm }: QuickAdd
         goal_id: parsed.goalId || null,
       };
 
-      if ((status === "pagamento_concluido") && (accounts && accounts.length > 0)) {
+      if ((status === "paid") && (accounts && accounts.length > 0)) {
         // prefer selected account if user chose one
         insertPayload.bank_account_id = selectedAccountId || accounts[0].id;
         insertPayload.paid_date = parsed.date.toISOString().split("T")[0];

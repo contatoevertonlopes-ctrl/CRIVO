@@ -473,7 +473,7 @@ const GoalItemsList = ({ goalId, onGoalUpdate }: GoalItemsListProps) => {
                     </div>
                     <span className={cn(
                       "text-sm font-medium",
-                      tx.status === "pagamento_concluido" ? "text-primary" : "text-foreground"
+                      (tx.status === "paid" || tx.status === "pagamento_concluido") ? "text-primary" : "text-foreground"
                     )}>
                       {formatCurrency(tx.amount)}
                     </span>

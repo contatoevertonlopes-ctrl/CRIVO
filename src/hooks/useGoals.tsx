@@ -79,7 +79,7 @@ export const useGoals = () => {
         const items = goal.goal_items || [];
 
         const transactionTotal = transactions
-          .filter((t: any) => t.status === "pagamento_concluido" && t.type === "expense")
+          .filter((t: any) => (t.status === "paid" || t.status === "pagamento_concluido") && t.type === "expense")
           .reduce((sum: number, t: any) => sum + Number(t.amount), 0);
 
         const itemsPaid = items.filter((i: any) => i.is_paid).length;

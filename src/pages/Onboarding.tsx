@@ -122,7 +122,7 @@ const Onboarding = () => {
           amount: data.currentBalance,
           type: "income",
           category: "Saldo Inicial",
-          status: "pagamento_concluido",
+          status: "paid",
           date: new Date().toISOString().split("T")[0],
         });
       }

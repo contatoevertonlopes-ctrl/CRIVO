@@ -35,7 +35,7 @@ const ESSENTIAL_CATEGORIES = [
   "bills",
 ];
 
-const COMPLETED_STATUSES = ["pagamento_concluido", "paid", "confirmed"];
+const COMPLETED_STATUSES = ["paid", "pagamento_concluido", "confirmed"];
 
 export const useAdaptiveModeData = (
   period: number = 30,

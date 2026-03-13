@@ -348,12 +348,12 @@ serve(async (req) => {
             for (const tx of transactions || []) {
               if (tx.type === "income") {
                 totalIncome += tx.amount;
-                if (tx.status === "pagamento_concluido" || tx.status === "paid" || tx.status === "confirmed") {
+                if (tx.status === "paid" || tx.status === "pagamento_concluido" || tx.status === "confirmed") {
                   confirmedIncome += tx.amount;
                 }
               } else {
                 totalExpenses += tx.amount;
-                if (tx.status === "pagamento_concluido" || tx.status === "paid" || tx.status === "confirmed") {
+                if (tx.status === "paid" || tx.status === "pagamento_concluido" || tx.status === "confirmed") {
                   confirmedExpenses += tx.amount;
                 }
               }

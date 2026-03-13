@@ -169,7 +169,7 @@ export const useNotifications = (): UseNotificationsReturn => {
       let query = supabase
         .from("transactions")
         .select("id, description, amount, date, type, status")
-        .in("status", ["pending", "em_aberto", "a_vencer"])
+        .in("status", ["pending", "upcoming", "em_aberto", "a_vencer"])
         .gte("date", today.toISOString().split("T")[0])
         .lte("date", nextWeek.toISOString().split("T")[0])
         .order("date", { ascending: true });
@@ -304,7 +304,7 @@ export const useNotifications = (): UseNotificationsReturn => {
     try {
       const { error } = await supabase
         .from("transactions")
-        .update({ status: "pagamento_concluido" })
+        .update({ status: "paid" })
         .eq("id", id);
       if (error) throw error;
       toast.success(type === "income" ? "Recebimento confirmado!" : "Conta marcada como paga!");

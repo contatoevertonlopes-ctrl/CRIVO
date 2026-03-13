@@ -48,7 +48,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   const [category, setCategory] = useState("");
   const [type, setType] = useState<"income" | "expense">("expense");
   const [amount, setAmount] = useState("");
-  const [status, setStatus] = useState("em_aberto");
+  const [status, setStatus] = useState("pending");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [paidDate, setPaidDate] = useState("");
   const [tag, setTag] = useState("");
@@ -180,9 +180,9 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   const todayStr = new Date().toISOString().split("T")[0];
 
   const computeUnpaidStatus = (dateStr: string) => {
-    if (dateStr > todayStr) return "a_vencer";
-    if (dateStr < todayStr) return "vencido";
-    return "em_aberto";
+    if (dateStr > todayStr) return "upcoming";
+    if (dateStr < todayStr) return "overdue";
+    return "pending";
   };
 
   const createRecurringSeries = async (root: {
@@ -326,7 +326,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             category,
             type,
             amount: installmentAmount,
-            status: "em_aberto",
+            status: "pending",
             date: installmentDate.toISOString().split("T")[0],
             paid_date: null,
             tag: tag || null,
@@ -444,7 +444,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
       setCategory("");
       setType("expense");
       setAmount("");
-      setStatus("em_aberto");
+      setStatus("pending");
       setDate(new Date().toISOString().split("T")[0]);
       setPaidDate("");
       setTag("");
@@ -491,10 +491,10 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   };
 
   const statusOptions = [
-    { value: "em_aberto", label: "Em aberto" },
-    { value: "a_vencer", label: "A vencer" },
-    { value: "vencido", label: "Vencido" },
-    { value: "pagamento_concluido", label: "Pagamento concluído" },
+    { value: "pending", label: "Em aberto" },
+    { value: "upcoming", label: "A vencer" },
+    { value: "overdue", label: "Vencido" },
+    { value: "paid", label: "Pagamento concluído" },
   ];
 
   return (

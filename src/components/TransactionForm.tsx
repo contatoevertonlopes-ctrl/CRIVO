@@ -66,14 +66,14 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
 
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
 
-  const computeUnpaidStatus = (dateStr: string) => {
+  const computeUnpaidStatusLocal = (dateStr: string) => {
     const date = dateStr || todayStr;
-    if (date > todayStr) return "a_vencer";
-    if (date < todayStr) return "vencido";
-    return "em_aberto";
+    if (date > todayStr) return "upcoming";
+    if (date < todayStr) return "overdue";
+    return "pending";
   };
 
-  const isPaid = formData.status === "pagamento_concluido";
+  const isPaid = formData.status === "paid";
 
   // Validation state - tracks which fields have been touched
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -121,13 +121,13 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
     }
   }, [requiresBankAccount, requiresCard, accounts, cards]);
 
-  // Compact mode: auto-compute status from date only if not manually set to pagamento_concluido.
+  // Compact mode: auto-compute status from date only if not manually set to paid.
   const [statusManuallySet, setStatusManuallySet] = React.useState(false);
   useEffect(() => {
     if (!isCompact) return;
     if (statusManuallySet) return;
-    if (formData.status === "pagamento_concluido") return;
-    const nextStatus = computeUnpaidStatus(formData.date);
+    if (formData.status === "paid") return;
+    const nextStatus = computeUnpaidStatusLocal(formData.date);
     if (formData.status !== nextStatus) {
       setFormData({ ...formData, status: nextStatus });
     }
@@ -163,8 +163,8 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
 
     // Normalize compact-mode fields before validating
     const normalizedCategory = (formData.category || "").trim() || (isCompact ? "Outros" : "");
-    const normalizedStatus = formData.status || (isCompact ? computeUnpaidStatus(formData.date) : "em_aberto");
-    const normalizedPaidDate = normalizedStatus === "pagamento_concluido"
+    const normalizedStatus = formData.status || (isCompact ? computeUnpaidStatusLocal(formData.date) : "pending");
+    const normalizedPaidDate = normalizedStatus === "paid"
       ? (formData.paid_date || todayStr)
       : formData.paid_date;
 
@@ -320,13 +320,13 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
             <div className="space-y-1.5">
               <Label className="text-sm">Status</Label>
               <Select
-                value={formData.status || computeUnpaidStatus(formData.date)}
+                value={formData.status || computeUnpaidStatusLocal(formData.date)}
                 onValueChange={(v) => {
                   setStatusManuallySet(true);
                   setFormData({
                     ...formData,
                     status: v,
-                    paid_date: v === "pagamento_concluido" ? (formData.paid_date || todayStr) : formData.paid_date,
+                    paid_date: v === "paid" ? (formData.paid_date || todayStr) : formData.paid_date,
                   });
                 }}
               >
@@ -334,10 +334,10 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="em_aberto">Em aberto</SelectItem>
-                  <SelectItem value="a_vencer">A vencer</SelectItem>
-                  <SelectItem value="vencido">Vencido</SelectItem>
-                  <SelectItem value="pagamento_concluido">Pago</SelectItem>
+                  <SelectItem value="pending">Em aberto</SelectItem>
+                  <SelectItem value="upcoming">A vencer</SelectItem>
+                  <SelectItem value="overdue">Vencido</SelectItem>
+                  <SelectItem value="paid">Pago</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -725,10 +725,10 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="em_aberto">Em aberto</SelectItem>
-                  <SelectItem value="a_vencer">A vencer</SelectItem>
-                  <SelectItem value="vencido">Vencido</SelectItem>
-                  <SelectItem value="pagamento_concluido">Pagamento concluído</SelectItem>
+                  <SelectItem value="pending">Em aberto</SelectItem>
+                  <SelectItem value="upcoming">A vencer</SelectItem>
+                  <SelectItem value="overdue">Vencido</SelectItem>
+                  <SelectItem value="paid">Pagamento concluído</SelectItem>
                 </SelectContent>
               </Select>
             </div>

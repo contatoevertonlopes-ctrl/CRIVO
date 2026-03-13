@@ -256,12 +256,8 @@ const Transactions = () => {
 
     if (statusFilter.length > 0) {
       filtered = filtered.filter((t) => {
-        return statusFilter.some((sf) => {
-          if (sf === "pending") {
-            return ["em_aberto", "a_vencer", "vencido", "pending"].includes(t.status);
-          }
-          return t.status === sf;
-        });
+        const normalized = normalizeStatusValue(t.status);
+        return statusFilter.includes(normalized);
       });
     }
 
@@ -456,12 +452,14 @@ const Transactions = () => {
     }
   };
 
-  // Normalize legacy status values to valid constraint values
-  const normalizeStatus = (status: string) => {
+  // Normalize legacy status values to canonical English
+  const normalizeStatusValue = (status: string) => {
     const legacyMap: Record<string, string> = {
-      pending: "em_aberto",
-      confirmed: "pagamento_concluido",
-      paid: "pagamento_concluido",
+      em_aberto: "pending",
+      a_vencer: "upcoming",
+      vencido: "overdue",
+      pagamento_concluido: "paid",
+      confirmed: "paid",
     };
     return legacyMap[status] || status;
   };
@@ -477,7 +475,7 @@ const Transactions = () => {
         amount: transaction.amount,
         category: transaction.category,
         type: transaction.type,
-        status: normalizeStatus(transaction.status),
+        status: normalizeStatusValue(transaction.status),
         date: transaction.date,
         tag: transaction.tag || null,
         is_recurring: transaction.is_recurring || false,
@@ -523,28 +521,25 @@ const Transactions = () => {
     };
   }, [editingTransaction]);
 
-  const getStatusLabel = (status: string) => {
+  const getStatusLabelLocal = (status: string) => {
+    const normalized = normalizeStatusValue(status);
     const statusMap: Record<string, string> = {
-      em_aberto: "Em aberto",
-      a_vencer: "A vencer",
-      vencido: "Vencido",
-      pagamento_concluido: "Pagamento concluído",
       pending: "Em aberto",
-      confirmed: "Pagamento concluído",
+      upcoming: "A vencer",
+      overdue: "Vencido",
       paid: "Pagamento concluído",
     };
-    return statusMap[status] || status;
+    return statusMap[normalized] || status;
   };
 
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "pagamento_concluido":
-      case "confirmed":
+  const getStatusStyleLocal = (status: string) => {
+    const normalized = normalizeStatusValue(status);
+    switch (normalized) {
       case "paid":
         return "bg-primary/10 text-primary";
-      case "a_vencer":
+      case "upcoming":
         return "bg-warning/10 text-warning";
-      case "vencido":
+      case "overdue":
         return "bg-destructive/10 text-destructive";
       default:
         return "bg-secondary/50 text-muted-foreground";
@@ -581,7 +576,7 @@ const Transactions = () => {
       t.category,
       t.type === "income" ? "Entrada" : "Saída",
       t.amount.toString(),
-      getStatusLabel(t.status),
+      getStatusLabelLocal(t.status),
     ]);
 
     const csvContent = [headers, ...rows].map((row) => row.join(",")).join("\n");
@@ -806,11 +801,10 @@ const Transactions = () => {
                         <Label className="text-xs text-muted-foreground">Status</Label>
                         <MultiSelect
                           options={[
-                            { value: "pending", label: "Pendentes" },
-                            { value: "em_aberto", label: "Em aberto" },
-                            { value: "a_vencer", label: "A vencer" },
-                            { value: "vencido", label: "Vencido" },
-                            { value: "pagamento_concluido", label: "Pago" },
+                            { value: "pending", label: "Em aberto" },
+                            { value: "upcoming", label: "A vencer" },
+                            { value: "overdue", label: "Vencido" },
+                            { value: "paid", label: "Pago" },
                           ]}
                           selected={statusFilter}
                           onChange={setStatusFilter}
@@ -1057,11 +1051,10 @@ const Transactions = () => {
                 <Label className="text-xs text-muted-foreground">Status</Label>
                 <MultiSelect
                   options={[
-                    { value: "pending", label: "Pendentes" },
-                    { value: "em_aberto", label: "Em aberto" },
-                    { value: "a_vencer", label: "A vencer" },
-                    { value: "vencido", label: "Vencido" },
-                    { value: "pagamento_concluido", label: "Pago" },
+                    { value: "pending", label: "Em aberto" },
+                    { value: "upcoming", label: "A vencer" },
+                    { value: "overdue", label: "Vencido" },
+                    { value: "paid", label: "Pago" },
                   ]}
                   selected={statusFilter}
                   onChange={setStatusFilter}

@@ -215,12 +215,12 @@ export const applyMapping = (rawData: RawData, mapping: ColumnMapping): ParsedTr
       const { category, suggested } = autoCategorize(description, existingCategory);
       
       // Parse status from import
-      let status = "em_aberto";
+      let status = "pending";
       if (statusStr) {
         if (/pago|paid|confirm|conclu[ií]d|quitad|efetivad/i.test(statusStr)) {
-          status = "pagamento_concluido";
+          status = "paid";
         } else if (/pend|aguard|aberto|open/i.test(statusStr)) {
-          status = "em_aberto";
+          status = "pending";
         } else if (/cancel/i.test(statusStr)) {
           status = "cancelado";
         }
