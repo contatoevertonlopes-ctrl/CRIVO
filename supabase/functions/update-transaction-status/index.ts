@@ -49,49 +49,47 @@ serve(async (req) => {
       oneDayAgo: oneDayAgoStr 
     });
 
-    // 1. Update "em_aberto" to "a_vencer" (3 days before due date)
-    // If the transaction date is within 3 days from now
-    const { data: toAVencer, error: toAVencerError } = await supabase
+    // 1. Update "pending" to "upcoming" (3 days before due date)
+    const { data: toUpcoming, error: toUpcomingError } = await supabase
       .from("transactions")
-      .update({ status: "a_vencer" })
-      .eq("status", "em_aberto")
+      .update({ status: "upcoming" })
+      .in("status", ["pending", "em_aberto"])
       .lte("date", threeDaysFromNowStr)
       .gte("date", todayStr)
       .select("id");
 
-    if (toAVencerError) {
-      logStep("Error updating to a_vencer", { error: toAVencerError });
+    if (toUpcomingError) {
+      logStep("Error updating to upcoming", { error: toUpcomingError });
     } else {
-      logStep("Updated to a_vencer", { count: toAVencer?.length || 0 });
+      logStep("Updated to upcoming", { count: toUpcoming?.length || 0 });
     }
 
-    // 2. Update "a_vencer" to "vencido" (1 day after due date)
-    // If the transaction date is before yesterday
-    const { data: toVencido, error: toVencidoError } = await supabase
+    // 2. Update "upcoming" to "overdue" (1 day after due date)
+    const { data: toOverdue, error: toOverdueError } = await supabase
       .from("transactions")
-      .update({ status: "vencido" })
-      .eq("status", "a_vencer")
+      .update({ status: "overdue" })
+      .in("status", ["upcoming", "a_vencer"])
       .lt("date", oneDayAgoStr)
       .select("id");
 
-    if (toVencidoError) {
-      logStep("Error updating to vencido", { error: toVencidoError });
+    if (toOverdueError) {
+      logStep("Error updating to overdue", { error: toOverdueError });
     } else {
-      logStep("Updated to vencido", { count: toVencido?.length || 0 });
+      logStep("Updated to overdue", { count: toOverdue?.length || 0 });
     }
 
-    // Also update "em_aberto" transactions that are past due directly to "vencido"
-    const { data: emAbertoToVencido, error: emAbertoToVencidoError } = await supabase
+    // Also update "pending" transactions that are past due directly to "overdue"
+    const { data: pendingToOverdue, error: pendingToOverdueError } = await supabase
       .from("transactions")
-      .update({ status: "vencido" })
-      .eq("status", "em_aberto")
+      .update({ status: "overdue" })
+      .in("status", ["pending", "em_aberto"])
       .lt("date", oneDayAgoStr)
       .select("id");
 
-    if (emAbertoToVencidoError) {
-      logStep("Error updating em_aberto to vencido", { error: emAbertoToVencidoError });
+    if (pendingToOverdueError) {
+      logStep("Error updating pending to overdue", { error: pendingToOverdueError });
     } else {
-      logStep("Updated em_aberto to vencido", { count: emAbertoToVencido?.length || 0 });
+      logStep("Updated pending to overdue", { count: pendingToOverdue?.length || 0 });
     }
 
     const summary = {
