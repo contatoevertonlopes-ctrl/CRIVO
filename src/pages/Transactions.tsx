@@ -805,11 +805,10 @@ const Transactions = () => {
                         <Label className="text-xs text-muted-foreground">Status</Label>
                         <MultiSelect
                           options={[
-                            { value: "pending", label: "Pendentes" },
-                            { value: "em_aberto", label: "Em aberto" },
-                            { value: "a_vencer", label: "A vencer" },
-                            { value: "vencido", label: "Vencido" },
-                            { value: "pagamento_concluido", label: "Pago" },
+                            { value: "pending", label: "Em aberto" },
+                            { value: "upcoming", label: "A vencer" },
+                            { value: "overdue", label: "Vencido" },
+                            { value: "paid", label: "Pago" },
                           ]}
                           selected={statusFilter}
                           onChange={setStatusFilter}
