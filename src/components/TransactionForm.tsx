@@ -320,7 +320,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
             <div className="space-y-1.5">
               <Label className="text-sm">Status</Label>
               <Select
-                value={formData.status || computeUnpaidStatus(formData.date)}
+                value={formData.status || computeUnpaidStatusLocal(formData.date)}
                 onValueChange={(v) => {
                   setStatusManuallySet(true);
                   setFormData({
