@@ -180,9 +180,9 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   const todayStr = new Date().toISOString().split("T")[0];
 
   const computeUnpaidStatus = (dateStr: string) => {
-    if (dateStr > todayStr) return "a_vencer";
-    if (dateStr < todayStr) return "vencido";
-    return "em_aberto";
+    if (dateStr > todayStr) return "upcoming";
+    if (dateStr < todayStr) return "overdue";
+    return "pending";
   };
 
   const createRecurringSeries = async (root: {
