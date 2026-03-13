@@ -92,9 +92,11 @@ const TransactionsTable = ({
 
   const normalizeStatus = (status: string) => {
     const legacyMap: Record<string, string> = {
-      pending: "em_aberto",
-      confirmed: "pagamento_concluido",
-      paid: "pagamento_concluido",
+      em_aberto: "pending",
+      a_vencer: "upcoming",
+      vencido: "overdue",
+      pagamento_concluido: "paid",
+      confirmed: "paid",
     };
     return legacyMap[status] || status;
   };

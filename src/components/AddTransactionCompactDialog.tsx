@@ -439,7 +439,7 @@ const AddTransactionCompactDialog = ({
 
     try {
       const normalizedCategory = (formData.category || "").trim() || "Outros";
-      const isPaid = formData.status === "pagamento_concluido";
+      const isPaid = formData.status === "paid";
       const normalizedPaidDate = isPaid ? (formData.paid_date || todayStr) : null;
 
       const { error } = await supabase

@@ -256,12 +256,8 @@ const Transactions = () => {
 
     if (statusFilter.length > 0) {
       filtered = filtered.filter((t) => {
-        return statusFilter.some((sf) => {
-          if (sf === "pending") {
-            return ["em_aberto", "a_vencer", "vencido", "pending"].includes(t.status);
-          }
-          return t.status === sf;
-        });
+        const normalized = normalizeStatusValue(t.status);
+        return statusFilter.includes(normalized);
       });
     }
 

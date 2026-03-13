@@ -57,9 +57,11 @@ const Reports = () => {
 
     const normalizeStatus = (status: string) => {
       const legacyMap: Record<string, string> = {
-        pending: "em_aberto",
-        confirmed: "pagamento_concluido",
-        paid: "pagamento_concluido",
+        em_aberto: "pending",
+        a_vencer: "upcoming",
+        vencido: "overdue",
+        pagamento_concluido: "paid",
+        confirmed: "paid",
       };
       return legacyMap[status] || status;
     };
@@ -67,7 +69,7 @@ const Reports = () => {
     const getEffectiveDate = (t: (typeof transactions)[number]) => {
       const normalized = normalizeStatus(t.status);
       // Para transações pagas, preferimos a data de pagamento (cashflow real).
-      return normalized === "pagamento_concluido" && t.paid_date ? t.paid_date : t.date;
+      return normalized === "paid" && t.paid_date ? t.paid_date : t.date;
     };
 
     // Mantém o comportamento original: relatórios consideram apenas transações concluídas/pagas.
