@@ -66,14 +66,14 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
 
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
 
-  const computeUnpaidStatus = (dateStr: string) => {
+  const computeUnpaidStatusLocal = (dateStr: string) => {
     const date = dateStr || todayStr;
-    if (date > todayStr) return "a_vencer";
-    if (date < todayStr) return "vencido";
-    return "em_aberto";
+    if (date > todayStr) return "upcoming";
+    if (date < todayStr) return "overdue";
+    return "pending";
   };
 
-  const isPaid = formData.status === "pagamento_concluido";
+  const isPaid = formData.status === "paid";
 
   // Validation state - tracks which fields have been touched
   const [touched, setTouched] = useState<Record<string, boolean>>({});
