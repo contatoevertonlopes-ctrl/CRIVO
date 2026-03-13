@@ -334,10 +334,10 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="em_aberto">Em aberto</SelectItem>
-                  <SelectItem value="a_vencer">A vencer</SelectItem>
-                  <SelectItem value="vencido">Vencido</SelectItem>
-                  <SelectItem value="pagamento_concluido">Pago</SelectItem>
+                  <SelectItem value="pending">Em aberto</SelectItem>
+                  <SelectItem value="upcoming">A vencer</SelectItem>
+                  <SelectItem value="overdue">Vencido</SelectItem>
+                  <SelectItem value="paid">Pago</SelectItem>
                 </SelectContent>
               </Select>
             </div>
