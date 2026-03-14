@@ -475,7 +475,7 @@ const Transactions = () => {
         amount: transaction.amount,
         category: transaction.category,
         type: transaction.type,
-        status: normalizeStatusValue(transaction.status),
+        status: transaction.status, // Keep original DB status (already Portuguese)
         date: transaction.date,
         tag: transaction.tag || null,
         is_recurring: transaction.is_recurring || false,
