@@ -48,7 +48,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   const [category, setCategory] = useState("");
   const [type, setType] = useState<"income" | "expense">("expense");
   const [amount, setAmount] = useState("");
-  const [status, setStatus] = useState("pending");
+  const [status, setStatus] = useState("em_aberto");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [paidDate, setPaidDate] = useState("");
   const [tag, setTag] = useState("");
