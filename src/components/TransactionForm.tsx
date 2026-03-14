@@ -68,9 +68,9 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
 
   const computeUnpaidStatusLocal = (dateStr: string) => {
     const date = dateStr || todayStr;
-    if (date > todayStr) return "upcoming";
-    if (date < todayStr) return "overdue";
-    return "pending";
+    if (date > todayStr) return "a_vencer";
+    if (date < todayStr) return "vencido";
+    return "em_aberto";
   };
 
   const isPaid = formData.status === "paid";
