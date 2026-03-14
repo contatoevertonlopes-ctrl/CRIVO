@@ -46,7 +46,7 @@ const getDefaultFormData = (): TransactionFormData => ({
   amount: "",
   category: "Outros",
   type: "expense",
-  status: "pending",
+  status: "em_aberto",
   date: new Date().toISOString().split("T")[0],
   is_recurring: false,
   recurring_interval: "monthly",
