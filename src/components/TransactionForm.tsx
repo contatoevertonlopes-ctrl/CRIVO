@@ -326,7 +326,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
                   setFormData({
                     ...formData,
                     status: v,
-                    paid_date: v === "paid" ? (formData.paid_date || todayStr) : formData.paid_date,
+                    paid_date: (v === "paid" || v === "pagamento_concluido") ? (formData.paid_date || todayStr) : formData.paid_date,
                   });
                 }}
               >
@@ -334,10 +334,10 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">Em aberto</SelectItem>
-                  <SelectItem value="upcoming">A vencer</SelectItem>
-                  <SelectItem value="overdue">Vencido</SelectItem>
-                  <SelectItem value="paid">Pago</SelectItem>
+                  <SelectItem value="em_aberto">Em aberto</SelectItem>
+                  <SelectItem value="a_vencer">A vencer</SelectItem>
+                  <SelectItem value="vencido">Vencido</SelectItem>
+                  <SelectItem value="pagamento_concluido">Pago</SelectItem>
                 </SelectContent>
               </Select>
             </div>
