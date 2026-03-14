@@ -326,7 +326,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             category,
             type,
             amount: installmentAmount,
-            status: "pending",
+            status: "em_aberto",
             date: installmentDate.toISOString().split("T")[0],
             paid_date: null,
             tag: tag || null,
