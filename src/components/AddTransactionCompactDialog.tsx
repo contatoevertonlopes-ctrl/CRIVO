@@ -320,7 +320,7 @@ const AddTransactionCompactDialog = ({
             category: normalizedCategory,
             type: formData.type,
             amount: installmentAmount,
-            status: "pending",
+            status: "em_aberto",
             date: installmentDate.toISOString().split("T")[0],
             tag: formData.tag || null,
             is_recurring: false,
