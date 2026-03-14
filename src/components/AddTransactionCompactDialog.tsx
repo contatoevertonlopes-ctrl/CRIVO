@@ -268,8 +268,8 @@ const AddTransactionCompactDialog = ({
 
     try {
       const normalizedCategory = (formData.category || "").trim() || "Outros";
-      const isPaid = formData.status === "paid";
-      const normalizedStatus = isPaid ? "paid" : computeUnpaidStatus(formData.date);
+      const isPaid = formData.status === "paid" || formData.status === "pagamento_concluido";
+      const normalizedStatus = isPaid ? "pagamento_concluido" : computeUnpaidStatus(formData.date);
       const normalizedPaidDate = normalizedStatus === "paid"
         ? (formData.paid_date || todayStr)
         : null;
