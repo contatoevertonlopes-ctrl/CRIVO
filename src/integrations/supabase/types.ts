@@ -1037,7 +1037,7 @@ export type Database = {
         Returns: string
       }
       calculate_next_due_date: {
-        Args: { current_due_date: string; freq: string }
+        Args: { current_date_val: string; freq: string }
         Returns: string
       }
       has_role: {

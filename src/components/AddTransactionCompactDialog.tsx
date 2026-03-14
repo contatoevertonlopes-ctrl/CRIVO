@@ -46,7 +46,7 @@ const getDefaultFormData = (): TransactionFormData => ({
   amount: "",
   category: "Outros",
   type: "expense",
-  status: "pending",
+  status: "em_aberto",
   date: new Date().toISOString().split("T")[0],
   is_recurring: false,
   recurring_interval: "monthly",
@@ -95,9 +95,9 @@ const AddTransactionCompactDialog = ({
 
   const computeUnpaidStatus = (dateStr: string) => {
     const d = dateStr || todayStr;
-    if (d > todayStr) return "upcoming";
-    if (d < todayStr) return "overdue";
-    return "pending";
+    if (d > todayStr) return "a_vencer";
+    if (d < todayStr) return "vencido";
+    return "em_aberto";
   };
 
   const resetForm = () => setFormData(getDefaultFormData());
@@ -268,9 +268,9 @@ const AddTransactionCompactDialog = ({
 
     try {
       const normalizedCategory = (formData.category || "").trim() || "Outros";
-      const isPaid = formData.status === "paid";
-      const normalizedStatus = isPaid ? "paid" : computeUnpaidStatus(formData.date);
-      const normalizedPaidDate = normalizedStatus === "paid"
+      const isPaid = formData.status === "paid" || formData.status === "pagamento_concluido";
+      const normalizedStatus = isPaid ? "pagamento_concluido" : computeUnpaidStatus(formData.date);
+      const normalizedPaidDate = normalizedStatus === "pagamento_concluido"
         ? (formData.paid_date || todayStr)
         : null;
 
@@ -320,7 +320,7 @@ const AddTransactionCompactDialog = ({
             category: normalizedCategory,
             type: formData.type,
             amount: installmentAmount,
-            status: "pending",
+            status: "em_aberto",
             date: installmentDate.toISOString().split("T")[0],
             tag: formData.tag || null,
             is_recurring: false,
@@ -439,7 +439,7 @@ const AddTransactionCompactDialog = ({
 
     try {
       const normalizedCategory = (formData.category || "").trim() || "Outros";
-      const isPaid = formData.status === "paid";
+      const isPaid = formData.status === "paid" || formData.status === "pagamento_concluido";
       const normalizedPaidDate = isPaid ? (formData.paid_date || todayStr) : null;
 
       const { error } = await supabase

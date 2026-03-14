@@ -133,7 +133,7 @@ serve(async (req) => {
           amount: totalAmount,
           category: 'Pagamento de Cartão',
           type: 'expense',
-          status: 'pending',
+          status: 'em_aberto',
           date: dueDateStr,
           tag: 'fixa',
         })

@@ -224,7 +224,7 @@ const CardDetailsDrawer = ({
         const { error: txError } = await supabase
           .from("transactions")
           .update({
-            status: "paid",
+            status: "pagamento_concluido",
             paid_date: new Date().toISOString().split("T")[0],
           })
           .in("id", params.linkedTransactionIds);
@@ -244,7 +244,7 @@ const CardDetailsDrawer = ({
             category: "Fatura Cartão",
             type: "expense",
             amount: params.amount,
-            status: "paid",
+            status: "pagamento_concluido",
             date: todayStr,
             paid_date: todayStr,
             payment_method: "bank_transfer",

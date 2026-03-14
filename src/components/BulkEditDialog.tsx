@@ -177,10 +177,10 @@ const BulkEditDialog = ({
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">Em aberto</SelectItem>
-                    <SelectItem value="upcoming">A vencer</SelectItem>
-                    <SelectItem value="overdue">Vencido</SelectItem>
-                    <SelectItem value="paid">Pagamento concluído</SelectItem>
+                    <SelectItem value="em_aberto">Em aberto</SelectItem>
+                    <SelectItem value="a_vencer">A vencer</SelectItem>
+                    <SelectItem value="vencido">Vencido</SelectItem>
+                    <SelectItem value="pagamento_concluido">Pagamento concluído</SelectItem>
                   </SelectContent>
                 </Select>
               )}

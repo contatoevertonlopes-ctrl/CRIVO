@@ -251,7 +251,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
         amount: t.amount,
         type: t.type,
         category: t.category,
-        status: t.status || "pending",
+        status: t.status || "em_aberto",
         paid_date: t.paidDate || null,
       }));
       
