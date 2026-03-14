@@ -1,11 +1,17 @@
 /**
- * Canonical English status values used in Supabase:
- * - "pending"  (Em aberto)
- * - "upcoming" (A vencer)
- * - "overdue"  (Vencido)
- * - "paid"     (Pago / Pagamento concluído)
+ * The Supabase database has a CHECK constraint that only accepts these
+ * Portuguese strings for the status column:
+ *   "em_aberto"            (pending / Em aberto)
+ *   "a_vencer"             (upcoming / A vencer)
+ *   "vencido"              (overdue / Vencido)
+ *   "pagamento_concluido"  (paid / Pagamento concluído)
+ *
+ * Internally (UI / filters / sort) we use short English keys for convenience.
+ * `toDbStatus`   converts English → Portuguese  (write path)
+ * `normalizeStatus` converts Portuguese → English (read path)
  */
 
+// ── Read path: DB → UI ─────────────────────────────────────────────
 const LEGACY_MAP: Record<string, string> = {
   em_aberto: "pending",
   a_vencer: "upcoming",
@@ -17,6 +23,22 @@ const LEGACY_MAP: Record<string, string> = {
 /** Normalizes any legacy Portuguese status value to canonical English. */
 export const normalizeStatus = (status: string): string =>
   LEGACY_MAP[status] || status;
+
+// ── Write path: UI → DB ────────────────────────────────────────────
+const TO_DB_MAP: Record<string, string> = {
+  pending: "em_aberto",
+  upcoming: "a_vencer",
+  overdue: "vencido",
+  paid: "pagamento_concluido",
+};
+
+/**
+ * Converts an English status key to the Portuguese string accepted by
+ * the Supabase CHECK constraint.  If the value is already Portuguese
+ * it is returned as-is.
+ */
+export const toDbStatus = (status: string): string =>
+  TO_DB_MAP[status] || status;
 
 export const STATUS_LABEL: Record<string, string> = {
   pending: "Em aberto",
@@ -50,10 +72,10 @@ export const isPaidStatus = (status: string): boolean =>
 export const isPendingStatus = (status: string): boolean =>
   !isPaidStatus(status);
 
-/** Compute the unpaid status based on a date string vs today. */
+/** Compute the unpaid status based on a date string vs today (returns DB-ready Portuguese). */
 export const computeUnpaidStatus = (dateStr: string): string => {
   const todayStr = new Date().toISOString().split("T")[0];
-  if (dateStr > todayStr) return "upcoming";
-  if (dateStr < todayStr) return "overdue";
-  return "pending";
+  if (dateStr > todayStr) return "a_vencer";
+  if (dateStr < todayStr) return "vencido";
+  return "em_aberto";
 };

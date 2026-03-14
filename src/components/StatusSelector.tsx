@@ -1,7 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { normalizeStatus } from "@/lib/statusUtils";
+import { normalizeStatus, toDbStatus } from "@/lib/statusUtils";
 
 interface StatusSelectorProps {
   transactionId: string;
@@ -34,9 +34,10 @@ const StatusSelector = ({ transactionId, currentStatus, onStatusChange, size = "
 
   const handleStatusChange = async (newStatus: string) => {
     try {
+      // Only send the status field (partial update) with the Portuguese DB value
       const { error } = await supabase
         .from("transactions")
-        .update({ status: newStatus })
+        .update({ status: toDbStatus(newStatus) })
         .eq("id", transactionId);
 
       if (error) {
