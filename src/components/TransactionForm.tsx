@@ -73,7 +73,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
     return "em_aberto";
   };
 
-  const isPaid = formData.status === "paid";
+  const isPaid = formData.status === "paid" || formData.status === "pagamento_concluido";
 
   // Validation state - tracks which fields have been touched
   const [touched, setTouched] = useState<Record<string, boolean>>({});
