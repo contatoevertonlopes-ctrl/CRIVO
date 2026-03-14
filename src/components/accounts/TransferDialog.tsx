@@ -99,7 +99,7 @@ export const TransferDialog = ({ open, onOpenChange }: TransferDialogProps) => {
           category: "Transferência",
           type: "expense",
           amount: transferAmount,
-          status: "paid",
+          status: "pagamento_concluido",
           date: today,
           paid_date: today,
           payment_method: "bank_transfer",
