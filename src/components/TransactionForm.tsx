@@ -163,8 +163,8 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
 
     // Normalize compact-mode fields before validating
     const normalizedCategory = (formData.category || "").trim() || (isCompact ? "Outros" : "");
-    const normalizedStatus = formData.status || (isCompact ? computeUnpaidStatusLocal(formData.date) : "pending");
-    const normalizedPaidDate = normalizedStatus === "paid"
+    const normalizedStatus = formData.status || (isCompact ? computeUnpaidStatusLocal(formData.date) : "em_aberto");
+    const normalizedPaidDate = (normalizedStatus === "paid" || normalizedStatus === "pagamento_concluido")
       ? (formData.paid_date || todayStr)
       : formData.paid_date;
 
