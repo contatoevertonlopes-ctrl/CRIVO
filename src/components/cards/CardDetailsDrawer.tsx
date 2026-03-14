@@ -244,7 +244,7 @@ const CardDetailsDrawer = ({
             category: "Fatura Cartão",
             type: "expense",
             amount: params.amount,
-            status: "paid",
+            status: "pagamento_concluido",
             date: todayStr,
             paid_date: todayStr,
             payment_method: "bank_transfer",
