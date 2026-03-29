@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import { useTheme } from "next-themes";
 
 interface AppLogoProps {
   size?: number;
@@ -7,36 +6,39 @@ interface AppLogoProps {
   color?: string;
 }
 
-const AppLogo = ({ size = 32, className, color }: AppLogoProps) => {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
-
-  // Para ficar 1:1 com o ícone do app instalado (PWA), usamos o mesmo asset.
-  // O `color` fica sem efeito aqui por ser um PNG.
-  void color;
+/** CRIVO logo — 4×4 dot grid sieve icon */
+const AppLogo = ({ size = 32, className }: AppLogoProps) => {
   return (
-    <span
-      className={cn(
-        "inline-flex shrink-0 overflow-hidden rounded-[22%] bg-[#0B1217]",
-        // No tema escuro, a borda branca geralmente é um halo de antialiasing.
-        // Recortar + dar um leve zoom remove o halo sem mudar o ícone.
-        isDark && "ring-1 ring-white/10",
-        className,
-      )}
-      style={{ width: size, height: size }}
-      aria-label="FinTrack"
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 512 512"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn("shrink-0", className)}
+      aria-label="CRIVO"
     >
-      <img
-        src="/pwa-512x512.png"
-        width={size}
-        height={size}
-        alt=""
-        className={cn("block h-full w-full", isDark && "scale-[1.03]")}
-        loading="eager"
-        decoding="async"
-        draggable={false}
-      />
-    </span>
+      <rect width="512" height="512" rx="112" fill="#1A2E4A" />
+      {/* Row 1: all dim */}
+      <circle cx="148" cy="148" r="28" fill="white" opacity="0.2" />
+      <circle cx="224" cy="148" r="28" fill="white" opacity="0.2" />
+      <circle cx="300" cy="148" r="28" fill="white" opacity="0.2" />
+      <circle cx="376" cy="148" r="28" fill="white" opacity="0.2" />
+      {/* Row 2: 3 dim + 1 green */}
+      <circle cx="148" cy="224" r="28" fill="white" opacity="0.2" />
+      <circle cx="224" cy="224" r="28" fill="white" opacity="0.2" />
+      <circle cx="300" cy="224" r="28" fill="white" opacity="0.2" />
+      <circle cx="376" cy="224" r="28" fill="#2ECC9A" />
+      {/* Row 3: 2 dim + 2 green */}
+      <circle cx="148" cy="300" r="28" fill="white" opacity="0.2" />
+      <circle cx="224" cy="300" r="28" fill="white" opacity="0.2" />
+      <circle cx="300" cy="300" r="28" fill="#2ECC9A" />
+      <circle cx="376" cy="300" r="28" fill="#2ECC9A" />
+      {/* Row 4: all green */}
+      <circle cx="148" cy="376" r="28" fill="#2ECC9A" />
+      <circle cx="224" cy="376" r="28" fill="#2ECC9A" />
+      <circle cx="300" cy="376" r="28" fill="#2ECC9A" />
+      <circle cx="376" cy="376" r="28" fill="#2ECC9A" />
+    </svg>
   );
 };
 

@@ -234,8 +234,8 @@ const Sidebar = () => {
           <AppLogo size={28} className="text-primary shrink-0" />
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="text-sm font-semibold leading-tight">FinTrack</span>
-              <span className="text-[10px] text-muted-foreground">Dashboard Financeiro</span>
+              <span className="text-sm font-bold tracking-[2px] uppercase leading-tight">CRIVO</span>
+              <span className="text-[10px] text-muted-foreground">Clareza Financeira</span>
             </div>
           )}
         </div>

@@ -84,7 +84,7 @@ const Install = () => {
           <div className="mx-auto w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4">
             <Smartphone className="w-8 h-8 text-primary" />
           </div>
-          <CardTitle>Instalar Club Finance Track</CardTitle>
+          <CardTitle>Instalar CRIVO</CardTitle>
           <CardDescription>
             Instale o app no seu dispositivo para acesso rápido e offline.
           </CardDescription>

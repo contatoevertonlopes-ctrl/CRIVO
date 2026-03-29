@@ -212,11 +212,11 @@ const Onboarding = () => {
               </div>
               
               <h1 className="text-3xl font-bold mb-3">
-                Bem-vindo ao FinTrack
+                Bem-vindo ao CRIVO
               </h1>
               
               <p className="text-lg text-muted-foreground mb-8">
-                Onde seu dinheiro ganha um propósito.
+                Passe pelo crivo. Clareza financeira começa aqui.
               </p>
               
               <Button 

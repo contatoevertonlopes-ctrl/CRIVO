@@ -20,7 +20,7 @@ const PlansCard = () => {
       <div className="relative z-10">
         <div className="flex justify-between items-start gap-2 mb-4">
           <div>
-            <h3 className="text-[15px] font-semibold mb-0.5">Planos FinTrack Pro</h3>
+            <h3 className="text-[15px] font-semibold mb-0.5">Planos CRIVO Pro</h3>
             <p className="text-xs text-muted-foreground">
               Desbloqueie previsões avançadas, exportação e integrações automáticas.
             </p>
