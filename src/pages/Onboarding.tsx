@@ -208,7 +208,7 @@ const Onboarding = () => {
           {step === 1 && (
             <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary via-primary to-green-900 flex items-center justify-center shadow-[0_0_60px_rgba(34,197,94,0.5)]">
-                <span className="text-4xl font-bold text-white">F</span>
+                <span className="text-4xl font-bold text-white tracking-[3px]">C</span>
               </div>
               
               <h1 className="text-3xl font-bold mb-3">
