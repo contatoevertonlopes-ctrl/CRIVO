@@ -64,7 +64,7 @@ const Install = () => {
             </div>
             <CardTitle>App Instalado!</CardTitle>
             <CardDescription>
-              O Club Finance Track já está instalado no seu dispositivo.
+              O CRIVO já está instalado no seu dispositivo.
             </CardDescription>
           </CardHeader>
           <CardContent>
