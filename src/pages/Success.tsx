@@ -85,7 +85,7 @@ const Success = () => {
             Você acaba de desbloquear o potencial máximo do
           </p>
           <p className="text-xl font-semibold text-primary mb-6">
-            FinTrack Premium
+            CRIVO Premium
           </p>
           
           <div className="bg-card border border-border rounded-2xl p-6 mb-8">
