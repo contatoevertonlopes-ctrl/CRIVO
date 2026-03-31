@@ -74,7 +74,7 @@ serve(async (req) => {
 
     const summary = {
       updated_to_upcoming: toUpcoming?.length || 0,
-      updated_to_overdue: (toOverdue?.length || 0) + (pendingToOverdue?.length || 0),
+      updated_to_overdue: toOverdue?.length || 0,
       processed_at: new Date().toISOString(),
     };
 
