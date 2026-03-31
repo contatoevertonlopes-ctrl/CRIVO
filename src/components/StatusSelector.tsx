@@ -34,10 +34,16 @@ const StatusSelector = ({ transactionId, currentStatus, onStatusChange, size = "
 
   const handleStatusChange = async (newStatus: string) => {
     try {
-      // Only send the status field (partial update) with the Portuguese DB value
+      const dbStatus = toDbStatus(newStatus);
+      // When marking as paid, also set paid_date
+      const updatePayload: Record<string, unknown> = { status: dbStatus };
+      if (newStatus === "paid") {
+        updatePayload.paid_date = new Date().toISOString().split("T")[0];
+      }
+
       const { error } = await supabase
         .from("transactions")
-        .update({ status: toDbStatus(newStatus) })
+        .update(updatePayload)
         .eq("id", transactionId);
 
       if (error) {
