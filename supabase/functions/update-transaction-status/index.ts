@@ -38,22 +38,16 @@ serve(async (req) => {
     threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
     const threeDaysFromNowStr = threeDaysFromNow.toISOString().split("T")[0];
 
-    // Calculate date 1 day ago
-    const oneDayAgo = new Date(today);
-    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-    const oneDayAgoStr = oneDayAgo.toISOString().split("T")[0];
-
     logStep("Date calculations", { 
       today: todayStr, 
       threeDaysFromNow: threeDaysFromNowStr,
-      oneDayAgo: oneDayAgoStr 
     });
 
-    // 1. Update "em_aberto" to "a_vencer" (3 days before due date)
+    // 1. Update "em_aberto" to "a_vencer" (within 3 days before due date, including today)
     const { data: toUpcoming, error: toUpcomingError } = await supabase
       .from("transactions")
       .update({ status: "a_vencer" })
-      .in("status", ["em_aberto", "pending"])
+      .in("status", ["em_aberto"])
       .lte("date", threeDaysFromNowStr)
       .gte("date", todayStr)
       .select("id");
@@ -64,32 +58,18 @@ serve(async (req) => {
       logStep("Updated to a_vencer", { count: toUpcoming?.length || 0 });
     }
 
-    // 2. Update "a_vencer" to "vencido" (1 day after due date)
+    // 2. Update "a_vencer" or "em_aberto" to "vencido" (past due date — date < today)
     const { data: toOverdue, error: toOverdueError } = await supabase
       .from("transactions")
       .update({ status: "vencido" })
-      .in("status", ["a_vencer", "upcoming"])
-      .lt("date", oneDayAgoStr)
+      .in("status", ["a_vencer", "em_aberto"])
+      .lt("date", todayStr)
       .select("id");
 
     if (toOverdueError) {
       logStep("Error updating to vencido", { error: toOverdueError });
     } else {
       logStep("Updated to vencido", { count: toOverdue?.length || 0 });
-    }
-
-    // Also update "em_aberto" transactions that are past due directly to "vencido"
-    const { data: pendingToOverdue, error: pendingToOverdueError } = await supabase
-      .from("transactions")
-      .update({ status: "vencido" })
-      .in("status", ["em_aberto", "pending"])
-      .lt("date", oneDayAgoStr)
-      .select("id");
-
-    if (pendingToOverdueError) {
-      logStep("Error updating em_aberto to vencido", { error: pendingToOverdueError });
-    } else {
-      logStep("Updated em_aberto to vencido", { count: pendingToOverdue?.length || 0 });
     }
 
     const summary = {
