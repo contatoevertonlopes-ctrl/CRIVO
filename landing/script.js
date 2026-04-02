@@ -1,5 +1,5 @@
 /**
- * FinTrack Landing Page — script.js
+ * CRIVO Landing Page — script.js
  * Handles: navbar scroll, mobile menu, scroll-reveal, Lucide icons init, footer year.
  */
 
