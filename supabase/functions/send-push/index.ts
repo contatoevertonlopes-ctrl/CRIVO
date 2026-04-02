@@ -125,7 +125,7 @@ serve(async (req) => {
 
         const jwt = await generateVapidJwt(
           audience,
-          "mailto:contato@clubfinancetrack.com",
+          "mailto:contato@crivoapp.com",
           privateKeyJwk
         );
 
