@@ -872,6 +872,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="weekly">Semanal</SelectItem>
+                        <SelectItem value="biweekly">Quinzenal</SelectItem>
                         <SelectItem value="monthly">Mensal</SelectItem>
                         <SelectItem value="yearly">Anual</SelectItem>
                       </SelectContent>

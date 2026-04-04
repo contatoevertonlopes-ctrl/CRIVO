@@ -17,6 +17,7 @@ interface Transaction {
   amount: number;
   status: string;
   is_recurring?: boolean;
+  recurring_series_id?: string | null;
   paid_date?: string;
   tag?: string;
   user_id?: string;
@@ -139,6 +140,7 @@ const TransactionCard = ({ transaction, onEdit, onDelete, onDuplicate, onStatusC
           <StatusSelector
             transactionId={transaction.id}
             currentStatus={transaction.status}
+            recurringSeriesId={transaction.recurring_series_id}
             onStatusChange={onStatusChange}
             size="sm"
           />

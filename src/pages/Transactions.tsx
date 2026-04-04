@@ -37,6 +37,17 @@ import { sortTransactionsByPriority } from "@/utils/transactionSort";
 import { startOfMonth, endOfMonth, subMonths, addMonths, format } from "date-fns";
 import { calculateTransactionTotals } from "@/utils/transactionTotals";
 import { useTransactionCategories } from "@/hooks/useTransactionCategories";
+import { deleteRecurringSeries } from "@/hooks/useRecurringSeries";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Transaction {
   id: string;
@@ -54,6 +65,7 @@ interface Transaction {
   payment_method?: string;
   bank_account_id?: string | null;
   card_id?: string | null;
+  recurring_series_id?: string | null;
 }
 
 interface TransactionRowProps {
@@ -144,6 +156,7 @@ const TransactionRow = ({
       <StatusSelector
         transactionId={transaction.id}
         currentStatus={transaction.status}
+        recurringSeriesId={transaction.recurring_series_id}
         onStatusChange={onStatusChange}
       />
     </td>
@@ -226,6 +239,8 @@ const Transactions = () => {
   const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
+  // Recurring delete dialog
+  const [recurringDeleteTarget, setRecurringDeleteTarget] = useState<Transaction | null>(null);
   const itemsPerPage = 10;
   const loading = authLoading || transactionsLoading;
 
@@ -436,19 +451,36 @@ const Transactions = () => {
   const paginatedTransactions = groupBy === "none" 
     ? filteredTransactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
     : filteredTransactions;
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir esta transação?")) return;
+  const handleDelete = (id: string) => {
+    const tx = (transactions as Transaction[]).find((t) => t.id === id);
+    if (tx?.recurring_series_id) {
+      setRecurringDeleteTarget(tx);
+    } else {
+      handleDeleteSingle(id);
+    }
+  };
 
+  const handleDeleteSingle = async (id: string) => {
     try {
       const { error } = await supabase.from("transactions").delete().eq("id", id);
-
       if (error) throw error;
-
-      toast.success("Transação excluída com sucesso!");
+      toast.success("Transação excluída.");
       fetchTransactions();
     } catch (error) {
       console.error("Error deleting transaction:", error);
       toast.error("Erro ao excluir transação");
+    }
+  };
+
+  const handleDeleteSeries = async (seriesId: string) => {
+    try {
+      const todayStr = new Date().toISOString().split("T")[0];
+      await deleteRecurringSeries(seriesId, todayStr);
+      toast.success("Série e ocorrências futuras excluídas.");
+      fetchTransactions();
+    } catch (error) {
+      console.error("Error deleting series:", error);
+      toast.error("Erro ao excluir série");
     }
   };
 
@@ -1485,6 +1517,45 @@ const Transactions = () => {
           </Button>
         }
       />
+
+      {/* Recurring delete confirmation dialog */}
+      <AlertDialog
+        open={!!recurringDeleteTarget}
+        onOpenChange={(open) => { if (!open) setRecurringDeleteTarget(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir transação recorrente</AlertDialogTitle>
+            <AlertDialogDescription>
+              <strong>"{recurringDeleteTarget?.description}"</strong> faz parte de uma série recorrente.
+              Como deseja excluir?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive/80 hover:bg-destructive text-white"
+              onClick={() => {
+                if (recurringDeleteTarget) handleDeleteSingle(recurringDeleteTarget.id);
+                setRecurringDeleteTarget(null);
+              }}
+            >
+              Apenas esta ocorrência
+            </AlertDialogAction>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90 text-white"
+              onClick={() => {
+                if (recurringDeleteTarget?.recurring_series_id) {
+                  handleDeleteSeries(recurringDeleteTarget.recurring_series_id);
+                }
+                setRecurringDeleteTarget(null);
+              }}
+            >
+              Esta e futuras não pagas
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -376,6 +376,7 @@ const TransactionsTable = ({
                             <StatusSelector
                               transactionId={transaction.id}
                               currentStatus={transaction.status}
+                              recurringSeriesId={transaction.recurring_series_id}
                               onStatusChange={handleSuccess}
                               size="sm"
                             />

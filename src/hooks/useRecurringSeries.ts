@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useHouseholdId } from "@/hooks/useHouseholdId";
+import { computeUnpaidStatus } from "@/lib/statusUtils";
+import { getRecurringGenerationCount, getNextRecurringDate } from "@/utils/recurringGeneration";
 
 export interface RecurringSeries {
   id: string;
@@ -119,6 +121,83 @@ export const updateRecurringSeriesTransactions = async (
     .gte("date", todayStr);
 
   if (error) throw error;
+};
+
+/**
+ * Extends a recurring series when the number of future unpaid occurrences
+ * drops below a threshold (3). Called after marking a transaction as paid.
+ *
+ * Generates a new batch of occurrences starting immediately after the last
+ * existing occurrence in the series.
+ */
+export const extendRecurringSeriesIfNeeded = async (seriesId: string): Promise<void> => {
+  const todayStr = new Date().toISOString().split("T")[0];
+
+  // Count remaining unpaid future occurrences
+  const { count, error: countError } = await supabase
+    .from("transactions")
+    .select("id", { count: "exact", head: true })
+    .eq("recurring_series_id", seriesId)
+    .neq("status", "paid")
+    .neq("status", "pagamento_concluido")
+    .neq("status", "confirmed")
+    .gte("date", todayStr);
+
+  if (countError) throw countError;
+
+  const remaining = count ?? 0;
+  if (remaining >= 3) return; // Still enough occurrences ahead
+
+  // Fetch series metadata
+  const { data: series, error: seriesError } = await supabase
+    .from("recurring_series")
+    .select("*")
+    .eq("id", seriesId)
+    .single();
+
+  if (seriesError || !series) throw seriesError ?? new Error("Series not found");
+
+  // Find the latest existing occurrence date
+  const { data: lastRow, error: lastError } = await supabase
+    .from("transactions")
+    .select("date")
+    .eq("recurring_series_id", seriesId)
+    .order("date", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (lastError || !lastRow) throw lastError ?? new Error("No occurrences found");
+
+  // Generate a new batch from the day after the last occurrence
+  const count_ = getRecurringGenerationCount(series.interval);
+  const baseDate = new Date(lastRow.date + "T12:00:00");
+
+  const rows = Array.from({ length: count_ }, (_, i) => {
+    const date = getNextRecurringDate(baseDate, i + 1, series.interval);
+    const dateStr = date.toISOString().split("T")[0];
+    return {
+      user_id: series.user_id,
+      household_id: series.household_id,
+      description: series.description,
+      amount: series.amount,
+      category: series.category,
+      type: series.type,
+      status: computeUnpaidStatus(dateStr),
+      date: dateStr,
+      paid_date: null,
+      tag: series.tag,
+      payment_method: series.payment_method,
+      is_recurring: true,
+      recurring_interval: series.interval,
+      frequency: series.interval,
+      recurring_series_id: seriesId,
+      bank_account_id: series.bank_account_id,
+      card_id: series.card_id,
+    };
+  });
+
+  const { error: insertError } = await supabase.from("transactions").insert(rows);
+  if (insertError) throw insertError;
 };
 
 /**
