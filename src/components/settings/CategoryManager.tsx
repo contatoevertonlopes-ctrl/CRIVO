@@ -91,7 +91,7 @@ const CategoryManager = () => {
           return (
             <div
               key={category.id}
-              className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:bg-card/80 transition-colors"
+              className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/70 hover:bg-card/80 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${

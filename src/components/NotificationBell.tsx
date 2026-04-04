@@ -38,7 +38,7 @@ const NotificationItem = ({
   return (
     <div
       className={cn(
-        "p-3 border-b border-border/50 hover:bg-secondary/30 transition-colors",
+        "p-3 border-b border-border/70 hover:bg-secondary/30 transition-colors",
         !notification.is_read && "bg-primary/5 border-l-2 border-l-primary"
       )}
     >
@@ -107,7 +107,7 @@ const BillItem = ({
   return (
     <div
       className={cn(
-        "p-3 border-b border-border/50 hover:bg-secondary/30 transition-colors",
+        "p-3 border-b border-border/70 hover:bg-secondary/30 transition-colors",
         isDueToday && "bg-destructive/10 border-l-2 border-l-destructive"
       )}
     >

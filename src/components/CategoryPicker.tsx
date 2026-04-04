@@ -91,7 +91,7 @@ const CategoryTile = ({
         "relative flex flex-col items-center gap-1.5 rounded-xl p-2 transition-colors border",
         selected
           ? "border-primary/60 bg-primary/10"
-          : "border-border/50 bg-secondary/20 hover:bg-secondary/40",
+          : "border-border/70 bg-secondary/20 hover:bg-secondary/40",
       )}
     >
       <div
@@ -165,7 +165,7 @@ const Content = ({
             <button
               type="button"
               onClick={() => setCreating(true)}
-              className="flex flex-col items-center gap-1.5 rounded-xl p-2 transition-colors border border-border/50 bg-secondary/20 hover:bg-secondary/40"
+              className="flex flex-col items-center gap-1.5 rounded-xl p-2 transition-colors border border-border/70 bg-secondary/20 hover:bg-secondary/40"
             >
               <div className="h-10 w-10 rounded-full flex items-center justify-center bg-secondary">
                 <Plus className="h-5 w-5 text-muted-foreground" />
@@ -214,7 +214,7 @@ const Content = ({
                       onClick={() => setNewIcon(opt.key)}
                       className={cn(
                         "h-10 w-10 rounded-xl border flex items-center justify-center",
-                        active ? "border-primary bg-primary/10" : "border-border/50 bg-secondary/20",
+                        active ? "border-primary bg-primary/10" : "border-border/70 bg-secondary/20",
                       )}
                     >
                       <Icon className="h-5 w-5" />
@@ -236,7 +236,7 @@ const Content = ({
                       onClick={() => setNewColor(c)}
                       className={cn(
                         "h-9 w-9 rounded-full border",
-                        active ? "border-primary" : "border-border/50",
+                        active ? "border-primary" : "border-border/70",
                       )}
                       style={{ backgroundColor: c }}
                     />

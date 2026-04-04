@@ -105,7 +105,7 @@ export const BankAccountDialog = ({
           <div className="space-y-2">
             <Label htmlFor="bank">Banco</Label>
             <Select value={bankName} onValueChange={handleBankSelect}>
-              <SelectTrigger className="bg-secondary/50 border-border/50">
+              <SelectTrigger className="bg-secondary/50 border-border/70">
                 <SelectValue placeholder="Selecione o banco" />
               </SelectTrigger>
               <SelectContent>
@@ -132,7 +132,7 @@ export const BankAccountDialog = ({
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Conta Principal, Reserva..."
               required
-              className="bg-secondary/50 border-border/50"
+              className="bg-secondary/50 border-border/70"
             />
           </div>
 
@@ -140,7 +140,7 @@ export const BankAccountDialog = ({
             <div className="space-y-2">
               <Label htmlFor="type">Tipo de Conta</Label>
               <Select value={accountType} onValueChange={(v) => setAccountType(v as "checking" | "savings")}>
-                <SelectTrigger className="bg-secondary/50 border-border/50">
+                <SelectTrigger className="bg-secondary/50 border-border/70">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -159,13 +159,13 @@ export const BankAccountDialog = ({
                 value={balance}
                 onChange={(e) => setBalance(e.target.value)}
                 placeholder="0,00"
-                className="bg-secondary/50 border-border/50"
+                className="bg-secondary/50 border-border/70"
               />
             </div>
           </div>
 
           {/* Color preview */}
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/50">
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/70">
             <div 
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: `${color}20` }}

@@ -212,7 +212,7 @@ const Reports = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-muted-foreground">Carregando...</div>
       </div>
     );
@@ -243,7 +243,7 @@ const Reports = () => {
   );
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen">
       <Sidebar />
       
       <main className="flex-1 min-w-0 pt-16 pb-24 lg:pt-0 lg:pb-0">
@@ -297,21 +297,21 @@ const Reports = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
               <div className="flex items-center gap-2 mb-1 sm:mb-2">
                 <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                 <p className="text-sm text-muted-foreground">Total Entradas</p>
               </div>
               <p className="text-xl sm:text-2xl font-bold text-primary">{formatCurrency(stats.totalIncome)}</p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
               <div className="flex items-center gap-2 mb-1 sm:mb-2">
                 <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-destructive" />
                 <p className="text-sm text-muted-foreground">Total Saídas</p>
               </div>
               <p className="text-xl sm:text-2xl font-bold text-destructive">{formatCurrency(stats.totalExpense)}</p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
               <div className="flex items-center gap-2 mb-1 sm:mb-2">
                 <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
                 <p className="text-sm text-muted-foreground">Saldo Total</p>
@@ -320,7 +320,7 @@ const Reports = () => {
                 {formatCurrency(stats.balance)}
               </p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
               <div className="flex items-center gap-2 mb-1 sm:mb-2">
                 <PieChart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-400" />
                 <p className="text-sm text-muted-foreground">Categorias</p>
@@ -332,7 +332,7 @@ const Reports = () => {
           {/* Charts Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Area Chart - Fluxo de Caixa */}
-            <div className="rounded-2xl sm:rounded-3xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-4 sm:p-5">
+            <div className="rounded-2xl sm:rounded-3xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft p-4 sm:p-5">
               <h3 className="text-sm font-medium mb-3 sm:mb-4">Fluxo de Caixa Mensal</h3>
               {loading ? (
                 <div className="h-48 sm:h-64 flex items-center justify-center text-muted-foreground">
@@ -375,7 +375,7 @@ const Reports = () => {
 
             {/* Pie Chart - Despesas por Categoria */}
             <ProFeatureOverlay>
-              <div className="rounded-2xl sm:rounded-3xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-4 sm:p-5">
+              <div className="rounded-2xl sm:rounded-3xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft p-4 sm:p-5">
                 <h3 className="text-sm font-medium mb-3 sm:mb-4">Despesas por Categoria</h3>
                 {loading ? (
                   <div className="h-48 sm:h-64 flex items-center justify-center text-muted-foreground">
@@ -441,7 +441,7 @@ const Reports = () => {
 
             {/* Bar Chart - Comparativo Mensal */}
             <ProFeatureOverlay>
-              <div className="rounded-2xl sm:rounded-3xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-4 sm:p-5">
+              <div className="rounded-2xl sm:rounded-3xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft p-4 sm:p-5">
                 <h3 className="text-xs sm:text-sm font-medium mb-3 sm:mb-4">Comparativo de Saldo Mensal</h3>
                 {loading ? (
                   <div className="h-48 sm:h-64 flex items-center justify-center text-muted-foreground">
@@ -480,7 +480,7 @@ const Reports = () => {
 
             {/* Médias */}
             <ProFeatureOverlay>
-              <div className="rounded-2xl sm:rounded-3xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-4 sm:p-5">
+              <div className="rounded-2xl sm:rounded-3xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft p-4 sm:p-5">
                 <h3 className="text-xs sm:text-sm font-medium mb-3 sm:mb-4">Análise de Médias Mensais</h3>
                 <div className="space-y-3 sm:space-y-4">
                   <div className="p-3 sm:p-4 rounded-xl bg-secondary/30 border border-border">

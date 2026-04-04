@@ -79,7 +79,7 @@ const FutureCommitmentsChart = ({ data }: FutureCommitmentsChartProps) => {
   const totalCommitments = data.reduce((sum, d) => sum + d.amount, 0);
 
   return (
-    <Card className="bg-gradient-to-br from-card to-secondary/20 border-border/50 overflow-hidden">
+    <Card className="bg-gradient-to-br from-card to-secondary/20 border-border/70 overflow-hidden">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div>

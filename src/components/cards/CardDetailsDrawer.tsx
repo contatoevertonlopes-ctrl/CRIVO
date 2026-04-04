@@ -385,7 +385,7 @@ const CardDetailsDrawer = ({
                       "p-4 rounded-xl border transition-all group",
                       purchase.isFullyPaid 
                         ? "bg-secondary/30 border-border/30 opacity-60"
-                        : "bg-card border-border/50 hover:border-primary/30"
+                        : "bg-card border-border/70 hover:border-primary/30"
                     )}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -484,7 +484,7 @@ const CardDetailsDrawer = ({
                           ? "bg-primary/5 border-primary/30"
                           : allPaid
                             ? "bg-secondary/30 border-border/30"
-                            : "bg-card border-border/50"
+                            : "bg-card border-border/70"
                       )}
                     >
                       <div className="flex items-center justify-between">
@@ -568,7 +568,7 @@ const CardDetailsDrawer = ({
                       
                       {/* Transaction list for this month */}
                       {isCurrent && bill.transactions.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-border/50 space-y-2">
+                        <div className="mt-3 pt-3 border-t border-border/70 space-y-2">
                           {bill.transactions.slice(0, 3).map(tx => (
                             <div key={tx.id} className="flex items-center justify-between text-xs">
                               <span className="text-muted-foreground truncate flex-1">
@@ -594,7 +594,7 @@ const CardDetailsDrawer = ({
 
             {/* Settings Tab */}
             <TabsContent value="settings" className="mt-0 space-y-4">
-              <div className="p-4 rounded-xl bg-card border border-border/50 space-y-3">
+              <div className="p-4 rounded-xl bg-card border border-border/70 space-y-3">
                 <h4 className="text-sm font-medium">Informações do Cartão</h4>
                 
                 <div className="grid grid-cols-2 gap-3 text-sm">

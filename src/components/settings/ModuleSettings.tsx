@@ -63,7 +63,7 @@ const ModuleSettings = () => {
               className={`transition-all duration-200 ${
                 isActive
                   ? "bg-primary/5 border-primary/30"
-                  : "bg-card/50 border-border/50 opacity-75"
+                  : "bg-card/50 border-border/70 opacity-75"
               }`}
             >
               <CardHeader className="pb-2">

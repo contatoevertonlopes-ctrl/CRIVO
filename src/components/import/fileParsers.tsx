@@ -14,33 +14,77 @@ export interface RawData {
   data: string[][];
 }
 
+/**
+ * Splits a single CSV line respecting double-quoted fields.
+ * Quoted fields may contain the separator character or escaped quotes ("").
+ */
+const splitCSVLine = (line: string, separator: string): string[] => {
+  const fields: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  let i = 0;
+
+  while (i < line.length) {
+    const char = line[i];
+
+    if (inQuotes) {
+      if (char === '"') {
+        // Escaped quote: "" inside a quoted field
+        if (line[i + 1] === '"') {
+          current += '"';
+          i += 2;
+          continue;
+        }
+        inQuotes = false;
+      } else {
+        current += char;
+      }
+    } else {
+      if (char === '"') {
+        inQuotes = true;
+      } else if (line.startsWith(separator, i)) {
+        fields.push(current.trim());
+        current = "";
+        i += separator.length;
+        continue;
+      } else {
+        current += char;
+      }
+    }
+    i++;
+  }
+
+  fields.push(current.trim());
+  return fields;
+};
+
 export const parseCSV = (content: string): RawData => {
   // Remove BOM if present
   const cleanContent = content.replace(/^\uFEFF/, "").trim();
   // Normalize line endings
   const normalizedContent = cleanContent.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
   const lines = normalizedContent.split("\n").filter(line => line.trim());
-  
+
   if (lines.length === 0) return { headers: [], data: [] };
-  
-  // Detect separator
+
+  // Detect separator using the first line (prefer ; over , to handle BR number format)
   const firstLine = lines[0];
   let separator = ",";
   if (firstLine.includes(";")) separator = ";";
   else if (firstLine.includes("\t")) separator = "\t";
-  
-  const headers = firstLine.split(separator).map(h => h.trim().replace(/^["']|["']$/g, ""));
-  
+
+  const headers = splitCSVLine(firstLine, separator);
+
   const data: string[][] = [];
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
-    const parts = line.split(separator).map(p => p.trim().replace(/^["']|["']$/g, ""));
+    const parts = splitCSVLine(line, separator);
     if (parts.length >= 2) {
       data.push(parts);
     }
   }
-  
+
   return { headers, data };
 };
 

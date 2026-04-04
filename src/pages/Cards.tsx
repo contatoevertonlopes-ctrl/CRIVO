@@ -100,7 +100,7 @@ const Cards = () => {
 
   if (authLoading || cardsLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-muted-foreground">Carregando...</div>
       </div>
     );
@@ -109,7 +109,7 @@ const Cards = () => {
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen">
       <Sidebar />
 
       <main className="flex-1 min-w-0 pt-16 pb-24 lg:pt-0 lg:pb-0">

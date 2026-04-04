@@ -47,14 +47,14 @@ const Sidebar = () => {
       {/* Mobile Header with Hamburger */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur-md border-b border-sidebar-border/80 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <AppLogo size={26} className="text-primary shrink-0" />
+          <AppLogo size={26} className="text-sidebar-primary shrink-0" />
           <span className="font-bold text-sm tracking-[2px] uppercase">CRIVO</span>
         </div>
         <button
           onClick={toggle}
-          className="w-9 h-9 rounded-xl bg-secondary/80 flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
+          className="w-9 h-9 rounded-xl bg-sidebar-accent/60 flex items-center justify-center hover:bg-sidebar-accent transition-colors active:scale-95"
         >
-          {collapsed ? <Menu className="w-4 h-4" /> : <X className="w-4 h-4" />}
+          {collapsed ? <Menu className="w-4 h-4 text-sidebar-foreground" /> : <X className="w-4 h-4 text-sidebar-foreground" />}
         </button>
       </div>
 
@@ -74,15 +74,15 @@ const Sidebar = () => {
                 className={cn(
                   "relative flex-1 min-w-0 flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all duration-200 active:scale-95",
                   isActive
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "text-sidebar-primary"
+                    : "text-sidebar-foreground/60 hover:text-sidebar-foreground"
                 )}
               >
                 {/* Active pill background */}
                 {isActive && (
-                  <span className="absolute inset-x-2 inset-y-1 rounded-xl bg-primary/10 dark:bg-primary/15" />
+                  <span className="absolute inset-x-2 inset-y-1 rounded-xl bg-sidebar-primary/15" />
                 )}
-                <Icon className={cn("relative w-[21px] h-[21px] shrink-0 transition-transform duration-200", isActive && "scale-110")} />
+                <Icon className={cn("relative w-[21px] h-[21px] shrink-0 transition-transform duration-200", isActive ? "scale-110 sidebar-icon-active" : "sidebar-icon")} />
                 <span className={cn(
                   "relative hidden xs:block text-[10px] truncate w-full text-center leading-tight font-medium",
                   isActive ? "font-semibold" : "font-normal"
@@ -106,7 +106,7 @@ const Sidebar = () => {
 
             {/* Navigation */}
             <nav className="flex flex-col gap-1">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 px-2">
+              <span className="text-[10px] uppercase tracking-wider text-sidebar-foreground/40 mb-2 px-2">
                 Menu
               </span>
               {navItems.map((item) => {
@@ -122,11 +122,11 @@ const Sidebar = () => {
                     className={cn(
                       "flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all duration-150 text-left active:scale-[0.98]",
                       isActive
-                        ? "bg-primary/12 text-primary font-semibold ring-1 ring-primary/20"
-                        : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground border border-transparent"
+                        ? "bg-sidebar-primary/15 text-sidebar-primary font-semibold ring-1 ring-sidebar-primary/25"
+                        : "text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground border border-transparent"
                     )}
                   >
-                    <Icon className={cn("w-5 h-5 shrink-0", isActive && "stroke-[2.5px]")} />
+                    <Icon className={cn("w-5 h-5 shrink-0", isActive ? "sidebar-icon-active stroke-[2.5px]" : "sidebar-icon")} />
                     <span className="text-sm font-medium">{item.label}</span>
                   </button>
                 );
@@ -161,7 +161,7 @@ const Sidebar = () => {
                       navigate("/plans");
                       toggle();
                     }}
-                    className="flex items-center gap-2 w-full px-3 py-3 rounded-lg border border-primary/30 bg-primary/10 text-primary text-sm hover:bg-primary/20 transition-colors"
+                    className="flex items-center gap-2 w-full px-3 py-3 rounded-lg border border-sidebar-primary/30 bg-sidebar-primary/10 text-sidebar-primary text-sm hover:bg-sidebar-primary/20 transition-colors"
                   >
                     <Crown className="w-5 h-5 shrink-0" />
                     <span>Plano Pro Ativo</span>
@@ -172,16 +172,16 @@ const Sidebar = () => {
                       navigate("/plans");
                       toggle();
                     }}
-                    className="flex flex-col w-full rounded-lg overflow-hidden p-3 bg-gradient-to-b from-primary/15 to-primary/5 border border-primary/30 hover:scale-[1.02] transition-all"
+                    className="flex flex-col w-full rounded-lg overflow-hidden p-3 bg-gradient-to-b from-sidebar-primary/15 to-sidebar-primary/5 border border-sidebar-primary/30 hover:scale-[1.02] transition-all"
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      <Sparkles className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium">Assine o Pro</span>
+                      <Sparkles className="w-4 h-4 text-sidebar-primary" />
+                      <span className="text-sm font-medium text-sidebar-foreground">Assine o Pro</span>
                     </div>
-                    <span className="text-xs text-muted-foreground mb-2 text-left">
+                    <span className="text-xs text-sidebar-foreground/50 mb-2 text-left">
                       Recursos ilimitados
                     </span>
-                    <span className="text-xs text-center py-1.5 rounded-md bg-primary/20 text-primary">
+                    <span className="text-xs text-center py-1.5 rounded-md bg-sidebar-primary/20 text-sidebar-primary">
                       Ver planos →
                     </span>
                   </button>
@@ -192,7 +192,7 @@ const Sidebar = () => {
                     navigate("/auth");
                     toggle();
                   }}
-                  className="text-sm text-primary hover:text-primary/80 transition-colors"
+                  className="text-sm text-sidebar-primary hover:text-sidebar-primary/80 transition-colors"
                 >
                   Login →
                 </button>
@@ -213,13 +213,13 @@ const Sidebar = () => {
         <button
           onClick={toggle}
           className={cn(
-            "absolute -right-3 top-6 w-6 h-6 rounded-full bg-secondary border border-border flex items-center justify-center hover:bg-primary/20 transition-colors shadow-sm"
+            "absolute -right-3 top-6 w-6 h-6 rounded-full bg-sidebar-accent border border-sidebar-border flex items-center justify-center hover:bg-sidebar-primary/20 transition-colors shadow-sm"
           )}
         >
           {collapsed ? (
-            <Menu className="w-3 h-3 text-muted-foreground" />
+            <Menu className="w-3 h-3 text-sidebar-foreground/60" />
           ) : (
-            <X className="w-3 h-3 text-muted-foreground" />
+            <X className="w-3 h-3 text-sidebar-foreground/60" />
           )}
         </button>
 
@@ -231,11 +231,11 @@ const Sidebar = () => {
           )}
           onClick={() => navigate("/")}
         >
-          <AppLogo size={28} className="text-primary shrink-0" />
+          <AppLogo size={28} className="text-sidebar-primary shrink-0" />
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="text-sm font-bold tracking-[2px] uppercase leading-tight">CRIVO</span>
-              <span className="text-[10px] text-muted-foreground">Clareza Financeira</span>
+              <span className="text-sm font-bold tracking-[2px] uppercase leading-tight text-sidebar-foreground">CRIVO</span>
+              <span className="text-[10px] text-sidebar-foreground/50">Clareza Financeira</span>
             </div>
           )}
         </div>
@@ -243,7 +243,7 @@ const Sidebar = () => {
         {/* Navigation */}
         <nav className="flex flex-col gap-1 mt-2">
           {!collapsed && (
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 px-2">
+            <span className="text-[10px] uppercase tracking-wider text-sidebar-foreground/40 mb-1 px-2">
               Menu
             </span>
           )}
@@ -258,12 +258,12 @@ const Sidebar = () => {
                   "flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all duration-150 text-left",
                   collapsed && "justify-center px-2",
                   isActive
-                    ? "bg-primary/12 text-primary font-semibold shadow-sm ring-1 ring-primary/20"
-                    : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground border border-transparent"
+                    ? "bg-sidebar-primary/15 text-sidebar-primary font-semibold shadow-sm ring-1 ring-sidebar-primary/25"
+                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground border border-transparent"
                 )}
                 title={collapsed ? item.label : undefined}
               >
-                <Icon className={cn("w-4 h-4 shrink-0", isActive && "stroke-[2.5px]")} />
+                <Icon className={cn("w-4 h-4 shrink-0", isActive ? "sidebar-icon-active stroke-[2.5px]" : "sidebar-icon")} />
                 {!collapsed && <span className="text-sm">{item.label}</span>}
               </button>
             );
@@ -282,7 +282,7 @@ const Sidebar = () => {
               )}
               title={collapsed ? "Administração" : undefined}
             >
-              <Shield className="w-4 h-4 shrink-0" />
+              <Shield className={cn("w-4 h-4 shrink-0", location.pathname === "/admin" ? "sidebar-icon-active" : "sidebar-icon")} />
               {!collapsed && <span className="text-sm">Administração</span>}
             </button>
           )}
@@ -295,7 +295,7 @@ const Sidebar = () => {
               <button
                 onClick={() => navigate("/plans")}
                 className={cn(
-                  "flex items-center gap-2 w-full px-3 py-2 rounded-lg border border-primary/30 bg-primary/10 text-primary text-xs hover:bg-primary/20 transition-colors",
+                  "flex items-center gap-2 w-full px-3 py-2 rounded-lg border border-sidebar-primary/30 bg-sidebar-primary/10 text-sidebar-primary text-xs hover:bg-sidebar-primary/20 transition-colors",
                   collapsed && "justify-center px-2"
                 )}
                 title={collapsed ? "Plano Pro" : undefined}
@@ -309,23 +309,23 @@ const Sidebar = () => {
                 className={cn(
                   "flex flex-col w-full rounded-lg overflow-hidden transition-all hover:scale-[1.02]",
                   collapsed
-                    ? "p-2 items-center bg-primary/10 border border-primary/30"
-                    : "p-3 bg-gradient-to-b from-primary/15 to-primary/5 border border-primary/30"
+                    ? "p-2 items-center bg-sidebar-primary/10 border border-sidebar-primary/30"
+                    : "p-3 bg-gradient-to-b from-sidebar-primary/15 to-sidebar-primary/5 border border-sidebar-primary/30"
                 )}
                 title={collapsed ? "Assinar Pro" : undefined}
               >
                 {collapsed ? (
-                  <Sparkles className="w-4 h-4 text-primary" />
+                  <Sparkles className="w-4 h-4 text-sidebar-primary" />
                 ) : (
                   <>
                     <div className="flex items-center gap-1.5 mb-1">
-                      <Sparkles className="w-3 h-3 text-primary" />
-                      <span className="text-xs font-medium">Assine o Pro</span>
+                      <Sparkles className="w-3 h-3 text-sidebar-primary" />
+                      <span className="text-xs font-medium text-sidebar-foreground">Assine o Pro</span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground mb-2 text-left">
+                    <span className="text-[10px] text-sidebar-foreground/50 mb-2 text-left">
                       Recursos ilimitados
                     </span>
-                    <span className="text-xs text-center py-1 rounded-md bg-primary/20 text-primary">
+                    <span className="text-xs text-center py-1 rounded-md bg-sidebar-primary/20 text-sidebar-primary">
                       Ver planos →
                     </span>
                   </>
@@ -335,7 +335,7 @@ const Sidebar = () => {
           ) : (
             <button
               onClick={() => navigate("/auth")}
-              className="text-sm text-primary hover:text-primary/80 transition-colors"
+              className="text-sm text-sidebar-primary hover:text-sidebar-primary/80 transition-colors"
             >
               {collapsed ? "→" : "Login →"}
             </button>

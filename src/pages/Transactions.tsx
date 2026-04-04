@@ -629,14 +629,14 @@ const Transactions = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-muted-foreground">Carregando...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen">
       <Sidebar />
       
       <main className="flex-1 min-w-0 pt-16 pb-24 lg:pt-0 lg:pb-0">
@@ -696,25 +696,25 @@ const Transactions = () => {
 
           {/* Summary Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Entradas</p>
               <p className="text-lg sm:text-2xl font-bold text-primary">{formatCurrency(totals.incomePaid)}</p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Saídas</p>
               <p className="text-lg sm:text-2xl font-bold text-destructive">{formatCurrency(totals.expensePaid)}</p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">Saldo</p>
               <p className={`text-lg sm:text-2xl font-bold ${totals.balancePaid >= 0 ? "text-primary" : "text-destructive"}`}>
                 {formatCurrency(totals.balancePaid)}
               </p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">A Receber</p>
               <p className="text-lg sm:text-2xl font-bold text-blue-500">{formatCurrency(totals.pendingIncome)}</p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-3 sm:p-4 card-shadow-soft">
+            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">A Pagar</p>
               <p className="text-lg sm:text-2xl font-bold text-warning">{formatCurrency(totals.pendingExpense)}</p>
             </div>
@@ -722,7 +722,7 @@ const Transactions = () => {
 
           {/* Filters */}
           {/* Mobile: compact search + drawer */}
-          <div className="sm:hidden rounded-xl bg-card/50 backdrop-blur border border-border/50 p-3 mb-4 card-shadow-soft">
+          <div className="sm:hidden rounded-xl bg-card/50 backdrop-blur border border-border/70 p-3 mb-4 card-shadow-soft">
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -969,7 +969,7 @@ const Transactions = () => {
           </div>
 
           {/* Desktop: full filters card */}
-          <div className="hidden sm:block rounded-2xl bg-card/50 backdrop-blur border border-border/50 p-4 mb-6 card-shadow-soft">
+          <div className="hidden sm:block rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-4 mb-6 card-shadow-soft">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Filter className="w-4 h-4 text-muted-foreground" />
@@ -1207,7 +1207,7 @@ const Transactions = () => {
           </div>
 
           {/* Transactions List */}
-          <div className="rounded-xl sm:rounded-2xl lg:rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft overflow-hidden">
+          <div className="rounded-xl sm:rounded-2xl lg:rounded-2xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft overflow-hidden">
             {loading ? (
               <div className="text-center py-12 text-muted-foreground text-sm">Carregando...</div>
             ) : filteredTransactions.length === 0 ? (

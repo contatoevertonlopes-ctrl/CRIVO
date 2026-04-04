@@ -165,7 +165,7 @@ const DashboardHeader = ({
         <div className="hidden sm:flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border/50 bg-card cursor-pointer hover:border-primary/30 hover:bg-secondary/50 transition-all shadow-sm">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border/70 bg-card cursor-pointer hover:border-primary/30 hover:bg-secondary/50 transition-all shadow-sm">
                 <Avatar className="w-6 h-6 ring-1 ring-border/40">
                   {profile?.avatarUrl ? (
                     <AvatarImage src={profile.avatarUrl || undefined} />

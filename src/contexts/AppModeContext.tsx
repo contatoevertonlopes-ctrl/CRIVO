@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useMemo, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useMemo, useCallback, useEffect, ReactNode } from "react";
 
 export type AppMode = "survival" | "prosperity";
 
@@ -27,6 +27,17 @@ export const AppModeProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem("appMode", newMode);
       return newMode;
     });
+  }, []);
+
+  // Sync mode across browser tabs
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "appMode" && e.newValue) {
+        setModeState(e.newValue as AppMode);
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
   const value = useMemo(

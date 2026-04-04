@@ -227,7 +227,7 @@ const Auth = () => {
                     placeholder="••••••••"
                     required
                     minLength={6}
-                    className="bg-secondary/50 border-border/50"
+                    className="bg-secondary/50 border-border/70"
                   />
                 </div>
 
@@ -241,7 +241,7 @@ const Auth = () => {
                     placeholder="••••••••"
                     required
                     minLength={6}
-                    className="bg-secondary/50 border-border/50"
+                    className="bg-secondary/50 border-border/70"
                   />
                 </div>
 
@@ -270,7 +270,7 @@ const Auth = () => {
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder="Seu nome"
-                        className="bg-secondary/50 border-border/50"
+                        className="bg-secondary/50 border-border/70"
                       />
                     </div>
 
@@ -282,7 +282,7 @@ const Auth = () => {
                         value={phone}
                         onChange={handlePhoneChange}
                         placeholder="(11) 99999-9999"
-                        className="bg-secondary/50 border-border/50"
+                        className="bg-secondary/50 border-border/70"
                         maxLength={15}
                       />
                     </div>
@@ -298,7 +298,7 @@ const Auth = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="ex@gmail.com"
                     required
-                    className="bg-secondary/50 border-border/50"
+                    className="bg-secondary/50 border-border/70"
                   />
                 </div>
 
@@ -312,7 +312,7 @@ const Auth = () => {
                     placeholder="••••••••"
                     required
                     minLength={6}
-                    className="bg-secondary/50 border-border/50"
+                    className="bg-secondary/50 border-border/70"
                   />
                 </div>
 
@@ -360,7 +360,7 @@ const Auth = () => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="seu@email.com"
-                            className="bg-secondary/50 border-border/50"
+                            className="bg-secondary/50 border-border/70"
                           />
 
                           <div className="flex gap-2">

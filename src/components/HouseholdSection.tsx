@@ -150,7 +150,7 @@ const HouseholdSection = () => {
 
   if (loading) {
     return (
-      <div className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-4 sm:p-6">
+      <div className="rounded-2xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft p-4 sm:p-6">
         <div className="flex items-center gap-2 mb-4">
           <Users className="w-5 h-5 text-primary" />
           <h2 className="text-base sm:text-lg font-semibold">Espaço Compartilhado</h2>
@@ -163,7 +163,7 @@ const HouseholdSection = () => {
   }
 
   return (
-    <div className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-4 sm:p-6">
+    <div className="rounded-2xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft p-4 sm:p-6">
       <div className="flex items-center gap-2 mb-4">
         <Users className="w-5 h-5 text-primary" />
         <h2 className="text-base sm:text-lg font-semibold">Espaço Compartilhado</h2>
@@ -183,7 +183,7 @@ const HouseholdSection = () => {
               value={householdName || household.name}
               onChange={(e) => setHouseholdName(e.target.value)}
               placeholder="Ex: Casa do João e Maria"
-              className="bg-secondary/50 border-border/50"
+              className="bg-secondary/50 border-border/70"
             />
             <Button
               onClick={handleUpdateName}

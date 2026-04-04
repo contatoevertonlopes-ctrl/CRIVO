@@ -262,7 +262,7 @@ const Settings = () => {
           </div>
 
           <Tabs defaultValue="general" className="max-w-4xl">
-          <TabsList className="mb-6 bg-card/50 border border-border/50 p-1">
+          <TabsList className="mb-6 bg-card/50 border border-border/70 p-1">
             <TabsTrigger value="general" className="data-[state=active]:bg-background gap-2">
               <User className="w-4 h-4" />
               <span className="hidden sm:inline">Geral</span>
@@ -284,12 +284,12 @@ const Settings = () => {
           {/* General Tab */}
           <TabsContent value="general" className="space-y-6">
             {/* Mode Selector */}
-            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft p-5 sm:p-6">
               <ModeSelector />
             </section>
 
             {/* Profile Section */}
-            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft p-5 sm:p-6">
               <h3 className="text-sm font-medium mb-4">Perfil</h3>
               
               <form onSubmit={handleUpdateProfile} className="space-y-4">
@@ -345,7 +345,7 @@ const Settings = () => {
                       type="email"
                       value={user.email || ""}
                       disabled
-                      className="bg-secondary/30 border-border/50"
+                      className="bg-secondary/30 border-border/70"
                     />
                   </div>
 
@@ -357,7 +357,7 @@ const Settings = () => {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Seu nome"
-                      className="bg-secondary/50 border-border/50"
+                      className="bg-secondary/50 border-border/70"
                     />
                   </div>
                 </div>
@@ -374,7 +374,7 @@ const Settings = () => {
 
             {/* Subscription Section */}
             <section className={`rounded-2xl bg-card/50 backdrop-blur border card-shadow-soft p-5 sm:p-6 ${
-              isPro ? "border-primary/40" : "border-border/50"
+              isPro ? "border-primary/40" : "border-border/70"
             }`}>
               <h3 className="text-sm font-medium mb-4">Assinatura</h3>
               
@@ -407,7 +407,7 @@ const Settings = () => {
             <HouseholdSection />
 
             {/* WhatsApp Section */}
-            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft p-5 sm:p-6">
               <div className="flex items-center gap-2 mb-4">
                 <MessageSquare className="w-4 h-4 text-green-500" />
                 <h3 className="text-sm font-medium">WhatsApp</h3>
@@ -425,7 +425,7 @@ const Settings = () => {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="5511999999999"
-                    className="bg-secondary/50 border-border/50 max-w-xs"
+                    className="bg-secondary/50 border-border/70 max-w-xs"
                   />
                   <p className="text-xs text-muted-foreground">
                     Digite com código do país (ex: 5511999999999)
@@ -452,12 +452,12 @@ const Settings = () => {
             </section>
 
             {/* Data Management */}
-            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft p-5 sm:p-6">
               <DataManagement />
             </section>
 
             {/* Logout Section */}
-            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft p-5 sm:p-6">
               <h3 className="text-sm font-medium mb-4">Conta</h3>
               
               <Button
@@ -473,7 +473,7 @@ const Settings = () => {
 
           {/* Experience Tab - Module Settings */}
           <TabsContent value="experience" className="space-y-6">
-            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft p-5 sm:p-6">
               <ModuleSettings />
             </section>
           </TabsContent>
@@ -481,19 +481,19 @@ const Settings = () => {
           {/* Financial Tab */}
           <TabsContent value="financial" className="space-y-6">
             {/* Goals Section */}
-            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft p-5 sm:p-6">
               <GoalsSection />
             </section>
 
             {/* Category Manager */}
-            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft p-5 sm:p-6">
               <CategoryManager />
             </section>
           </TabsContent>
 
           {/* Notifications Tab */}
           <TabsContent value="notifications" className="space-y-6">
-            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/50 card-shadow-soft p-5 sm:p-6">
+            <section className="rounded-2xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft p-5 sm:p-6">
               <NotificationTriggers />
             </section>
           </TabsContent>

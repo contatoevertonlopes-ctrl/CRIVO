@@ -126,7 +126,9 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
       firstBillingMonth.setMonth(firstBillingMonth.getMonth() + 1);
     }
 
-    const installmentAmount = Math.round((params.totalAmount / params.installments) * 100) / 100;
+    const baseInstallmentAmount = Math.round((params.totalAmount / params.installments) * 100) / 100;
+    // First installment absorbs any rounding difference so total always matches
+    const firstInstallmentAmount = Math.round((params.totalAmount - baseInstallmentAmount * (params.installments - 1)) * 100) / 100;
     const firstDescription = params.installments > 1
       ? `${params.description} (1/${params.installments})`
       : params.description;
@@ -139,7 +141,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
         user_id: user.id,
         household_id: householdId,
         description: firstDescription,
-        amount: installmentAmount,
+        amount: firstInstallmentAmount,
         purchase_date: params.purchaseDateStr,
         installment_number: 1,
         total_installments: params.installments,
@@ -283,7 +285,9 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
         // Create multiple transactions for installments
         const totalAmount = parseFloat(amount);
         const numInstallments = parseInt(installmentCount);
-        const installmentAmount = Math.round((totalAmount / numInstallments) * 100) / 100;
+        const baseInstallmentAmt = Math.round((totalAmount / numInstallments) * 100) / 100;
+        // First installment absorbs rounding so sum of all installments = totalAmount
+        const firstInstallmentAmt = Math.round((totalAmount - baseInstallmentAmt * (numInstallments - 1)) * 100) / 100;
         const baseDate = new Date(date);
 
         const firstInstallmentDate = getNextInstallmentDate(baseDate, 0, installmentInterval);
@@ -297,7 +301,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             description: `${description} 1/${numInstallments}`,
             category,
             type,
-            amount: installmentAmount,
+            amount: firstInstallmentAmt,
             status,
             date: firstDateStr,
             paid_date: paidDate || null,
@@ -325,7 +329,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             description: `${description} ${i + 1}/${numInstallments}`,
             category,
             type,
-            amount: installmentAmount,
+            amount: baseInstallmentAmt,
             status: "em_aberto",
             date: installmentDate.toISOString().split("T")[0],
             paid_date: null,
@@ -364,7 +368,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
 
         toast({
           title: "Parcelas criadas",
-          description: `${numInstallments} parcelas de R$ ${installmentAmount.toFixed(2)} foram criadas.`,
+          description: `${numInstallments} parcelas de R$ ${baseInstallmentAmt.toFixed(2)} foram criadas (1ª parcela: R$ ${firstInstallmentAmt.toFixed(2)}).`,
         });
       } else {
         // Single transaction
@@ -525,7 +529,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
               onChange={(e) => setDescription(e.target.value)}
               onBlur={() => handleBlur("description")}
               placeholder="Ex: Pagamento cliente X"
-              className={cn("bg-secondary/50 border-border/50", errors.description && "border-destructive focus-visible:ring-destructive")}
+              className={cn("bg-secondary/50 border-border/70", errors.description && "border-destructive focus-visible:ring-destructive")}
               autoComplete="off"
             />
             {errors.description && (
@@ -540,7 +544,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             <div className="space-y-2">
               <Label htmlFor="type">Tipo</Label>
               <Select value={type} onValueChange={(value: "income" | "expense") => setType(value)}>
-                <SelectTrigger className="bg-secondary/50 border-border/50">
+                <SelectTrigger className="bg-secondary/50 border-border/70">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -563,7 +567,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
                 onChange={(e) => setAmount(e.target.value)}
                 onBlur={() => handleBlur("amount")}
                 placeholder="0,00"
-                className={cn("bg-secondary/50 border-border/50", errors.amount && "border-destructive focus-visible:ring-destructive")}
+                className={cn("bg-secondary/50 border-border/70", errors.amount && "border-destructive focus-visible:ring-destructive")}
                 autoComplete="off"
               />
               {errors.amount && (
@@ -586,7 +590,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
                 onChange={(e) => setCategory(e.target.value)}
                 onBlur={() => handleBlur("category")}
                 placeholder="Ex: Serviços"
-                className={cn("bg-secondary/50 border-border/50", errors.category && "border-destructive focus-visible:ring-destructive")}
+                className={cn("bg-secondary/50 border-border/70", errors.category && "border-destructive focus-visible:ring-destructive")}
                 autoComplete="off"
               />
               {errors.category && (
@@ -600,7 +604,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="bg-secondary/50 border-border/50">
+                <SelectTrigger className="bg-secondary/50 border-border/70">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -623,7 +627,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 required
-                className="bg-secondary/50 border-border/50"
+                className="bg-secondary/50 border-border/70"
               />
             </div>
 
@@ -634,7 +638,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
                 type="date"
                 value={paidDate}
                 onChange={(e) => setPaidDate(e.target.value)}
-                className="bg-secondary/50 border-border/50"
+                className="bg-secondary/50 border-border/70"
               />
             </div>
           </div>
@@ -650,7 +654,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
               setSelectedCardId("");
               setTouched(prev => ({ ...prev, paymentMethod: true }));
             }}>
-              <SelectTrigger className={cn("bg-secondary/50 border-border/50", errors.paymentMethod && "border-destructive focus:ring-destructive")}>
+              <SelectTrigger className={cn("bg-secondary/50 border-border/70", errors.paymentMethod && "border-destructive focus:ring-destructive")}>
                 <SelectValue placeholder="Selecione a forma de pagamento" />
               </SelectTrigger>
               <SelectContent>
@@ -683,7 +687,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
                     setSelectedBankAccountId(v);
                     setTouched(prev => ({ ...prev, bankAccount: true }));
                   }}>
-                    <SelectTrigger className={cn("bg-secondary/50 border-border/50", errors.bankAccount && "border-destructive focus:ring-destructive")}>
+                    <SelectTrigger className={cn("bg-secondary/50 border-border/70", errors.bankAccount && "border-destructive focus:ring-destructive")}>
                       <SelectValue placeholder="Escolha a conta bancária" />
                     </SelectTrigger>
                     <SelectContent>
@@ -725,7 +729,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
                     setSelectedCardId(v);
                     setTouched(prev => ({ ...prev, card: true }));
                   }}>
-                    <SelectTrigger className={cn("bg-secondary/50 border-border/50", errors.card && "border-destructive focus:ring-destructive")}>
+                    <SelectTrigger className={cn("bg-secondary/50 border-border/70", errors.card && "border-destructive focus:ring-destructive")}>
                       <SelectValue placeholder="Escolha o cartão" />
                     </SelectTrigger>
                     <SelectContent>
@@ -757,7 +761,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
           <div className="space-y-2">
             <Label htmlFor="tag">Tag</Label>
             <Select value={tag} onValueChange={setTag}>
-              <SelectTrigger className="bg-secondary/50 border-border/50">
+              <SelectTrigger className="bg-secondary/50 border-border/70">
                 <SelectValue placeholder="Selecione uma tag (opcional)" />
               </SelectTrigger>
               <SelectContent>
@@ -800,13 +804,13 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
                         max="48"
                         value={installmentCount}
                         onChange={(e) => setInstallmentCount(e.target.value)}
-                        className="bg-secondary/50 border-border/50"
+                        className="bg-secondary/50 border-border/70"
                       />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">Intervalo</Label>
                       <Select value={installmentInterval} onValueChange={setInstallmentInterval}>
-                        <SelectTrigger className="bg-secondary/50 border-border/50">
+                        <SelectTrigger className="bg-secondary/50 border-border/70">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -863,7 +867,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
                   <div className="mt-3 space-y-2">
                     <Label className="text-xs text-muted-foreground">Intervalo</Label>
                     <Select value={recurringInterval} onValueChange={setRecurringInterval}>
-                      <SelectTrigger className="bg-secondary/50 border-border/50">
+                      <SelectTrigger className="bg-secondary/50 border-border/70">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useHouseholdId } from "@/hooks/useHouseholdId";
 import { useBankAccounts } from "@/hooks/useBankAccounts";
 import { detectCategory } from "@/utils/categorySuggestion";
+import { parseMonetaryValue } from "@/components/import/importUtils";
 
 interface Goal {
   id: string;
@@ -40,11 +41,11 @@ const detectGoal = (text: string, goals: Goal[]): { goalId: string; goalTitle: s
 };
 
 const parseQuickText = (text: string, goals: Goal[]): ParsedTransaction | null => {
-  // Extract amount: looks for numbers with optional decimal
-  const amountMatch = text.match(/(?:R\$\s?)?(\d+(?:[.,]\d{1,2})?)/i);
+  // Extract amount: supports formats like 50, 1.500, 1.500,50, 1,500.50, R$ 50,00
+  const amountMatch = text.match(/(?:R\$\s?)?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)/i);
   if (!amountMatch) return null;
-  
-  const amount = parseFloat(amountMatch[1].replace(",", "."));
+
+  const amount = parseMonetaryValue(amountMatch[0]);
   if (isNaN(amount) || amount <= 0) return null;
 
   // Detect if it's income

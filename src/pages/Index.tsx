@@ -239,7 +239,7 @@ const Index = () => {
   const PayReceiveCards = ({ className }: { className?: string }) => {
     return (
       <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${className ?? ""}`.trim()}>
-        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft">
+        <Card className="rounded-2xl border-border/70 bg-card/50 backdrop-blur card-shadow-soft">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
@@ -269,7 +269,7 @@ const Index = () => {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft">
+        <Card className="rounded-2xl border-border/70 bg-card/50 backdrop-blur card-shadow-soft">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
@@ -315,7 +315,7 @@ const Index = () => {
     <Card
       className={
         [
-          "rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft h-full relative",
+          "rounded-2xl border-border/70 bg-card/50 backdrop-blur card-shadow-soft h-full relative",
           isEditingLayout && wiggleOnce ? "dashboard-edit-wiggle-card" : "",
         ]
           .filter(Boolean)
@@ -329,7 +329,7 @@ const Index = () => {
             <p className="text-xs text-muted-foreground">Visão geral</p>
             <p className="text-lg font-semibold text-foreground">Saldo geral</p>
           </div>
-          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap bg-secondary text-muted-foreground border border-border/50">
+          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap bg-secondary text-muted-foreground border border-border/70">
             {getPeriodLabel()}
           </span>
         </div>
@@ -344,7 +344,7 @@ const Index = () => {
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-border/50 bg-background/40 p-3">
+          <div className="rounded-xl border border-border/70 bg-background/40 p-3">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-prosperity-emerald" />
               <p className="text-[11px] text-muted-foreground">Entradas</p>
@@ -352,7 +352,7 @@ const Index = () => {
             <p className="mt-1 text-base font-semibold text-prosperity-emerald">{formatCurrency(metrics.monthlyIncome)}</p>
             <p className="text-[10px] text-muted-foreground">Previsto: {formatCurrency(metrics.monthlyIncomePending)}</p>
           </div>
-          <div className="rounded-xl border border-border/50 bg-background/40 p-3">
+          <div className="rounded-xl border border-border/70 bg-background/40 p-3">
             <div className="flex items-center gap-2">
               <Receipt className="w-4 h-4 text-destructive" />
               <p className="text-[11px] text-muted-foreground">Saídas</p>
@@ -369,7 +369,7 @@ const Index = () => {
     <Card
       className={
         [
-          "rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft h-full relative",
+          "rounded-2xl border-border/70 bg-card/50 backdrop-blur card-shadow-soft h-full relative",
           isEditingLayout && wiggleOnce ? "dashboard-edit-wiggle-card" : "",
         ]
           .filter(Boolean)
@@ -390,7 +390,7 @@ const Index = () => {
             topAccounts.map((a) => (
               <div
                 key={a.id}
-                className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-3 py-2.5 transition-colors"
+                className="flex items-center gap-3 rounded-xl border border-border/70 bg-card px-3 py-2.5 transition-colors"
                 style={a.color ? {
                   borderLeftColor: getAccentColor(a.color),
                   borderLeftWidth: "3px",
@@ -422,7 +422,7 @@ const Index = () => {
     <Card
       className={
         [
-          "rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft h-full relative",
+          "rounded-2xl border-border/70 bg-card/50 backdrop-blur card-shadow-soft h-full relative",
           isEditingLayout && wiggleOnce ? "dashboard-edit-wiggle-card" : "",
         ]
           .filter(Boolean)
@@ -441,7 +441,7 @@ const Index = () => {
             <p className="text-xs text-muted-foreground">Nenhum cartão cadastrado</p>
           ) : (
             <>
-              <div className="rounded-xl border border-border/50 bg-card px-3 py-2.5 shrink-0">
+              <div className="rounded-xl border border-border/70 bg-card px-3 py-2.5 shrink-0">
                 <div className="flex items-center justify-between">
                   <p className="text-[11px] text-muted-foreground">Fatura do mês</p>
                   <p className="text-[12px] font-semibold tabular-nums text-foreground">{formatCurrency(totalCurrentCardBill)}</p>
@@ -457,7 +457,7 @@ const Index = () => {
                 {cards.slice(0, 3).map((c) => (
                   <div
                     key={c.id}
-                    className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-3 py-2.5 transition-colors"
+                    className="flex items-center gap-3 rounded-xl border border-border/70 bg-card px-3 py-2.5 transition-colors"
                     style={c.color ? {
                       borderLeftColor: getAccentColor(c.color),
                       borderLeftWidth: "3px",
@@ -503,7 +503,7 @@ const Index = () => {
     <Card
       className={
         [
-          "rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft h-full relative",
+          "rounded-2xl border-border/70 bg-card/50 backdrop-blur card-shadow-soft h-full relative",
           isEditingLayout && wiggleOnce ? "dashboard-edit-wiggle-card" : "",
         ]
           .filter(Boolean)
@@ -547,7 +547,7 @@ const Index = () => {
     <Card
       className={
         [
-          "rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft h-full relative",
+          "rounded-2xl border-border/70 bg-card/50 backdrop-blur card-shadow-soft h-full relative",
           isEditingLayout && wiggleOnce ? "dashboard-edit-wiggle-card" : "",
         ]
           .filter(Boolean)
@@ -674,7 +674,7 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-muted-foreground">Carregando...</div>
       </div>
     );
@@ -685,7 +685,7 @@ const Index = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen">
       <Sidebar />
       
       {/* Main Content */}

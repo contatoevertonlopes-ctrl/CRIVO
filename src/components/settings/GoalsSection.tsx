@@ -79,7 +79,7 @@ const GoalsSection = () => {
               value={goals.totalDebt ? formatCurrency(goals.totalDebt) : ""}
               onChange={(e) => handleCurrencyChange("totalDebt", e.target.value)}
               placeholder="R$ 0,00"
-              className="bg-secondary/50 border-border/50"
+              className="bg-secondary/50 border-border/70"
             />
             <p className="text-xs text-muted-foreground">
               Soma de todas as suas dívidas atuais
@@ -97,7 +97,7 @@ const GoalsSection = () => {
               value={goals.monthlyDebtPayment ? formatCurrency(goals.monthlyDebtPayment) : ""}
               onChange={(e) => handleCurrencyChange("monthlyDebtPayment", e.target.value)}
               placeholder="R$ 0,00"
-              className="bg-secondary/50 border-border/50"
+              className="bg-secondary/50 border-border/70"
             />
             <p className="text-xs text-muted-foreground">
               Quanto você consegue separar por mês para pagar dívidas
@@ -149,7 +149,7 @@ const GoalsSection = () => {
             value={goals.monthlyInvestment ? formatCurrency(goals.monthlyInvestment) : ""}
             onChange={(e) => handleCurrencyChange("monthlyInvestment", e.target.value)}
             placeholder="R$ 0,00"
-            className="bg-secondary/50 border-border/50"
+            className="bg-secondary/50 border-border/70"
           />
           <p className="text-xs text-muted-foreground">
             Quanto você pretende investir todo mês
@@ -167,7 +167,7 @@ const GoalsSection = () => {
             value={goals.financialFreedomTarget ? formatCurrency(goals.financialFreedomTarget) : ""}
             onChange={(e) => handleCurrencyChange("financialFreedomTarget", e.target.value)}
             placeholder="R$ 0,00"
-            className="bg-secondary/50 border-border/50"
+            className="bg-secondary/50 border-border/70"
           />
           <p className="text-xs text-muted-foreground">
             Patrimônio alvo para viver de renda

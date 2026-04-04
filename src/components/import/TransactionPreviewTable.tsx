@@ -106,7 +106,7 @@ const TransactionPreviewTable = ({
       </div>
 
       {/* Table */}
-      <ScrollArea className="h-[300px] rounded-lg border border-border/50">
+      <ScrollArea className="h-[300px] rounded-lg border border-border/70">
         <table className="w-full text-xs">
           <thead className="bg-muted/50 sticky top-0">
             <tr>

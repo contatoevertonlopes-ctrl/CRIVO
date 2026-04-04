@@ -70,7 +70,7 @@ export const BankAccountCard = ({ account, onEdit, onDelete }: BankAccountCardPr
 
   return (
     <Card 
-      className="relative overflow-hidden border-border/50 hover:border-border transition-colors group"
+      className="relative overflow-hidden border-border/70 hover:border-border transition-colors group"
       style={{ 
         background: darkBg
           ? `linear-gradient(135deg, ${color} 0%, ${color} 100%)`

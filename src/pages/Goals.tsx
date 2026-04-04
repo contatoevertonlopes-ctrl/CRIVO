@@ -33,7 +33,7 @@ const Goals = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-muted-foreground">Carregando...</div>
       </div>
     );
@@ -119,7 +119,7 @@ const Goals = () => {
   });
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen">
       <Sidebar />
 
       <main className="flex-1 min-w-0 pt-16 pb-24 lg:pt-0 lg:pb-0">
@@ -158,7 +158,7 @@ const Goals = () => {
               {[1, 2, 3].map((i) => (
                 <div 
                   key={i} 
-                  className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur p-5 animate-pulse card-shadow-soft"
+                  className="rounded-2xl border border-border/70 bg-card/50 backdrop-blur p-5 animate-pulse card-shadow-soft"
                 >
                   <div className="h-12 bg-muted rounded mb-4"></div>
                   <div className="h-4 bg-muted rounded w-2/3 mb-2"></div>
@@ -167,7 +167,7 @@ const Goals = () => {
               ))}
             </div>
           ) : goals.length === 0 ? (
-            <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur p-8 text-center card-shadow-soft">
+            <div className="rounded-2xl border border-border/70 bg-card/50 backdrop-blur p-8 text-center card-shadow-soft">
               <div className={cn(
                 "w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4",
                 isSurvival ? "bg-survival-primary/15" : "bg-prosperity-emerald/15"

@@ -41,7 +41,7 @@ const NextBillWidget = ({ cards }: NextBillWidgetProps) => {
         ? "bg-destructive/10 border-destructive/30" 
         : isWarning 
           ? "bg-warning/10 border-warning/30"
-          : "bg-card border-border/50"
+          : "bg-card border-border/70"
     )}>
       <div className={cn(
         "w-10 h-10 rounded-lg flex items-center justify-center",

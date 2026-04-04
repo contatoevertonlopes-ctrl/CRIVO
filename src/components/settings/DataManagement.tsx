@@ -135,7 +135,7 @@ const DataManagement = () => {
 
       <div className="space-y-4">
         {/* Export Section */}
-        <div className="p-4 rounded-lg bg-card/50 border border-border/50">
+        <div className="p-4 rounded-lg bg-card/50 border border-border/70">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
               <Download className="w-5 h-5 text-primary" />

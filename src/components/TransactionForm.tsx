@@ -943,7 +943,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
                       max="48"
                       value={installmentCount}
                       onChange={(e) => setFormData({ ...formData, installment_count: e.target.value })}
-                      className="bg-secondary/50 border-border/50"
+                      className="bg-secondary/50 border-border/70"
                     />
                   </div>
                   <div className="space-y-1">
@@ -952,7 +952,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
                       value={installmentInterval} 
                       onValueChange={(v) => setFormData({ ...formData, installment_interval: v })}
                     >
-                      <SelectTrigger className="bg-secondary/50 border-border/50">
+                      <SelectTrigger className="bg-secondary/50 border-border/70">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

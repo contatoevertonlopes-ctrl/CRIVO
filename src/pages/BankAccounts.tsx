@@ -168,7 +168,7 @@ const BankAccounts = () => {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Total Patrimony */}
-          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft">
+          <Card className="rounded-2xl border-border/70 bg-card/50 backdrop-blur card-shadow-soft">
             <CardContent className="p-5">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-primary/20 flex items-center justify-center">
@@ -185,7 +185,7 @@ const BankAccounts = () => {
           </Card>
 
           {/* Total Positive */}
-          <Card className="rounded-2xl border-border/50 bg-card/50 backdrop-blur card-shadow-soft">
+          <Card className="rounded-2xl border-border/70 bg-card/50 backdrop-blur card-shadow-soft">
             <CardContent className="p-5">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-green-500/20 flex items-center justify-center">

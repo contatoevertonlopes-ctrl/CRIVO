@@ -113,7 +113,7 @@ export function MultiSelect({
             <span>{allLabel}</span>
           </button>
 
-          <div className="border-t border-border/50 my-1" />
+          <div className="border-t border-border/70 my-1" />
 
           {options.map((option) => {
             const isSelected = selected.includes(option.value);
@@ -142,7 +142,7 @@ export function MultiSelect({
         </div>
 
         {!isAllSelected && selected.length > 0 && (
-          <div className="border-t border-border/50 p-2">
+          <div className="border-t border-border/70 p-2">
             <div className="flex flex-wrap gap-1">
               {selected.map((v) => {
                 const label = options.find((o) => o.value === v)?.label ?? v;

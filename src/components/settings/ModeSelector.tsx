@@ -47,7 +47,7 @@ const ModeSelector = () => {
                   ? m.color === "survival"
                     ? "border-survival-primary bg-survival-primary/10 shadow-lg shadow-survival-primary/20"
                     : "border-prosperity-primary bg-prosperity-primary/10 shadow-lg shadow-prosperity-primary/20"
-                  : "border-border/50 bg-card/50 hover:border-border"
+                  : "border-border/70 bg-card/50 hover:border-border"
               )}
             >
               {isActive && (

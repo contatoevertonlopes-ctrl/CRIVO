@@ -205,7 +205,7 @@ const TransactionsTable = ({
         </div>
         <div className="flex items-center gap-2">
           {/* View Toggle */}
-          <div className="flex items-center rounded-lg border border-border/50 p-0.5">
+          <div className="flex items-center rounded-lg border border-border/70 p-0.5">
             <button
               onClick={() => setViewMode("timeline")}
               className={cn(

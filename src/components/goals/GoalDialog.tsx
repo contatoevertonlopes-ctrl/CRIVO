@@ -261,7 +261,7 @@ const GoalDialog = ({ open, onOpenChange, goal, onSave }: GoalDialogProps) => {
                 value={carValue}
                 onChange={(e) => setCarValue(formatCurrencyInput(e.target.value))}
                 placeholder="R$ 100.000,00"
-                className="mt-1.5 bg-background border-border/50 text-lg font-semibold"
+                className="mt-1.5 bg-background border-border/70 text-lg font-semibold"
               />
             </div>
 
@@ -275,7 +275,7 @@ const GoalDialog = ({ open, onOpenChange, goal, onSave }: GoalDialogProps) => {
                 value={financeMonths}
                 onChange={(e) => setFinanceMonths(e.target.value)}
                 placeholder="48"
-                className="mt-1.5 bg-background border-border/50"
+                className="mt-1.5 bg-background border-border/70"
               />
             </div>
 
@@ -396,7 +396,7 @@ const GoalDialog = ({ open, onOpenChange, goal, onSave }: GoalDialogProps) => {
         <div className="space-y-5 pt-2">
           {/* Template info */}
           {selectedTemplate && selectedTemplate.items.length > 0 && (
-            <div className="p-3 rounded-xl bg-secondary/50 border border-border/50">
+            <div className="p-3 rounded-xl bg-secondary/50 border border-border/70">
               <p className="text-xs text-muted-foreground mb-1">
                 {selectedTemplate.items.length} itens serão criados automaticamente
               </p>
@@ -448,7 +448,7 @@ const GoalDialog = ({ open, onOpenChange, goal, onSave }: GoalDialogProps) => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex: Casamento 2026"
-              className="mt-1.5 bg-background border-border/50"
+              className="mt-1.5 bg-background border-border/70"
             />
           </div>
 
@@ -462,7 +462,7 @@ const GoalDialog = ({ open, onOpenChange, goal, onSave }: GoalDialogProps) => {
               value={targetAmount}
               onChange={(e) => setTargetAmount(formatCurrencyInput(e.target.value))}
               placeholder="R$ 0,00"
-              className="mt-1.5 bg-background border-border/50"
+              className="mt-1.5 bg-background border-border/70"
             />
           </div>
 
@@ -477,7 +477,7 @@ const GoalDialog = ({ open, onOpenChange, goal, onSave }: GoalDialogProps) => {
                 type="date"
                 value={eventDate}
                 onChange={(e) => setEventDate(e.target.value)}
-                className="mt-1.5 bg-background border-border/50"
+                className="mt-1.5 bg-background border-border/70"
               />
             </div>
           )}
@@ -492,7 +492,7 @@ const GoalDialog = ({ open, onOpenChange, goal, onSave }: GoalDialogProps) => {
               type="date"
               value={deadline}
               onChange={(e) => setDeadline(e.target.value)}
-              className="mt-1.5 bg-background border-border/50"
+              className="mt-1.5 bg-background border-border/70"
             />
           </div>
 

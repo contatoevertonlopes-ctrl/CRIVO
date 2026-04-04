@@ -243,14 +243,14 @@ const GoalItemsList = ({ goalId, onGoalUpdate }: GoalItemsListProps) => {
           placeholder="Ex: Fotógrafo"
           value={newItemTitle}
           onChange={(e) => setNewItemTitle(e.target.value)}
-          className="flex-1 h-9 text-sm bg-background border-border/50"
+          className="flex-1 h-9 text-sm bg-background border-border/70"
           onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
         />
         <Input
           placeholder="R$ 0,00"
           value={newItemAmount}
           onChange={(e) => setNewItemAmount(formatCurrencyInput(e.target.value))}
-          className="w-28 h-9 text-sm bg-background border-border/50"
+          className="w-28 h-9 text-sm bg-background border-border/70"
           onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
         />
         <Button
@@ -462,7 +462,7 @@ const GoalItemsList = ({ goalId, onGoalUpdate }: GoalItemsListProps) => {
                 <button
                   key={tx.id}
                   onClick={() => handleLinkTransaction(tx.id)}
-                  className="w-full p-3 rounded-lg border border-border/50 bg-secondary/30 hover:bg-secondary/60 transition-colors text-left"
+                  className="w-full p-3 rounded-lg border border-border/70 bg-secondary/30 hover:bg-secondary/60 transition-colors text-left"
                 >
                   <div className="flex items-center justify-between">
                     <div>

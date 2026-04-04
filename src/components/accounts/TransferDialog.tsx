@@ -164,7 +164,7 @@ export const TransferDialog = ({ open, onOpenChange }: TransferDialogProps) => {
           <div className="space-y-2">
             <Label>Conta de Origem</Label>
             <Select value={fromAccountId} onValueChange={setFromAccountId}>
-              <SelectTrigger className="bg-secondary/50 border-border/50">
+              <SelectTrigger className="bg-secondary/50 border-border/70">
                 <SelectValue placeholder="Selecione a conta de origem" />
               </SelectTrigger>
               <SelectContent>
@@ -208,7 +208,7 @@ export const TransferDialog = ({ open, onOpenChange }: TransferDialogProps) => {
               onValueChange={setToAccountId}
               disabled={!fromAccountId}
             >
-              <SelectTrigger className="bg-secondary/50 border-border/50">
+              <SelectTrigger className="bg-secondary/50 border-border/70">
                 <SelectValue placeholder={fromAccountId ? "Selecione a conta de destino" : "Selecione primeiro a origem"} />
               </SelectTrigger>
               <SelectContent>
@@ -240,7 +240,7 @@ export const TransferDialog = ({ open, onOpenChange }: TransferDialogProps) => {
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0,00"
               required
-              className="bg-secondary/50 border-border/50 text-lg font-semibold"
+              className="bg-secondary/50 border-border/70 text-lg font-semibold"
             />
           </div>
 
@@ -252,7 +252,7 @@ export const TransferDialog = ({ open, onOpenChange }: TransferDialogProps) => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Ex: Reserva de emergência"
-              className="bg-secondary/50 border-border/50"
+              className="bg-secondary/50 border-border/70"
             />
           </div>
 

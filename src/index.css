@@ -48,8 +48,8 @@
     --warning: 38 92% 50%;
     --warning-foreground: 38 80% 12%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
+    --border: 220 14% 84%;
+    --input: 220 14% 84%;
     --ring: 156 62% 49%;
 
     --radius: 0.75rem;
@@ -110,6 +110,13 @@
     --gradient-accent: linear-gradient(135deg, hsl(156 62% 49%), hsl(156 83% 34%));
     --gradient-survival: linear-gradient(135deg, hsl(220 13% 95%), hsl(210 17% 98%));
     --gradient-prosperity: linear-gradient(135deg, hsl(220 13% 95%), hsl(210 17% 98%));
+
+    /* Mesh background — light */
+    --mesh-bg:
+      radial-gradient(at 18% 12%,  hsl(214 50% 91%) 0px, transparent 52%),
+      radial-gradient(at 82%  8%,  hsl(156 55% 90%) 0px, transparent 46%),
+      radial-gradient(at 55% 85%,  hsl(220 35% 93%) 0px, transparent 54%),
+      radial-gradient(at 10% 75%,  hsl(214 40% 94%) 0px, transparent 42%);
 
     /* Shadows — light */
     --shadow-soft: 0 2px 8px rgba(26, 46, 74, 0.06);
@@ -214,6 +221,13 @@
     --gradient-survival: linear-gradient(135deg, hsl(214 40% 13%), hsl(214 50% 10%));
     --gradient-prosperity: linear-gradient(135deg, hsl(214 38% 12%), hsl(214 50% 10%));
 
+    /* Mesh background — dark */
+    --mesh-bg:
+      radial-gradient(at 18% 12%,  hsl(214 65% 17%) 0px, transparent 52%),
+      radial-gradient(at 80%  6%,  hsl(156 48% 11%) 0px, transparent 46%),
+      radial-gradient(at 55% 88%,  hsl(220 52%  7%) 0px, transparent 54%),
+      radial-gradient(at  8% 72%,  hsl(214 55% 13%) 0px, transparent 42%);
+
     /* Shadows — dark */
     --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.40), 0 1px 4px rgba(0, 0, 0, 0.20);
     --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.15);
@@ -256,9 +270,9 @@
   }
 
   html, body {
-    @apply bg-background text-foreground font-sans;
+    @apply text-foreground font-sans;
     font-family: "DM Sans", "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    background: hsl(var(--background));
+    background-color: hsl(var(--background));
     overflow-x: hidden;
     max-width: 100vw;
   }
@@ -266,6 +280,24 @@
   body {
     min-height: 100vh;
     min-height: 100dvh;
+    position: relative;
+  }
+
+  /* Mesh gradient layer — fixed so it never scrolls with content */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: var(--mesh-bg);
+    background-color: transparent;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Ensure all page content renders above the mesh layer */
+  #root {
+    position: relative;
+    z-index: 1;
   }
 
   /* Date input calendar icon styling */
@@ -304,6 +336,15 @@
 
   .glow-prosperity {
     box-shadow: var(--shadow-glow-green);
+  }
+
+  /* Sidebar icon shadows */
+  .sidebar-icon {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+  }
+  .sidebar-icon-active {
+    filter: drop-shadow(0 0 5px hsl(var(--sidebar-primary) / 0.55))
+            drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
   }
 
   /* Financial value typography */
