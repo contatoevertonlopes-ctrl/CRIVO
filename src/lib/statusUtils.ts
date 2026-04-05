@@ -72,10 +72,13 @@ export const isPaidStatus = (status: string): boolean =>
 export const isPendingStatus = (status: string): boolean =>
   !isPaidStatus(status);
 
-/** Compute the unpaid status based on a date string vs today (returns DB-ready Portuguese). */
+/**
+ * Compute the unpaid status based on a date string vs today (returns DB-ready Portuguese).
+ * New transactions always start as "em_aberto" regardless of how far in the future they are.
+ * The daily cron job handles transitioning to "a_vencer" (5 days before) and "vencido" (1 day after).
+ */
 export const computeUnpaidStatus = (dateStr: string): string => {
   const todayStr = new Date().toISOString().split("T")[0];
-  if (dateStr > todayStr) return "a_vencer";
   if (dateStr < todayStr) return "vencido";
   return "em_aberto";
 };

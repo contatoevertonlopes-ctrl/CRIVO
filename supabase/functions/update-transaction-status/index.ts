@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { enforceCronSecret } from "../_shared/cronAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
 const logStep = (step: string, details?: any) => {
@@ -16,8 +17,12 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Enforce cron secret — reject unauthorized callers
+  const authError = enforceCronSecret(corsHeaders, req);
+  if (authError) return authError;
+
   try {
-    logStep("Function started - public endpoint for cron job");
+    logStep("Function started");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -32,23 +37,20 @@ serve(async (req) => {
 
     const today = new Date();
     const todayStr = today.toISOString().split("T")[0];
-    
-    // Calculate date 3 days from now
-    const threeDaysFromNow = new Date(today);
-    threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
-    const threeDaysFromNowStr = threeDaysFromNow.toISOString().split("T")[0];
 
-    logStep("Date calculations", { 
-      today: todayStr, 
-      threeDaysFromNow: threeDaysFromNowStr,
-    });
+    // 5 days from now — threshold for "A vencer"
+    const fiveDaysFromNow = new Date(today);
+    fiveDaysFromNow.setDate(fiveDaysFromNow.getDate() + 5);
+    const fiveDaysFromNowStr = fiveDaysFromNow.toISOString().split("T")[0];
 
-    // 1. Update "em_aberto" to "a_vencer" (within 3 days before due date, including today)
+    logStep("Date calculations", { today: todayStr, fiveDaysFromNow: fiveDaysFromNowStr });
+
+    // 1. "em_aberto" → "a_vencer" — due within the next 5 days (today inclusive)
     const { data: toUpcoming, error: toUpcomingError } = await supabase
       .from("transactions")
       .update({ status: "a_vencer" })
       .in("status", ["em_aberto"])
-      .lte("date", threeDaysFromNowStr)
+      .lte("date", fiveDaysFromNowStr)
       .gte("date", todayStr)
       .select("id");
 
@@ -58,7 +60,7 @@ serve(async (req) => {
       logStep("Updated to a_vencer", { count: toUpcoming?.length || 0 });
     }
 
-    // 2. Update "a_vencer" or "em_aberto" to "vencido" (past due date — date < today)
+    // 2. "a_vencer" or "em_aberto" → "vencido" — 1 day after due date (date strictly before today)
     const { data: toOverdue, error: toOverdueError } = await supabase
       .from("transactions")
       .update({ status: "vencido" })

@@ -74,7 +74,7 @@ const BankAccounts = () => {
   const handleSave = async (data: {
     name: string;
     bank_name: string;
-    account_type: "checking" | "savings";
+    account_type: "checking" | "savings" | "cash";
     balance: number;
     color: string;
     icon: string;

@@ -10,7 +10,7 @@ export interface BankAccount {
   household_id: string | null;
   name: string;
   bank_name: string;
-  account_type: "checking" | "savings";
+  account_type: "checking" | "savings" | "cash";
   balance: number;
   color: string;
   icon: string;
@@ -47,6 +47,7 @@ export const BANK_PRESETS: Record<string, { color: string; icon: string; simpleI
   "Original":        { color: "#006B3F", icon: "landmark" },
   "Sicoob":          { color: "#003641", icon: "landmark" },
   "Sicredi":         { color: "#00AA4F", icon: "landmark" },
+  "Dinheiro":        { color: "#16a34a", icon: "banknote" },
   "Outro":           { color: "#6366f1", icon: "landmark" },
 };
 

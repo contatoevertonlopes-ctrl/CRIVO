@@ -25,7 +25,7 @@ interface BankAccountDialogProps {
   onSave: (data: {
     name: string;
     bank_name: string;
-    account_type: "checking" | "savings";
+    account_type: "checking" | "savings" | "cash";
     balance: number;
     color: string;
     icon: string;
@@ -42,7 +42,7 @@ export const BankAccountDialog = ({
 }: BankAccountDialogProps) => {
   const [name, setName] = useState("");
   const [bankName, setBankName] = useState("");
-  const [accountType, setAccountType] = useState<"checking" | "savings">("checking");
+  const [accountType, setAccountType] = useState<"checking" | "savings" | "cash">("checking");
   const [balance, setBalance] = useState("");
   const [color, setColor] = useState("#6366f1");
   const [icon, setIcon] = useState("landmark");
@@ -71,6 +71,12 @@ export const BankAccountDialog = ({
     if (preset) {
       setColor(preset.color);
       setIcon(preset.icon);
+    }
+    if (bank === "Dinheiro") {
+      setAccountType("cash");
+      if (!name) setName("Carteira");
+    } else if (accountType === "cash") {
+      setAccountType("checking");
     }
   };
 
@@ -139,13 +145,14 @@ export const BankAccountDialog = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="type">Tipo de Conta</Label>
-              <Select value={accountType} onValueChange={(v) => setAccountType(v as "checking" | "savings")}>
+              <Select value={accountType} onValueChange={(v) => setAccountType(v as "checking" | "savings" | "cash")}>
                 <SelectTrigger className="bg-secondary/50 border-border/70">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="checking">Corrente</SelectItem>
                   <SelectItem value="savings">Poupança</SelectItem>
+                  <SelectItem value="cash">Dinheiro</SelectItem>
                 </SelectContent>
               </Select>
             </div>

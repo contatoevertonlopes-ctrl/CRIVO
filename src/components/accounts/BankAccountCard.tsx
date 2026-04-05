@@ -2,7 +2,7 @@ import { BankAccount, BANK_PRESETS } from "@/hooks/useBankAccounts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Landmark, Wallet, CreditCard, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Landmark, Wallet, CreditCard, Banknote, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +24,8 @@ const getIcon = (iconName: string, color: string) => {
       return <Wallet {...iconProps} />;
     case "credit-card":
       return <CreditCard {...iconProps} />;
+    case "banknote":
+      return <Banknote {...iconProps} />;
     default:
       return <Landmark {...iconProps} />;
   }
@@ -131,7 +133,7 @@ export const BankAccountCard = ({ account, onEdit, onDelete }: BankAccountCardPr
               variant={account.account_type === "checking" ? "default" : "secondary"}
               className={`text-xs px-2 py-0 ${darkBg ? "bg-white/15 text-white border border-white/20" : ""}`}
             >
-              {account.account_type === "checking" ? "Corrente" : "Poupança"}
+              {account.account_type === "checking" ? "Corrente" : account.account_type === "cash" ? "Dinheiro" : "Poupança"}
             </Badge>
           </div>
           <p 
