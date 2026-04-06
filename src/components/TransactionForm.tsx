@@ -44,6 +44,7 @@ interface TransactionFormProps {
   subscribed: boolean;
   showInstallment?: boolean;
   variant?: "full" | "compact";
+  disableAutoStatus?: boolean;
 }
 
 interface ValidationErrors {
@@ -55,7 +56,7 @@ interface ValidationErrors {
   card_id: boolean;
 }
 
-const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscribed, showInstallment = true, variant = "full" }: TransactionFormProps) => {
+const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscribed, showInstallment = true, variant = "full", disableAutoStatus = false }: TransactionFormProps) => {
   const { accounts } = useBankAccounts();
   const { cards } = useCards();
   const isInstallment = formData.is_installment || false;
@@ -68,7 +69,6 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
 
   const computeUnpaidStatusLocal = (dateStr: string) => {
     const date = dateStr || todayStr;
-    if (date > todayStr) return "a_vencer";
     if (date < todayStr) return "vencido";
     return "em_aberto";
   };
@@ -121,12 +121,14 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
     }
   }, [requiresBankAccount, requiresCard, accounts, cards]);
 
-  // Compact mode: auto-compute status from date only if not manually set to paid.
+  // Compact mode: auto-compute status from date only if not manually set and not paid.
   const [statusManuallySet, setStatusManuallySet] = React.useState(false);
   useEffect(() => {
     if (!isCompact) return;
+    if (disableAutoStatus) return;
     if (statusManuallySet) return;
-    if (formData.status === "paid") return;
+    // Don't overwrite paid status (both English and Portuguese variants)
+    if (formData.status === "paid" || formData.status === "pagamento_concluido" || formData.status === "confirmed") return;
     const nextStatus = computeUnpaidStatusLocal(formData.date);
     if (formData.status !== nextStatus) {
       setFormData({ ...formData, status: nextStatus });

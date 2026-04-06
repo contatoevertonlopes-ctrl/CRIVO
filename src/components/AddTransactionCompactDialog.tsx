@@ -95,7 +95,6 @@ const AddTransactionCompactDialog = ({
 
   const computeUnpaidStatus = (dateStr: string) => {
     const d = dateStr || todayStr;
-    if (d > todayStr) return "a_vencer";
     if (d < todayStr) return "vencido";
     return "em_aberto";
   };
@@ -439,7 +438,16 @@ const AddTransactionCompactDialog = ({
 
     try {
       const normalizedCategory = (formData.category || "").trim() || "Outros";
-      const isPaid = formData.status === "paid" || formData.status === "pagamento_concluido";
+      const isPaid = formData.status === "paid" || formData.status === "pagamento_concluido" || formData.status === "confirmed";
+      // Normalize status to DB Portuguese format
+      const TO_DB_MAP: Record<string, string> = {
+        paid: "pagamento_concluido",
+        pending: "em_aberto",
+        upcoming: "a_vencer",
+        overdue: "vencido",
+      };
+      const dbStatus = TO_DB_MAP[formData.status] ?? formData.status;
+      // Respect manually entered paid_date; only fallback to today if none set
       const normalizedPaidDate = isPaid ? (formData.paid_date || todayStr) : null;
 
       const { error } = await supabase
@@ -449,7 +457,7 @@ const AddTransactionCompactDialog = ({
           amount: parseFloat(formData.amount),
           category: normalizedCategory,
           type: formData.type,
-          status: formData.status,
+          status: dbStatus,
           date: formData.date,
           is_recurring: subscribed ? formData.is_recurring : false,
           recurring_interval: formData.is_recurring ? formData.recurring_interval : null,
@@ -502,6 +510,7 @@ const AddTransactionCompactDialog = ({
               subscribed={subscribed}
               showInstallment={resolvedShowInstallment}
               variant="compact"
+              disableAutoStatus={mode === "edit"}
             />
           </div>
         </DrawerContent>
