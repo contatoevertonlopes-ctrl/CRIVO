@@ -15,6 +15,7 @@ import CurrencyInput from "@/components/CurrencyInput";
 import CategoryPicker from "@/components/CategoryPicker";
 import { useTransactionCategories } from "@/hooks/useTransactionCategories";
 import { CATEGORY_ICONS, findCategoryByName } from "@/lib/transactionCategories";
+import { computeUnpaidStatus } from "@/lib/statusUtils";
 
 export interface TransactionFormData {
   description: string;
@@ -68,9 +69,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
 
   const computeUnpaidStatusLocal = (dateStr: string) => {
-    const date = dateStr || todayStr;
-    if (date < todayStr) return "vencido";
-    return "em_aberto";
+    return computeUnpaidStatus(dateStr || todayStr);
   };
 
   const isPaid = formData.status === "paid" || formData.status === "pagamento_concluido";

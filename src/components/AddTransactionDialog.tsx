@@ -28,6 +28,7 @@ import { Plus, RefreshCw, Lock, ListOrdered, CreditCard, Landmark, Wallet, Alert
 import { addMonths, addWeeks, addDays, format } from "date-fns";
 import { getNextRecurringDate, getRecurringGenerationCount } from "@/utils/recurringGeneration";
 import { createRecurringSeries as createRecurringSeriesInDb } from "@/hooks/useRecurringSeries";
+import { computeUnpaidStatus } from "@/lib/statusUtils";
 import GoalItemLinkDialog from "./GoalItemLinkDialog";
 import { cn } from "@/lib/utils";
 
@@ -48,7 +49,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
   const [category, setCategory] = useState("");
   const [type, setType] = useState<"income" | "expense">("expense");
   const [amount, setAmount] = useState("");
-  const [status, setStatus] = useState("em_aberto");
+  const [status, setStatus] = useState(() => computeUnpaidStatus(new Date().toISOString().split("T")[0]));
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [paidDate, setPaidDate] = useState("");
   const [tag, setTag] = useState("");
@@ -329,7 +330,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
             category,
             type,
             amount: baseInstallmentAmt,
-            status: "em_aberto",
+            status: computeUnpaidStatus(installmentDate.toISOString().split("T")[0]),
             date: installmentDate.toISOString().split("T")[0],
             paid_date: null,
             tag: tag || null,
@@ -447,7 +448,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
       setCategory("");
       setType("expense");
       setAmount("");
-      setStatus("em_aberto");
+      setStatus(computeUnpaidStatus(new Date().toISOString().split("T")[0]));
       setDate(new Date().toISOString().split("T")[0]);
       setPaidDate("");
       setTag("");
@@ -624,7 +625,14 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
                 id="date"
                 type="date"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                onChange={(e) => {
+                  const newDate = e.target.value;
+                  setDate(newDate);
+                  // Auto-compute status for unpaid transactions
+                  if (status !== "pagamento_concluido" && status !== "paid") {
+                    setStatus(computeUnpaidStatus(newDate));
+                  }
+                }}
                 required
                 className="bg-secondary/50 border-border/70"
               />

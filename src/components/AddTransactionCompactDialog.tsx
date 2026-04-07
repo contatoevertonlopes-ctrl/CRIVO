@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { addDays, addMonths, addWeeks } from "date-fns";
 import { getNextRecurringDate, getRecurringGenerationCount } from "@/utils/recurringGeneration";
 import { createRecurringSeries as createRecurringSeriesInDb } from "@/hooks/useRecurringSeries";
+import { computeUnpaidStatus } from "@/lib/statusUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AddTransactionCompactDialogProps {
@@ -92,12 +93,6 @@ const AddTransactionCompactDialog = ({
   const [formData, setFormData] = useState<TransactionFormData>(() => initialFormData ?? getDefaultFormData());
 
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
-
-  const computeUnpaidStatus = (dateStr: string) => {
-    const d = dateStr || todayStr;
-    if (d < todayStr) return "vencido";
-    return "em_aberto";
-  };
 
   const resetForm = () => setFormData(getDefaultFormData());
 
