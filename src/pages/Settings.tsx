@@ -330,7 +330,7 @@ const Settings = () => {
                       </Button>
                     </div>
                     {avatarFile && (
-                      <p className="text-xs text-muted-foreground truncate max-w-[200px]">{avatarFile.name}</p>
+                      <p className="text-xs text-muted-foreground truncate max-w-[150px] sm:max-w-[200px]">{avatarFile.name}</p>
                     )}
                   </div>
                 </div>

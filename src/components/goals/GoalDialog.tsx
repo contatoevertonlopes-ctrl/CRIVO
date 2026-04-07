@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { useAppMode } from "@/contexts/AppModeContext";
 import { useAdaptiveModeData } from "@/hooks/useAdaptiveModeData";
 import { cn } from "@/lib/utils";
-import { 
-  Target, 
-  Plane, 
-  Home, 
-  Heart, 
-  Car, 
-  GraduationCap, 
+import {
+  Target,
+  Plane,
+  Home,
+  Heart,
+  Car,
+  GraduationCap,
   Briefcase,
   Gift,
   Sparkles,
@@ -22,6 +22,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,6 +77,7 @@ const GoalDialog = ({ open, onOpenChange, goal, onSave }: GoalDialogProps) => {
   const { mode } = useAppMode();
   const adaptiveData = useAdaptiveModeData();
   const isSurvival = mode === "survival";
+  const isMobile = useIsMobile();
   
   // Step state
   const [step, setStep] = useState<"template" | "details" | "car-simulation">(goal ? "details" : "template");
@@ -186,49 +194,51 @@ const GoalDialog = ({ open, onOpenChange, goal, onSave }: GoalDialogProps) => {
 
   // Template Selection Step
   if (step === "template") {
+    const templateGrid = (
+      <div className="grid grid-cols-2 gap-3 pt-2">
+        {goalTemplates.map((template) => {
+          const IconComponent = getIconComponent(template.icon);
+          return (
+            <button
+              key={template.id}
+              onClick={() => handleTemplateSelect(template)}
+              className={cn(
+                "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center",
+                "bg-secondary/50 border-transparent hover:border-primary/50 hover:bg-secondary"
+              )}
+            >
+              <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center",
+                isSurvival ? "bg-survival-primary/20" : "bg-prosperity-emerald/20")}>
+                <IconComponent className={cn("w-6 h-6",
+                  isSurvival ? "text-survival-primary" : "text-prosperity-emerald")} />
+              </div>
+              <span className="font-medium text-sm">{template.name}</span>
+              <span className="text-[10px] text-muted-foreground leading-tight">{template.description}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+    if (isMobile) {
+      return (
+        <Drawer open={open} onOpenChange={onOpenChange}>
+          <DrawerContent className="max-h-[90vh]">
+            <DrawerHeader className="pb-0">
+              <DrawerTitle className="text-lg font-semibold">Escolha um modelo</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-6 overflow-y-auto">{templateGrid}</div>
+          </DrawerContent>
+        </Drawer>
+      );
+    }
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className={cn(
-          "max-w-lg border rounded-2xl",
-          isSurvival 
-            ? "bg-survival-card border-survival-border" 
-            : "bg-prosperity-card border-prosperity-border"
-        )}>
+        <DialogContent className={cn("max-w-lg border rounded-2xl",
+          isSurvival ? "bg-survival-card border-survival-border" : "bg-prosperity-card border-prosperity-border")}>
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">
-              Escolha um modelo
-            </DialogTitle>
+            <DialogTitle className="text-lg font-semibold">Escolha um modelo</DialogTitle>
           </DialogHeader>
-
-          <div className="grid grid-cols-2 gap-3 pt-2">
-            {goalTemplates.map((template) => {
-              const IconComponent = getIconComponent(template.icon);
-              return (
-                <button
-                  key={template.id}
-                  onClick={() => handleTemplateSelect(template)}
-                  className={cn(
-                    "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center",
-                    "bg-secondary/50 border-transparent hover:border-primary/50 hover:bg-secondary"
-                  )}
-                >
-                  <div className={cn(
-                    "w-12 h-12 rounded-xl flex items-center justify-center",
-                    isSurvival ? "bg-survival-primary/20" : "bg-prosperity-emerald/20"
-                  )}>
-                    <IconComponent className={cn(
-                      "w-6 h-6",
-                      isSurvival ? "text-survival-primary" : "text-prosperity-emerald"
-                    )} />
-                  </div>
-                  <span className="font-medium text-sm">{template.name}</span>
-                  <span className="text-[10px] text-muted-foreground leading-tight">
-                    {template.description}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          {templateGrid}
         </DialogContent>
       </Dialog>
     );
@@ -236,22 +246,8 @@ const GoalDialog = ({ open, onOpenChange, goal, onSave }: GoalDialogProps) => {
 
   // Car Simulation Step
   if (step === "car-simulation") {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className={cn(
-          "max-w-md border rounded-2xl",
-          isSurvival 
-            ? "bg-survival-card border-survival-border" 
-            : "bg-prosperity-card border-prosperity-border"
-        )}>
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold flex items-center gap-2">
-              <Car className="w-5 h-5" />
-              Simulação de Compra de Carro
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4 pt-2">
+    const carSimContent = (
+      <div className="space-y-4 pt-2">
             {/* Car Value Input */}
             <div>
               <Label className="text-xs text-muted-foreground">
@@ -373,26 +369,41 @@ const GoalDialog = ({ open, onOpenChange, goal, onSave }: GoalDialogProps) => {
               </Button>
             </div>
           </div>
+    );
+    if (isMobile) {
+      return (
+        <Drawer open={open} onOpenChange={onOpenChange}>
+          <DrawerContent className="max-h-[92vh]">
+            <DrawerHeader className="pb-0">
+              <DrawerTitle className="text-lg font-semibold flex items-center gap-2">
+                <Car className="w-5 h-5" />
+                Simulação de Compra de Carro
+              </DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-6 overflow-y-auto">{carSimContent}</div>
+          </DrawerContent>
+        </Drawer>
+      );
+    }
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className={cn("max-w-md border rounded-2xl",
+          isSurvival ? "bg-survival-card border-survival-border" : "bg-prosperity-card border-prosperity-border")}>
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold flex items-center gap-2">
+              <Car className="w-5 h-5" />
+              Simulação de Compra de Carro
+            </DialogTitle>
+          </DialogHeader>
+          {carSimContent}
         </DialogContent>
       </Dialog>
     );
   }
 
   // Details Step
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn(
-        "max-w-md border rounded-2xl",
-        isSurvival 
-          ? "bg-survival-card border-survival-border" 
-          : "bg-prosperity-card border-prosperity-border"
-      )}>
-        <DialogHeader>
-          <DialogTitle className="text-lg font-semibold">
-            {goal ? "Editar Objetivo" : selectedTemplate ? `Novo: ${selectedTemplate.name}` : "Novo Objetivo"}
-          </DialogTitle>
-        </DialogHeader>
-
+  const detailsTitle = goal ? "Editar Objetivo" : selectedTemplate ? `Novo: ${selectedTemplate.name}` : "Novo Objetivo";
+  const detailsContent = (
         <div className="space-y-5 pt-2">
           {/* Template info */}
           {selectedTemplate && selectedTemplate.items.length > 0 && (
@@ -506,12 +517,8 @@ const GoalDialog = ({ open, onOpenChange, goal, onSave }: GoalDialogProps) => {
               {goal ? "Cancelar" : "Voltar"}
             </Button>
             <Button
-              className={cn(
-                "flex-1",
-                isSurvival 
-                  ? "bg-survival-primary hover:bg-survival-primary/90" 
-                  : "bg-prosperity-emerald hover:bg-prosperity-emerald/90"
-              )}
+              className={cn("flex-1",
+                isSurvival ? "bg-survival-primary hover:bg-survival-primary/90" : "bg-prosperity-emerald hover:bg-prosperity-emerald/90")}
               onClick={handleSave}
               disabled={!title.trim() || !targetAmount}
             >
@@ -519,6 +526,29 @@ const GoalDialog = ({ open, onOpenChange, goal, onSave }: GoalDialogProps) => {
             </Button>
           </div>
         </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent className="max-h-[92vh]">
+          <DrawerHeader className="pb-0">
+            <DrawerTitle className="text-lg font-semibold">{detailsTitle}</DrawerTitle>
+          </DrawerHeader>
+          <div className="px-4 pb-6 overflow-y-auto">{detailsContent}</div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className={cn("max-w-md border rounded-2xl",
+        isSurvival ? "bg-survival-card border-survival-border" : "bg-prosperity-card border-prosperity-border")}>
+        <DialogHeader>
+          <DialogTitle className="text-lg font-semibold">{detailsTitle}</DialogTitle>
+        </DialogHeader>
+        {detailsContent}
       </DialogContent>
     </Dialog>
   );

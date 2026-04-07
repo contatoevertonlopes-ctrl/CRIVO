@@ -131,7 +131,7 @@ const TransactionRow = ({
     <td className="py-4 px-4 whitespace-nowrap">{formatDate(transaction.date)}</td>
     <td className="py-4 px-4 font-medium">
       <div className="flex items-center gap-2">
-        <span className="truncate max-w-[200px]">{transaction.description}</span>
+        <span className="truncate max-w-[120px] sm:max-w-[200px]">{transaction.description}</span>
         {transaction.is_recurring && (
           <span title="Recorrente">
             <RefreshCw className="w-3 h-3 text-primary shrink-0" />

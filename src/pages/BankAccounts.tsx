@@ -205,7 +205,7 @@ const BankAccounts = () => {
       </main>
 
       {/* FABs */}
-      <div className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 flex flex-col gap-2 z-40">
+      <div className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 flex flex-col gap-2 z-40">
         {accounts.length >= 2 && (
           <Button
             size="lg"

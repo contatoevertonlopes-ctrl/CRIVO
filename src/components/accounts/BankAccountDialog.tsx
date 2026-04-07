@@ -6,6 +6,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Landmark, Loader2 } from "lucide-react";
 
 interface BankAccountDialogProps {
@@ -40,6 +47,7 @@ export const BankAccountDialog = ({
   onSave,
   isLoading,
 }: BankAccountDialogProps) => {
+  const isMobile = useIsMobile();
   const [name, setName] = useState("");
   const [bankName, setBankName] = useState("");
   const [accountType, setAccountType] = useState<"checking" | "savings" | "cash">("checking");
@@ -82,20 +90,107 @@ export const BankAccountDialog = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    await onSave({
-      name,
-      bank_name: bankName,
-      account_type: accountType,
-      balance: parseFloat(balance) || 0,
-      color,
-      icon,
-    });
-    
+    await onSave({ name, bank_name: bankName, account_type: accountType, balance: parseFloat(balance) || 0, color, icon });
     onOpenChange(false);
   };
 
   const bankOptions = Object.keys(BANK_PRESETS);
+  const title = account ? "Editar Conta" : "Nova Conta Bancária";
+
+  const formContent = (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="bank">Banco</Label>
+        <Select value={bankName} onValueChange={handleBankSelect}>
+          <SelectTrigger className="bg-secondary/50 border-border/70">
+            <SelectValue placeholder="Selecione o banco" />
+          </SelectTrigger>
+          <SelectContent>
+            {bankOptions.map((bank) => (
+              <SelectItem key={bank} value={bank}>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: BANK_PRESETS[bank].color }} />
+                  {bank}
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="name">Apelido da Conta</Label>
+        <Input
+          id="name" value={name} onChange={(e) => setName(e.target.value)}
+          placeholder="Ex: Conta Principal, Reserva..." required
+          className="bg-secondary/50 border-border/70"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="type">Tipo de Conta</Label>
+          <Select value={accountType} onValueChange={(v) => setAccountType(v as "checking" | "savings" | "cash")}>
+            <SelectTrigger className="bg-secondary/50 border-border/70"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="checking">Corrente</SelectItem>
+              <SelectItem value="savings">Poupança</SelectItem>
+              <SelectItem value="cash">Dinheiro</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="balance">Saldo Inicial (R$)</Label>
+          <Input
+            id="balance" type="number" step="0.01" value={balance}
+            onChange={(e) => setBalance(e.target.value)} placeholder="0,00"
+            className="bg-secondary/50 border-border/70"
+          />
+        </div>
+      </div>
+
+      {/* Color preview */}
+      <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/70">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}20` }}>
+          <Landmark className="w-5 h-5" style={{ color }} />
+        </div>
+        <div>
+          <p className="text-sm font-medium">{bankName || "Banco"}</p>
+          <p className="text-xs text-muted-foreground">{name || "Apelido da conta"}</p>
+        </div>
+      </div>
+
+      <div className="flex gap-3 pt-2">
+        <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={isLoading || !bankName || !name}
+          className="flex-1 bg-gradient-to-r from-primary to-green-600 text-primary-foreground">
+          {isLoading ? (
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Salvando...</>
+          ) : (
+            account ? "Atualizar" : "Adicionar"
+          )}
+        </Button>
+      </div>
+    </form>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent className="max-h-[92vh]">
+          <DrawerHeader className="pb-2">
+            <DrawerTitle className="flex items-center gap-2">
+              <Landmark className="w-5 h-5 text-primary" />
+              {title}
+            </DrawerTitle>
+          </DrawerHeader>
+          <div className="px-4 pb-6 overflow-y-auto">{formContent}</div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -103,113 +198,10 @@ export const BankAccountDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Landmark className="w-5 h-5 text-primary" />
-            {account ? "Editar Conta" : "Nova Conta Bancária"}
+            {title}
           </DialogTitle>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <div className="space-y-2">
-            <Label htmlFor="bank">Banco</Label>
-            <Select value={bankName} onValueChange={handleBankSelect}>
-              <SelectTrigger className="bg-secondary/50 border-border/70">
-                <SelectValue placeholder="Selecione o banco" />
-              </SelectTrigger>
-              <SelectContent>
-                {bankOptions.map((bank) => (
-                  <SelectItem key={bank} value={bank}>
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: BANK_PRESETS[bank].color }}
-                      />
-                      {bank}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="name">Apelido da Conta</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ex: Conta Principal, Reserva..."
-              required
-              className="bg-secondary/50 border-border/70"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="type">Tipo de Conta</Label>
-              <Select value={accountType} onValueChange={(v) => setAccountType(v as "checking" | "savings" | "cash")}>
-                <SelectTrigger className="bg-secondary/50 border-border/70">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="checking">Corrente</SelectItem>
-                  <SelectItem value="savings">Poupança</SelectItem>
-                  <SelectItem value="cash">Dinheiro</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="balance">Saldo Inicial (R$)</Label>
-              <Input
-                id="balance"
-                type="number"
-                step="0.01"
-                value={balance}
-                onChange={(e) => setBalance(e.target.value)}
-                placeholder="0,00"
-                className="bg-secondary/50 border-border/70"
-              />
-            </div>
-          </div>
-
-          {/* Color preview */}
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/70">
-            <div 
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: `${color}20` }}
-            >
-              <Landmark className="w-5 h-5" style={{ color }} />
-            </div>
-            <div>
-              <p className="text-sm font-medium">{bankName || "Banco"}</p>
-              <p className="text-xs text-muted-foreground">{name || "Apelido da conta"}</p>
-            </div>
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="flex-1"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={isLoading || !bankName || !name}
-              className="flex-1 bg-gradient-to-r from-primary to-green-600 text-primary-foreground"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                account ? "Atualizar" : "Adicionar"
-              )}
-            </Button>
-          </div>
-        </form>
+        <div className="mt-4">{formContent}</div>
       </DialogContent>
     </Dialog>
   );

@@ -197,7 +197,7 @@ const NotificationBell = () => {
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-[340px] p-0" sideOffset={8}>
+      <DropdownMenuContent align="end" className="w-[min(340px,calc(100vw-32px))] p-0" sideOffset={8}>
         <Tabs defaultValue="alerts" className="w-full">
           <div className="border-b border-border px-3 pt-3 pb-0">
             <TabsList className="w-full h-9 bg-secondary/50">
