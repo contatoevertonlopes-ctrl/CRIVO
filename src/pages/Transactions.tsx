@@ -213,7 +213,7 @@ const Transactions = () => {
   const { members } = useHousehold();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { transactions, isLoading: transactionsLoading, refetch: refetchTransactions, error: transactionsError } = useTransactions();
+  const { transactions, isLoading: transactionsLoading, refetch: refetchTransactions, resetTransactions, error: transactionsError } = useTransactions();
   const { categories: predefinedCategories } = useTransactionCategories();
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [search, setSearch] = useState("");
@@ -250,6 +250,12 @@ const Transactions = () => {
       navigate("/auth");
     }
   }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      resetTransactions();
+    }
+  }, [user?.id, householdId, isShared, authLoading, resetTransactions]);
 
   const fetchTransactions = async () => {
     await refetchTransactions();

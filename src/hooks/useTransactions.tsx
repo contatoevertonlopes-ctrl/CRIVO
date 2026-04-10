@@ -65,8 +65,11 @@ export const useTransactions = (options: UseTransactionsOptions = {}) => {
         .order("date", { ascending: false });
 
       if (isShared && householdId) {
-        // Shared household: get all household transactions
-        supabaseQuery = supabaseQuery.eq("household_id", householdId);
+        // Shared household: get transactions from the household,
+        // and also include any legacy transactions still owned by this user.
+        supabaseQuery = supabaseQuery.or(
+          `household_id.eq.${householdId},user_id.eq.${user.id}`
+        );
       } else {
         // Individual: get only user's transactions
         supabaseQuery = supabaseQuery.eq("user_id", user.id);
@@ -81,12 +84,19 @@ export const useTransactions = (options: UseTransactionsOptions = {}) => {
     enabled: !!user && !householdLoading && options.enabled !== false,
     staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
     gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache
+    refetchOnMount: "always",
     refetchOnWindowFocus: false, // Don't refetch on window focus to reduce calls
   });
 
   // Helper to invalidate cache after mutations
   const invalidateTransactions = () => {
     queryClient.invalidateQueries({ queryKey: transactionKeys.all });
+  };
+
+  // Helper to clear frontend transaction cache and force a fresh fetch
+  const resetTransactions = () => {
+    queryClient.setQueryData<Transaction[]>(queryKey, EMPTY_TRANSACTIONS);
+    queryClient.invalidateQueries({ queryKey, exact: true });
   };
 
   // Helper to optimistically update cache
@@ -121,6 +131,7 @@ export const useTransactions = (options: UseTransactionsOptions = {}) => {
     isFetching: query.isFetching,
     error: query.error,
     refetch: query.refetch,
+    resetTransactions,
     invalidateTransactions,
     updateTransactionInCache,
     addTransactionToCache,

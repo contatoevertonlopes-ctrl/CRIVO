@@ -42,25 +42,28 @@ interface AddTransactionCompactDialogProps {
   showInstallment?: boolean;
 }
 
-const getDefaultFormData = (): TransactionFormData => ({
-  description: "",
-  amount: "",
-  category: "Outros",
-  type: "expense",
-  status: "em_aberto",
-  date: new Date().toISOString().split("T")[0],
-  is_recurring: false,
-  recurring_interval: "monthly",
-  frequency: "monthly",
-  paid_date: "",
-  tag: "",
-  is_installment: false,
-  installment_count: "2",
-  installment_interval: "monthly",
-  payment_method: "",
-  bank_account_id: "",
-  card_id: "",
-});
+const getDefaultFormData = (): TransactionFormData => {
+  const today = new Date().toISOString().split("T")[0];
+  return {
+    description: "",
+    amount: "",
+    category: "Outros",
+    type: "expense",
+    status: computeUnpaidStatus(today),
+    date: today,
+    is_recurring: false,
+    recurring_interval: "monthly",
+    frequency: "monthly",
+    paid_date: "",
+    tag: "",
+    is_installment: false,
+    installment_count: "2",
+    installment_interval: "monthly",
+    payment_method: "",
+    bank_account_id: "",
+    card_id: "",
+  };
+};
 
 const AddTransactionCompactDialog = ({
   trigger,

@@ -45,11 +45,11 @@ serve(async (req) => {
 
     logStep("Date calculations", { today: todayStr, fiveDaysFromNow: fiveDaysFromNowStr });
 
-    // 1. "em_aberto" → "a_vencer" — due within the next 5 days (today inclusive)
+    // 1. "em_aberto" (or legacy English pending) → "a_vencer" — due within the next 5 days (today inclusive)
     const { data: toUpcoming, error: toUpcomingError } = await supabase
       .from("transactions")
       .update({ status: "a_vencer" })
-      .in("status", ["em_aberto"])
+      .in("status", ["em_aberto", "pending"])
       .lte("date", fiveDaysFromNowStr)
       .gte("date", todayStr)
       .select("id");
@@ -60,11 +60,11 @@ serve(async (req) => {
       logStep("Updated to a_vencer", { count: toUpcoming?.length || 0 });
     }
 
-    // 2. "a_vencer" or "em_aberto" → "vencido" — 1 day after due date (date strictly before today)
+    // 2. "a_vencer" or "em_aberto" (or legacy English upcoming/pending) → "vencido" — due date passed and not paid
     const { data: toOverdue, error: toOverdueError } = await supabase
       .from("transactions")
       .update({ status: "vencido" })
-      .in("status", ["a_vencer", "em_aberto"])
+      .in("status", ["a_vencer", "em_aberto", "upcoming", "pending"])
       .lt("date", todayStr)
       .select("id");
 

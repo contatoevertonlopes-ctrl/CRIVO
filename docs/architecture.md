@@ -421,6 +421,7 @@ As Edge Functions vivem em `supabase/functions/*` e rodam em Deno. Elas se divid
     - `em_aberto` → `vencido` (passou do prazo)
   - **Autenticação**: não exige JWT; usa Service Role.
   - **Uso esperado**: chamado por scheduler externo (cron).
+  - **Agendamento recomendado**: diariamente às 00:01, para manter os status de transações atualizados.
 
 - `close-card-bills`
   - **Objetivo**: no dia de fechamento do cartão (`closing_day`), criar:
@@ -507,6 +508,7 @@ As functions aplicam limites por IP (`getClientIp`) e/ou por usuário.
 
 - **Frontend**: build via `vite build` (scripts em `package.json`).
 - **Backend (Supabase)**: deploy de migrations e Edge Functions via pipeline do Supabase (ou CLI), dependendo do ambiente.
+- **Scheduler**: o job `update-transaction-status` deve ser agendado externamente para rodar diariamente às 00:01.
 
 > Este repositório não define um pipeline de deploy explícito; normalmente isso fica configurado no ambiente Supabase/Lovable.
 
