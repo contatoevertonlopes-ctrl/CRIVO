@@ -456,10 +456,9 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    logStep("Error", { message: errorMessage, stack: errorStack });
+    logStep("Error", { message: errorMessage });
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
