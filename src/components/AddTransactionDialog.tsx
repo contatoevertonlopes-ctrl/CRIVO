@@ -166,7 +166,7 @@ const AddTransactionDialog = ({ onSuccess }: AddTransactionDialogProps) => {
           user_id: user.id,
           household_id: householdId,
           description: `${params.description} (${i}/${params.installments})`,
-          amount: installmentAmount,
+          amount: baseInstallmentAmount,
           purchase_date: params.purchaseDateStr,
           installment_number: i,
           total_installments: params.installments,
