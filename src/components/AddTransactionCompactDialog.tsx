@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { addDays, addMonths, addWeeks } from "date-fns";
 import { getNextRecurringDate, getRecurringGenerationCount } from "@/utils/recurringGeneration";
 import { createRecurringSeries as createRecurringSeriesInDb } from "@/hooks/useRecurringSeries";
-import { computeUnpaidStatus } from "@/lib/statusUtils";
+import { computeUnpaidStatus, toDbStatus } from "@/lib/statusUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AddTransactionCompactDialogProps {
@@ -265,9 +265,9 @@ const AddTransactionCompactDialog = ({
 
     try {
       const normalizedCategory = (formData.category || "").trim() || "Outros";
-      const isPaid = formData.status === "paid" || formData.status === "pagamento_concluido";
-      const normalizedStatus = isPaid ? "pagamento_concluido" : computeUnpaidStatus(formData.date);
-      const normalizedPaidDate = normalizedStatus === "pagamento_concluido"
+      const normalizedStatus = toDbStatus(formData.status || computeUnpaidStatus(formData.date));
+      const isPaid = normalizedStatus === "pagamento_concluido";
+      const normalizedPaidDate = isPaid
         ? (formData.paid_date || todayStr)
         : null;
 
@@ -310,6 +310,7 @@ const AddTransactionCompactDialog = ({
         const childRows: any[] = [];
         for (let i = 1; i < numInstallments; i++) {
           const installmentDate = getNextInstallmentDate(baseDate, i, formData.installment_interval);
+          const installmentDateStr = installmentDate.toISOString().split("T")[0];
           childRows.push({
             user_id: user.id,
             household_id: householdId,
@@ -317,8 +318,8 @@ const AddTransactionCompactDialog = ({
             category: normalizedCategory,
             type: formData.type,
             amount: installmentAmount,
-            status: "em_aberto",
-            date: installmentDate.toISOString().split("T")[0],
+            status: computeUnpaidStatus(installmentDateStr),
+            date: installmentDateStr,
             tag: formData.tag || null,
             is_recurring: false,
             recurring_interval: null,

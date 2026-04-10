@@ -16,6 +16,7 @@ interface Transaction {
   type: "income" | "expense";
   amount: number;
   status: string;
+  payment_method?: string | null;
   is_recurring?: boolean;
   recurring_series_id?: string | null;
   paid_date?: string;
@@ -74,6 +75,23 @@ const TransactionCard = ({ transaction, onEdit, onDelete, onDuplicate, onStatusC
     }
   };
 
+  const getPaymentMethodLabel = (method?: string | null) => {
+    switch (method) {
+      case "pix":
+        return "PIX";
+      case "credit_card":
+        return "Cartão de crédito";
+      case "debit_card":
+        return "Cartão de débito";
+      case "bank_transfer":
+        return "Transferência bancária";
+      case "boleto":
+        return "Boleto";
+      default:
+        return method || "—";
+    }
+  };
+
   return (
     <div className="group px-4 py-3.5 border-b border-border/60 last:border-b-0 hover:bg-accent/[0.04] dark:hover:bg-white/[0.025] transition-colors duration-150">
       <div className="flex items-start justify-between gap-3">
@@ -110,6 +128,14 @@ const TransactionCard = ({ transaction, onEdit, onDelete, onDuplicate, onStatusC
                 <span className="text-border">·</span>
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${getTagStyle(transaction.tag)}`}>
                   {getTagLabel(transaction.tag)}
+                </span>
+              </>
+            )}
+            {transaction.payment_method && (
+              <>
+                <span className="text-border">·</span>
+                <span className="text-[10px] text-muted-foreground">
+                  {getPaymentMethodLabel(transaction.payment_method)}
                 </span>
               </>
             )}

@@ -61,7 +61,9 @@ export const useTransactions = (options: UseTransactionsOptions = {}) => {
 
       let supabaseQuery = supabase
         .from("transactions")
-        .select("*")
+        .select(
+          "id,user_id,household_id,date,description,category,type,amount,status,is_recurring,recurring_interval,parent_transaction_id,recurring_series_id,goal_id,tag,payment_method,bank_account_id,card_id,paid_date,created_at,updated_at"
+        )
         .order("date", { ascending: false });
 
       if (isShared && householdId) {

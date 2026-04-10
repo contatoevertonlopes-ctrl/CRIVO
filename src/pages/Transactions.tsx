@@ -97,7 +97,25 @@ const TransactionRow = ({
   selectionMode,
   memberInfo,
   showMember
-}: TransactionRowProps) => (
+}: TransactionRowProps) => {
+  const getPaymentMethodLabel = (method?: string | null) => {
+    switch (method) {
+      case "pix":
+        return "PIX";
+      case "credit_card":
+        return "Cartão de crédito";
+      case "debit_card":
+        return "Cartão de débito";
+      case "bank_transfer":
+        return "Transferência bancária";
+      case "boleto":
+        return "Boleto";
+      default:
+        return method || "-";
+    }
+  };
+
+  return (
   <tr className={`border-b border-secondary/50 hover:bg-secondary/30 transition-colors ${isSelected ? "bg-primary/10" : ""}`}>
     {selectionMode && (
       <td className="py-4 px-2">
@@ -152,6 +170,7 @@ const TransactionRow = ({
         {transaction.type === "income" ? "Entrada" : "Saída"}
       </span>
     </td>
+    <td className="py-4 px-4 whitespace-nowrap">{getPaymentMethodLabel(transaction.payment_method)}</td>
     <td className="py-4 px-4 whitespace-nowrap">{formatCurrency(transaction.amount)}</td>
     <td className="py-4 px-4">
       <StatusSelector
@@ -203,7 +222,8 @@ const TransactionRow = ({
       </div>
     </td>
   </tr>
-);
+  );
+};
 
 const Transactions = () => {
   const { user, loading: authLoading } = useAuth();
@@ -1363,6 +1383,7 @@ const Transactions = () => {
                         <th className="text-left py-4 px-4 font-medium">Descrição</th>
                         <th className="text-left py-4 px-4 font-medium">Categoria</th>
                         <th className="text-left py-4 px-4 font-medium">Tipo</th>
+                        <th className="text-left py-4 px-4 font-medium">Forma de Pagamento</th>
                         <th 
                           className="text-left py-4 px-4 font-medium cursor-pointer hover:text-foreground transition-colors select-none"
                           onClick={() => setSortOrder(sortOrder === "amount_desc" ? "amount_asc" : "amount_desc")}
