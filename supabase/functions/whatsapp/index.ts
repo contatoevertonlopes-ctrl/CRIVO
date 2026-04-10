@@ -50,27 +50,45 @@ async function sendWhatsAppMessage(phone: string, message: string) {
   return result;
 }
 
-// Parse user commands from WhatsApp messages
+// Parse user commands from WhatsApp messages with input validation
 function parseCommand(message: string): { action: string; data: any } | null {
+  // Limit message size to prevent abuse
+  if (!message || message.length > 500) {
+    return null;
+  }
+
   const lowerMessage = message.toLowerCase().trim();
 
   // Command: /adicionar or /add - Add transaction
-  // Format: /adicionar 100 despesa alimentação descrição do gasto
-  // Format: /adicionar 500 receita salário descrição da receita
-  const addMatch = message.match(/^\/(adicionar|add)\s+(\d+(?:[.,]\d{2})?)\s+(despesa|receita|expense|income)\s+(\S+)\s+(.+)/i);
+  const addMatch = message.match(/^\/(adicionar|add)\s+(\d+(?:[.,]\d{1,2})?)\s+(despesa|receita|expense|income)\s+(\S+)\s+(.+)/i);
   if (addMatch) {
     const amount = parseFloat(addMatch[2].replace(",", "."));
     const type = addMatch[3].toLowerCase();
-    const category = addMatch[4];
-    const description = addMatch[5];
-    
+    const category = addMatch[4].trim();
+    const description = addMatch[5].trim();
+
+    // Validate amount (0.01 to 10,000,000.00)
+    if (isNaN(amount) || !isFinite(amount) || amount <= 0 || amount > 10000000) {
+      return null;
+    }
+
+    // Validate category (alphanumeric + accented chars, max 50 chars)
+    if (category.length > 50 || !/^[a-zA-Z0-9À-ÿ_\s-]+$/.test(category)) {
+      return null;
+    }
+
+    // Validate description (min 2 chars, max 200 chars)
+    if (description.length < 2 || description.length > 200) {
+      return null;
+    }
+
     return {
       action: "add_transaction",
       data: {
-        amount,
+        amount: Math.round(amount * 100) / 100,
         type: type === "despesa" || type === "expense" ? "expense" : "income",
-        category,
-        description,
+        category: category.substring(0, 50),
+        description: description.substring(0, 200),
       },
     };
   }
@@ -438,10 +456,9 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    logStep("Error", { message: errorMessage, stack: errorStack });
+    logStep("Error", { message: errorMessage });
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
