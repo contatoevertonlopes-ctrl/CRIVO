@@ -38,6 +38,7 @@ import { startOfMonth, endOfMonth, subMonths, addMonths, format } from "date-fns
 import { calculateTransactionTotals } from "@/utils/transactionTotals";
 import { useTransactionCategories } from "@/hooks/useTransactionCategories";
 import { deleteRecurringSeries } from "@/hooks/useRecurringSeries";
+import { normalizeStatus } from "@/lib/statusUtils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -212,7 +213,7 @@ const Transactions = () => {
   const { members } = useHousehold();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { transactions, isLoading: transactionsLoading, refetch: refetchTransactions } = useTransactions();
+  const { transactions, isLoading: transactionsLoading, refetch: refetchTransactions, error: transactionsError } = useTransactions();
   const { categories: predefinedCategories } = useTransactionCategories();
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [search, setSearch] = useState("");
@@ -271,7 +272,7 @@ const Transactions = () => {
 
     if (statusFilter.length > 0) {
       filtered = filtered.filter((t) => {
-        const normalized = normalizeStatusValue(t.status);
+        const normalized = normalizeStatus(t.status);
         return statusFilter.includes(normalized);
       });
     }
@@ -304,8 +305,11 @@ const Transactions = () => {
           periodEnd = endOfMonth(addMonths(now, 1));
           break;
         case "custom":
-          if (customDateFrom && customDateTo) {
-            filtered = filtered.filter((t) => t.date >= customDateFrom && t.date <= customDateTo);
+          if (customDateFrom) {
+            filtered = filtered.filter((t) => t.date >= customDateFrom);
+          }
+          if (customDateTo) {
+            filtered = filtered.filter((t) => t.date <= customDateTo);
           }
           break;
         default:
@@ -485,16 +489,7 @@ const Transactions = () => {
   };
 
   // Normalize legacy status values to canonical English
-  const normalizeStatusValue = (status: string) => {
-    const legacyMap: Record<string, string> = {
-      em_aberto: "pending",
-      a_vencer: "upcoming",
-      vencido: "overdue",
-      pagamento_concluido: "paid",
-      confirmed: "paid",
-    };
-    return legacyMap[status] || status;
-  };
+  const normalizeStatusValue = (status: string) => normalizeStatus(status);
 
   const handleDuplicate = async (transaction: Transaction) => {
     if (!user) return;
@@ -579,8 +574,10 @@ const Transactions = () => {
   };
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr + "T00:00:00");
-    return date.toLocaleDateString("pt-BR");
+    if (!dateStr) return "-";
+    const normalizedDate = dateStr.includes("T") ? dateStr : `${dateStr}T00:00:00`;
+    const date = new Date(normalizedDate);
+    return Number.isNaN(date.getTime()) ? dateStr : date.toLocaleDateString("pt-BR");
   };
 
   const showMember = isShared && members.length > 1;
@@ -1242,6 +1239,13 @@ const Transactions = () => {
           <div className="rounded-xl sm:rounded-2xl lg:rounded-2xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft overflow-hidden">
             {loading ? (
               <div className="text-center py-12 text-muted-foreground text-sm">Carregando...</div>
+            ) : transactionsError ? (
+              <div className="text-center py-12 text-destructive text-sm space-y-3">
+                <p>Erro ao carregar transações. Tente recarregar a página.</p>
+                <Button variant="outline" size="sm" onClick={fetchTransactions}>
+                  Recarregar
+                </Button>
+              </div>
             ) : filteredTransactions.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground text-sm">
                 Nenhuma transação encontrada
