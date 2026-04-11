@@ -17,6 +17,7 @@ export interface ColumnMapping {
   debit: string;
   category: string;
   paidDate: string;
+  dueDate: string;
   type: string;
   status: string;
 }
@@ -162,6 +163,22 @@ const ColumnMapper = ({ headers, mapping, onMappingChange, onApply }: ColumnMapp
         <div className="space-y-1.5">
           <Label className="text-xs text-muted-foreground">Data Pagamento</Label>
           <Select value={mapping.paidDate || "__none__"} onValueChange={(v) => updateMapping("paidDate", v === "__none__" ? "" : v)}>
+            <SelectTrigger className="h-9 text-xs">
+              <SelectValue placeholder="Não importar" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__" className="text-xs text-muted-foreground">Não importar</SelectItem>
+              {headers.filter(h => h && h.trim()).map((h) => (
+                <SelectItem key={h} value={h} className="text-xs">{h}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Due Date Column */}
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">Data Vencimento</Label>
+          <Select value={mapping.dueDate || "__none__"} onValueChange={(v) => updateMapping("dueDate", v === "__none__" ? "" : v)}>
             <SelectTrigger className="h-9 text-xs">
               <SelectValue placeholder="Não importar" />
             </SelectTrigger>

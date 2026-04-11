@@ -47,6 +47,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     debit: "",
     category: "",
     paidDate: "",
+    dueDate: "",
     type: "",
     status: "",
   });
@@ -253,6 +254,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
         category: t.category,
         status: t.status || "em_aberto",
         paid_date: t.paidDate || null,
+        due_date: t.dueDate || null,
       }));
       
       const { error } = await supabase

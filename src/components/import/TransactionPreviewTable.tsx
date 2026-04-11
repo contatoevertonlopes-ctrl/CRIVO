@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Check, AlertTriangle, Sparkles, X, Calendar } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +23,7 @@ export interface ParsedTransaction {
   isDuplicate?: boolean;
   selected: boolean;
   paidDate?: string;
+  dueDate?: string;
   status?: string;
   dateUsedFallback?: boolean;
   originalDateValue?: string;
@@ -58,6 +58,15 @@ const TransactionPreviewTable = ({
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-");
     return `${day}/${month}/${year}`;
+  };
+
+  const getStatusLabel = (status?: string) => {
+    if (!status) return "Em aberto";
+    if (status === "pagamento_concluido") return "Pago";
+    if (status === "em_aberto") return "Em aberto";
+    if (status === "a_vencer") return "A vencer";
+    if (status === "vencido") return "Vencido";
+    return status;
   };
 
   return (
@@ -112,6 +121,7 @@ const TransactionPreviewTable = ({
             <tr>
               <th className="p-2 text-left w-10"></th>
               <th className="p-2 text-left">Data</th>
+              <th className="p-2 text-left">Vencimento</th>
               <th className="p-2 text-left">Descrição</th>
               <th className="p-2 text-left">Categoria</th>
               <th className="p-2 text-right">Valor</th>
@@ -151,6 +161,9 @@ const TransactionPreviewTable = ({
                     )}
                   </div>
                 </td>
+                <td className="p-2">
+                  {t.dueDate ? formatDate(t.dueDate) : "-"}
+                </td>
                 <td className="p-2 max-w-[200px] truncate" title={t.description}>
                   {t.description}
                 </td>
@@ -182,14 +195,19 @@ const TransactionPreviewTable = ({
                 )}>
                   {t.type === "income" ? "+" : "-"}{formatCurrency(t.amount)}
                 </td>
-                <td className="p-2 text-center">
+                <td className="p-2 text-center space-y-1">
+                  <div className="text-[11px] text-muted-foreground">
+                    {getStatusLabel(t.status)}
+                  </div>
                   {t.isDuplicate ? (
                     <span className="inline-flex items-center gap-1 text-amber-500">
                       <AlertTriangle className="w-3 h-3" />
+                      Duplicada
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 text-green-500">
                       <Check className="w-3 h-3" />
+                      Válida
                     </span>
                   )}
                 </td>

@@ -39,7 +39,7 @@ export interface GoalItem {
 // Query key factory for consistent cache keys
 export const goalKeys = {
   all: ["goals"] as const,
-  list: (userId: string | undefined) => [...goalKeys.all, "list", userId] as const,
+  list: (userId: string | undefined, householdId: string | null | undefined) => [...goalKeys.all, "list", { userId, householdId }] as const,
   items: (goalId: string | null) => [...goalKeys.all, "items", goalId] as const,
 };
 
@@ -54,7 +54,7 @@ export const useGoals = () => {
   const { householdId, loading: householdLoading } = useHouseholdContext();
   const queryClient = useQueryClient();
 
-  const queryKey = goalKeys.list(user?.id);
+  const queryKey = goalKeys.list(user?.id, householdId);
 
   // Fetch goals
   const goalsQuery = useQuery({
@@ -62,7 +62,7 @@ export const useGoals = () => {
     queryFn: async (): Promise<Goal[]> => {
       if (!user) return [];
 
-      const { data: goalsData, error: goalsError } = await supabase
+      let supabaseQuery = supabase
         .from("goals")
         .select(`
           *,
@@ -71,6 +71,13 @@ export const useGoals = () => {
         `)
         .order("created_at", { ascending: false });
 
+      if (householdId) {
+        supabaseQuery = supabaseQuery.or(`household_id.eq.${householdId},user_id.eq.${user.id}`);
+      } else {
+        supabaseQuery = supabaseQuery.eq("user_id", user.id);
+      }
+
+      const { data: goalsData, error: goalsError } = await supabaseQuery;
       if (goalsError) throw goalsError;
 
       // Process goals with aggregated amounts

@@ -195,6 +195,7 @@ export const applyMapping = (rawData: RawData, mapping: ColumnMapping): ParsedTr
   const debitIndex = mapping.debit ? headers.indexOf(mapping.debit) : -1;
   const categoryIndex = mapping.category ? headers.indexOf(mapping.category) : -1;
   const paidDateIndex = mapping.paidDate ? headers.indexOf(mapping.paidDate) : -1;
+  const dueDateIndex = mapping.dueDate ? headers.indexOf(mapping.dueDate) : -1;
   const typeIndex = mapping.type ? headers.indexOf(mapping.type) : -1;
   const statusIndex = mapping.status ? headers.indexOf(mapping.status) : -1;
 
@@ -258,20 +259,24 @@ export const applyMapping = (rawData: RawData, mapping: ColumnMapping): ParsedTr
     if (amount > 0 && description) {
       const { category, suggested } = autoCategorize(description, existingCategory);
       
-      // Parse status from import
+      const dateResult = parseDate(dateStr);
+      const paidDateResult = paidDateStr ? parseDate(paidDateStr) : null;
+      const dueDateStr = dueDateIndex >= 0 ? row[dueDateIndex]?.trim() : "";
+      const dueDateResult = dueDateStr ? parseDate(dueDateStr) : null;
+      
+      // Parse status from import and keep it DB-safe
       let status = "em_aberto";
       if (statusStr) {
         if (/pago|paid|confirm|conclu[ií]d|quitad|efetivad/i.test(statusStr)) {
           status = "pagamento_concluido";
         } else if (/pend|aguard|aberto|open/i.test(statusStr)) {
           status = "em_aberto";
-        } else if (/cancel/i.test(statusStr)) {
-          status = "cancelado";
+        } else {
+          status = "em_aberto";
         }
+      } else if (paidDateResult?.date) {
+        status = "pagamento_concluido";
       }
-      
-      const dateResult = parseDate(dateStr);
-      const paidDateResult = paidDateStr ? parseDate(paidDateStr) : null;
       
       transactions.push({
         id: generateTransactionId(),
@@ -283,6 +288,7 @@ export const applyMapping = (rawData: RawData, mapping: ColumnMapping): ParsedTr
         suggestedCategory: suggested ? category : undefined,
         selected: true,
         paidDate: paidDateResult?.date,
+        dueDate: dueDateResult?.date,
         status,
         dateUsedFallback: dateResult.usedFallback,
         originalDateValue: dateResult.originalValue,
@@ -305,6 +311,7 @@ export const autoDetectMapping = (headers: string[]): ColumnMapping => {
     debit: debitCol,
     category: headers.find(h => /categ|classifica/i.test(h)) || "",
     paidDate: headers.find(h => /data.?pag|paid|pagamento|data.?efetiva|dt.?pag/i.test(h)) || "",
+    dueDate: headers.find(h => /vencimento|due.?date|data.?venc|due_date|data.?vencimento/i.test(h)) || "",
     type: headers.find(h => /^tipo$|type|natureza|renda|despesa|income|expense/i.test(h)) || "",
     status: headers.find(h => /status|situa[çc][aã]o|estado|state/i.test(h)) || "",
   };

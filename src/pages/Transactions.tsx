@@ -62,6 +62,7 @@ interface Transaction {
   is_recurring?: boolean;
   recurring_interval?: string;
   paid_date?: string;
+  due_date?: string;
   tag?: string;
   payment_method?: string;
   bank_account_id?: string | null;
@@ -148,6 +149,9 @@ const TransactionRow = ({
       </td>
     )}
     <td className="py-4 px-4 whitespace-nowrap">{formatDate(transaction.date)}</td>
+    <td className="py-4 px-4 whitespace-nowrap text-muted-foreground">
+      {transaction.due_date ? formatDate(transaction.due_date) : "-"}
+    </td>
     <td className="py-4 px-4 font-medium">
       <div className="flex items-center gap-2">
         <span className="truncate max-w-[120px] sm:max-w-[200px]">{transaction.description}</span>
@@ -270,12 +274,6 @@ const Transactions = () => {
       navigate("/auth");
     }
   }, [user, authLoading, navigate]);
-
-  useEffect(() => {
-    if (!authLoading && user) {
-      resetTransactions();
-    }
-  }, [user?.id, householdId, isShared, authLoading, resetTransactions]);
 
   const fetchTransactions = async () => {
     await refetchTransactions();
@@ -1380,6 +1378,7 @@ const Transactions = () => {
                             )}
                           </div>
                         </th>
+                        <th className="text-left py-4 px-4 font-medium">Vencimento</th>
                         <th className="text-left py-4 px-4 font-medium">Descrição</th>
                         <th className="text-left py-4 px-4 font-medium">Categoria</th>
                         <th className="text-left py-4 px-4 font-medium">Tipo</th>
