@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useSharedHousehold } from "@/hooks/useSharedHousehold";
@@ -24,6 +25,7 @@ export interface Transaction {
   goal_id?: string | null;
   tag?: string | null;
   payment_method?: string | null;
+  due_date?: string | null;
   paid_date?: string | null;
   created_at: string;
   updated_at: string;
@@ -68,12 +70,12 @@ export const useTransactions = (options: UseTransactionsOptions = {}) => {
         let supabaseQuery = supabase
           .from("transactions")
           .select(
-            "id,user_id,household_id,date,description,category,type,amount,status,is_recurring,recurring_interval,parent_transaction_id,recurring_series_id,goal_id,tag,payment_method,bank_account_id,card_id,paid_date,created_at,updated_at"
+            "id,user_id,household_id,date,description,category,type,amount,status,is_recurring,recurring_interval,parent_transaction_id,recurring_series_id,goal_id,tag,payment_method,due_date,bank_account_id,card_id,paid_date,created_at,updated_at"
           )
           .order("date", { ascending: false })
           .range(from, from + PAGE_SIZE - 1);
 
-        if (isShared && householdId) {
+        if (householdId) {
           supabaseQuery = supabaseQuery.or(
             `household_id.eq.${householdId},user_id.eq.${user.id}`
           );
@@ -101,41 +103,50 @@ export const useTransactions = (options: UseTransactionsOptions = {}) => {
   });
 
   // Helper to invalidate cache after mutations
-  const invalidateTransactions = () => {
+  const invalidateTransactions = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: transactionKeys.all });
-  };
+  }, [queryClient]);
 
   // Helper to clear frontend transaction cache and force a fresh fetch
-  const resetTransactions = () => {
+  const resetTransactions = useCallback(() => {
     queryClient.setQueryData<Transaction[]>(queryKey, EMPTY_TRANSACTIONS);
     queryClient.invalidateQueries({ queryKey, exact: true });
-  };
+  }, [queryClient, queryKey]);
 
   // Helper to optimistically update cache
-  const updateTransactionInCache = (updatedTransaction: Partial<Transaction> & { id: string }) => {
-    queryClient.setQueryData<Transaction[]>(queryKey, (oldData) => {
-      if (!oldData) return oldData;
-      return oldData.map((t) =>
-        t.id === updatedTransaction.id ? { ...t, ...updatedTransaction } : t
-      );
-    });
-  };
+  const updateTransactionInCache = useCallback(
+    (updatedTransaction: Partial<Transaction> & { id: string }) => {
+      queryClient.setQueryData<Transaction[]>(queryKey, (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.map((t) =>
+          t.id === updatedTransaction.id ? { ...t, ...updatedTransaction } : t
+        );
+      });
+    },
+    [queryClient, queryKey]
+  );
 
   // Helper to add transaction to cache
-  const addTransactionToCache = (newTransaction: Transaction) => {
-    queryClient.setQueryData<Transaction[]>(queryKey, (oldData) => {
-      if (!oldData) return [newTransaction];
-      return [newTransaction, ...oldData];
-    });
-  };
+  const addTransactionToCache = useCallback(
+    (newTransaction: Transaction) => {
+      queryClient.setQueryData<Transaction[]>(queryKey, (oldData) => {
+        if (!oldData) return [newTransaction];
+        return [newTransaction, ...oldData];
+      });
+    },
+    [queryClient, queryKey]
+  );
 
   // Helper to remove transaction from cache
-  const removeTransactionFromCache = (transactionId: string) => {
-    queryClient.setQueryData<Transaction[]>(queryKey, (oldData) => {
-      if (!oldData) return oldData;
-      return oldData.filter((t) => t.id !== transactionId);
-    });
-  };
+  const removeTransactionFromCache = useCallback(
+    (transactionId: string) => {
+      queryClient.setQueryData<Transaction[]>(queryKey, (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.filter((t) => t.id !== transactionId);
+      });
+    },
+    [queryClient, queryKey]
+  );
 
   return {
     transactions: query.data ?? EMPTY_TRANSACTIONS,
