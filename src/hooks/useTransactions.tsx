@@ -59,29 +59,39 @@ export const useTransactions = (options: UseTransactionsOptions = {}) => {
     queryFn: async (): Promise<Transaction[]> => {
       if (!user) return EMPTY_TRANSACTIONS;
 
-      let supabaseQuery = supabase
-        .from("transactions")
-        .select(
-          "id,user_id,household_id,date,description,category,type,amount,status,is_recurring,recurring_interval,parent_transaction_id,recurring_series_id,goal_id,tag,payment_method,bank_account_id,card_id,paid_date,created_at,updated_at"
-        )
-        .order("date", { ascending: false });
+      const PAGE_SIZE = 1000;
+      let allData: Transaction[] = [];
+      let from = 0;
+      let hasMore = true;
 
-      if (isShared && householdId) {
-        // Shared household: get transactions from the household,
-        // and also include any legacy transactions still owned by this user.
-        supabaseQuery = supabaseQuery.or(
-          `household_id.eq.${householdId},user_id.eq.${user.id}`
-        );
-      } else {
-        // Individual: get only user's transactions
-        supabaseQuery = supabaseQuery.eq("user_id", user.id);
+      while (hasMore) {
+        let supabaseQuery = supabase
+          .from("transactions")
+          .select(
+            "id,user_id,household_id,date,description,category,type,amount,status,is_recurring,recurring_interval,parent_transaction_id,recurring_series_id,goal_id,tag,payment_method,bank_account_id,card_id,paid_date,created_at,updated_at"
+          )
+          .order("date", { ascending: false })
+          .range(from, from + PAGE_SIZE - 1);
+
+        if (isShared && householdId) {
+          supabaseQuery = supabaseQuery.or(
+            `household_id.eq.${householdId},user_id.eq.${user.id}`
+          );
+        } else {
+          supabaseQuery = supabaseQuery.eq("user_id", user.id);
+        }
+
+        const { data, error } = await supabaseQuery;
+        if (error) throw error;
+
+        const page = (data as Transaction[]) || [];
+        allData = allData.concat(page);
+
+        hasMore = page.length === PAGE_SIZE;
+        from += PAGE_SIZE;
       }
 
-      const { data, error } = await supabaseQuery;
-
-      if (error) throw error;
-
-      return (data as Transaction[]) || EMPTY_TRANSACTIONS;
+      return allData.length > 0 ? allData : EMPTY_TRANSACTIONS;
     },
     enabled: !!user && !householdLoading && options.enabled !== false,
     staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
