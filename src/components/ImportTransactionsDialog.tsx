@@ -86,13 +86,22 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
     fetchExisting();
   }, [user, householdId, open]);
 
+  const getTransactionKey = (t: { date: string; amount: number; description: string }) => {
+    return `${t.date}_${t.amount}_${t.description.trim().toLowerCase().substring(0, 30)}`;
+  };
+
   const checkDuplicates = useCallback((parsed: ParsedTransaction[]): ParsedTransaction[] => {
-    return parsed.map(t => {
-      const key = `${t.date}_${t.amount}_${t.description.toLowerCase().substring(0, 30)}`;
+    const seen = new Set<string>();
+
+    return parsed.map((t) => {
+      const key = getTransactionKey(t);
+      const isDuplicate = existingTransactions.has(key) || seen.has(key);
+      seen.add(key);
+
       return {
         ...t,
-        isDuplicate: existingTransactions.has(key),
-        selected: !existingTransactions.has(key), // Pre-deselect duplicates
+        isDuplicate,
+        selected: !isDuplicate, // Pre-deselect duplicates
       };
     });
   }, [existingTransactions]);
