@@ -73,6 +73,7 @@ export const useTransactions = (options: UseTransactionsOptions = {}) => {
             "id,user_id,household_id,date,description,category,type,amount,status,is_recurring,recurring_interval,parent_transaction_id,recurring_series_id,goal_id,tag,payment_method,bank_account_id,card_id,paid_date,created_at,updated_at"
           )
           .order("date", { ascending: false })
+          .order("id", { ascending: false })
           .range(from, from + PAGE_SIZE - 1);
 
         if (householdId) {
@@ -93,7 +94,11 @@ export const useTransactions = (options: UseTransactionsOptions = {}) => {
         from += PAGE_SIZE;
       }
 
-      return allData.length > 0 ? allData : EMPTY_TRANSACTIONS;
+      const uniqueTransactions = Array.from(
+        new Map(allData.map((transaction) => [transaction.id, transaction])).values()
+      );
+
+      return uniqueTransactions.length > 0 ? uniqueTransactions : EMPTY_TRANSACTIONS;
     },
     enabled: !!user && !householdLoading && options.enabled !== false,
     staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
