@@ -96,7 +96,7 @@ export const useTransactions = (options: UseTransactionsOptions = {}) => {
     enabled: !!user && !householdLoading && options.enabled !== false,
     staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
     gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache
-    refetchOnMount: "always",
+    refetchOnMount: false, // Don't refetch on mount to prevent automatic updates
     refetchOnWindowFocus: false, // Don't refetch on window focus to reduce calls
   });
 
