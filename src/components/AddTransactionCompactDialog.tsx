@@ -212,19 +212,6 @@ const AddTransactionCompactDialog = ({
     if (!user) throw new Error("Missing user");
 
     const interval = root.recurring_interval as "weekly" | "biweekly" | "monthly" | "yearly";
-    const generationCount = getRecurringGenerationCount(interval);
-    const baseDate = new Date(root.date + "T00:00:00");
-
-    const occurrences = Array.from({ length: generationCount }, (_, i) => {
-      const d = getNextRecurringDate(baseDate, i, interval);
-      const dateStr = d.toISOString().split("T")[0];
-      const isFirst = i === 0;
-      return {
-        date: dateStr,
-        status: isFirst ? root.status : computeUnpaidStatus(dateStr),
-        paid_date: isFirst ? root.paid_date : null,
-      };
-    });
 
     return createRecurringSeriesInDb(
       {
@@ -241,7 +228,11 @@ const AddTransactionCompactDialog = ({
         bank_account_id: root.bank_account_id,
         card_id: root.card_id,
       },
-      occurrences,
+      {
+        date: root.date,
+        status: root.status,
+        paid_date: root.paid_date,
+      },
       user.id,
       householdId,
     );
