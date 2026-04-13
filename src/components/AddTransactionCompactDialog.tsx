@@ -22,7 +22,7 @@ import {
 import TransactionForm, { type TransactionFormData } from "@/components/TransactionForm";
 import { toast } from "sonner";
 import { addDays, addMonths, addWeeks } from "date-fns";
-import { getNextRecurringDate, getRecurringGenerationCount } from "@/utils/recurringGeneration";
+
 import { createRecurringSeries as createRecurringSeriesInDb } from "@/hooks/useRecurringSeries";
 import { computeUnpaidStatus, toDbStatus } from "@/lib/statusUtils";
 import { useIsMobile } from "@/hooks/use-mobile";

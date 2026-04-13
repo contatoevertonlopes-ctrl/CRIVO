@@ -26,7 +26,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Plus, RefreshCw, Lock, ListOrdered, CreditCard, Landmark, Wallet, AlertCircle } from "lucide-react";
 import { addMonths, addWeeks, addDays, format } from "date-fns";
-import { getNextRecurringDate, getRecurringGenerationCount } from "@/utils/recurringGeneration";
+
 import { createRecurringSeries as createRecurringSeriesInDb } from "@/hooks/useRecurringSeries";
 import { computeUnpaidStatus } from "@/lib/statusUtils";
 import GoalItemLinkDialog from "./GoalItemLinkDialog";
