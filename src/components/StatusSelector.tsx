@@ -2,7 +2,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { normalizeStatus, toDbStatus } from "@/lib/statusUtils";
-import { extendRecurringSeriesIfNeeded } from "@/hooks/useRecurringSeries";
 
 interface StatusSelectorProps {
   transactionId: string;
@@ -54,14 +53,6 @@ const StatusSelector = ({ transactionId, currentStatus, recurringSeriesId, onSta
       }
 
       toast.success("Status atualizado!");
-
-      // Extend recurring series if needed (fire-and-forget)
-      if (newStatus === "paid" && recurringSeriesId) {
-        extendRecurringSeriesIfNeeded(recurringSeriesId).catch((err) =>
-          console.error("[recurring] Failed to extend series:", err)
-        );
-      }
-
       onStatusChange?.();
     } catch (error: any) {
       console.error("Error updating status:", error);

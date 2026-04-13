@@ -228,6 +228,7 @@ const ImportTransactionsDialog = ({ onSuccess }: ImportTransactionsDialogProps) 
       debit: "",
       category: "",
       paidDate: "",
+      dueDate: "",
       type: "",
       status: "",
     });

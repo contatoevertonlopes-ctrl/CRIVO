@@ -74,9 +74,18 @@ serve(async (req) => {
       logStep("Updated to vencido", { count: toOverdue?.length || 0 });
     }
 
+    // 3. Generate next occurrence for recurring transactions that hit their due date
+    const { error: recurError } = await supabase.rpc("process_recurrence_on_due_date");
+    if (recurError) {
+      logStep("Error processing recurrence on due date", { error: recurError });
+    } else {
+      logStep("Processed recurrence on due date");
+    }
+
     const summary = {
       updated_to_upcoming: toUpcoming?.length || 0,
       updated_to_overdue: toOverdue?.length || 0,
+      recurrence_processed: !recurError,
       processed_at: new Date().toISOString(),
     };
 
