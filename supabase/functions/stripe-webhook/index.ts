@@ -100,8 +100,20 @@ serve(async (req) => {
         });
       }
     } else {
+      const isLocalDev = Deno.env.get("DENO_ENV") === "development" ||
+        Deno.env.get("SUPABASE_URL")?.includes("localhost") ||
+        Deno.env.get("SUPABASE_URL")?.includes("127.0.0.1");
+
+      if (!isLocalDev) {
+        logStep("STRIPE_WEBHOOK_SECRET not configured in non-local environment — rejecting");
+        return new Response(JSON.stringify({ error: "Webhook secret not configured" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        });
+      }
+
       event = JSON.parse(body);
-      logStep("No STRIPE_WEBHOOK_SECRET configured; parsing as JSON (dev-only)");
+      logStep("No STRIPE_WEBHOOK_SECRET configured; parsing as JSON (local dev only)");
     }
 
     logStep("Event type", { type: event.type });

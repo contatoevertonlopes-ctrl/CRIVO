@@ -178,8 +178,15 @@ export const parseDate = (dateStr: string): ParsedDateResult => {
   const formats = [
     // YYYY-MM-DD (ISO format)
     { regex: /^(\d{4})-(\d{1,2})-(\d{1,2})$/, format: (m: RegExpMatchArray) => `${m[1]}-${pad(m[2])}-${pad(m[3])}` },
-    // DD/MM/YYYY (Brazilian format - most common)
-    { regex: /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, format: (m: RegExpMatchArray) => `${m[3]}-${pad(m[2])}-${pad(m[1])}` },
+    // DD/MM/YYYY (Brazilian) or MM/DD/YYYY (American) — disambiguate by value range
+    { regex: /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, format: (m: RegExpMatchArray) => {
+      const first = parseInt(m[1], 10);
+      const second = parseInt(m[2], 10);
+      // If second part > 12 and first <= 12, it must be MM/DD/YYYY
+      if (second > 12 && first <= 12) return `${m[3]}-${pad(m[1])}-${pad(m[2])}`;
+      // Default: DD/MM/YYYY (Brazilian)
+      return `${m[3]}-${pad(m[2])}-${pad(m[1])}`;
+    }},
     // DD-MM-YYYY
     { regex: /^(\d{1,2})-(\d{1,2})-(\d{4})$/, format: (m: RegExpMatchArray) => `${m[3]}-${pad(m[2])}-${pad(m[1])}` },
     // DD.MM.YYYY
@@ -190,17 +197,6 @@ export const parseDate = (dateStr: string): ParsedDateResult => {
     { regex: /^(\d{1,2})-(\d{1,2})-(\d{2})$/, format: (m: RegExpMatchArray) => `${expandYear(m[3])}-${pad(m[2])}-${pad(m[1])}` },
     // YYYYMMDD (OFX/compact format)
     { regex: /^(\d{4})(\d{2})(\d{2})$/, format: (m: RegExpMatchArray) => `${m[1]}-${m[2]}-${m[3]}` },
-    // MM/DD/YYYY (American format - check day > 12 to differentiate)
-    { regex: /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, format: (m: RegExpMatchArray) => {
-      // If first number > 12, it's likely DD/MM/YYYY (already handled above)
-      // If second number > 12, it's likely MM/DD/YYYY
-      const first = parseInt(m[1], 10);
-      const second = parseInt(m[2], 10);
-      if (second > 12 && first <= 12) {
-        return `${m[3]}-${pad(m[1])}-${pad(m[2])}`; // MM/DD/YYYY
-      }
-      return null; // Skip, already handled by DD/MM/YYYY
-    }},
     // YYYY/MM/DD
     { regex: /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/, format: (m: RegExpMatchArray) => `${m[1]}-${pad(m[2])}-${pad(m[3])}` },
   ];

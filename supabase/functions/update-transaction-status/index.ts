@@ -45,34 +45,18 @@ serve(async (req) => {
 
     logStep("Date calculations", { today: todayStr, fiveDaysFromNow: fiveDaysFromNowStr });
 
-    // 1. "em_aberto" (or legacy English pending) → "a_vencer" — due within the next 5 days (today inclusive)
-    const { data: toUpcoming, error: toUpcomingError } = await supabase
-      .from("transactions")
-      .update({ status: "a_vencer" })
-      .in("status", ["em_aberto", "pending"])
-      .lte("date", fiveDaysFromNowStr)
-      .gte("date", todayStr)
-      .select("id");
+    // Single atomic RPC — both updates run inside one PL/pgSQL transaction.
+    // Defined in: supabase/migrations/20260411231240_update_transaction_statuses_rpc.sql
+    const { data: rpcResult, error: rpcError } = await supabase.rpc(
+      "update_transaction_statuses",
+      { today_date: todayStr, upcoming_date: fiveDaysFromNowStr }
+    );
 
-    if (toUpcomingError) {
-      logStep("Error updating to a_vencer", { error: toUpcomingError });
-    } else {
-      logStep("Updated to a_vencer", { count: toUpcoming?.length || 0 });
+    if (rpcError) {
+      throw new Error(`RPC update_transaction_statuses failed: ${rpcError.message}`);
     }
 
-    // 2. "a_vencer" or "em_aberto" (or legacy English upcoming/pending) → "vencido" — due date passed and not paid
-    const { data: toOverdue, error: toOverdueError } = await supabase
-      .from("transactions")
-      .update({ status: "vencido" })
-      .in("status", ["a_vencer", "em_aberto", "upcoming", "pending"])
-      .lt("date", todayStr)
-      .select("id");
-
-    if (toOverdueError) {
-      logStep("Error updating to vencido", { error: toOverdueError });
-    } else {
-      logStep("Updated to vencido", { count: toOverdue?.length || 0 });
-    }
+    logStep("RPC completed", rpcResult);
 
     // 3. Generate next occurrence for recurring transactions that hit their due date
     const { error: recurError } = await supabase.rpc("process_recurrence_on_due_date");
@@ -83,8 +67,8 @@ serve(async (req) => {
     }
 
     const summary = {
-      updated_to_upcoming: toUpcoming?.length || 0,
-      updated_to_overdue: toOverdue?.length || 0,
+      updated_to_upcoming: rpcResult?.updated_to_upcoming ?? 0,
+      updated_to_overdue: rpcResult?.updated_to_overdue ?? 0,
       recurrence_processed: !recurError,
       processed_at: new Date().toISOString(),
     };

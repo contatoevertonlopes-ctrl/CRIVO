@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "./useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 type SubscriptionRow = {
   plan: string;
@@ -170,7 +171,9 @@ export const useSubscription = () => {
 
       if (error) throw error;
       return data.url;
-    } catch {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao iniciar checkout";
+      toast.error(msg);
       return null;
     }
   };
@@ -187,7 +190,9 @@ export const useSubscription = () => {
 
       if (error) throw error;
       return data.url;
-    } catch {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao abrir portal do cliente";
+      toast.error(msg);
       return null;
     }
   };

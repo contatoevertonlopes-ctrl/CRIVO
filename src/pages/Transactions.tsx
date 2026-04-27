@@ -237,7 +237,7 @@ const Transactions = () => {
   const { members } = useHousehold();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { transactions, isLoading: transactionsLoading, refetch: refetchTransactions, resetTransactions, error: transactionsError } = useTransactions();
+  const { transactions, isLoading: transactionsLoading, refetch: refetchTransactions, error: transactionsError } = useTransactions();
   const { categories: predefinedCategories } = useTransactionCategories();
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [search, setSearch] = useState("");
@@ -274,13 +274,6 @@ const Transactions = () => {
       navigate("/auth");
     }
   }, [user, authLoading, navigate]);
-
-  useEffect(() => {
-    if (!authLoading && user) {
-      resetTransactions();
-      refetchTransactions();
-    }
-  }, [authLoading, user]);
 
   const fetchTransactions = async () => {
     await refetchTransactions();
@@ -394,7 +387,11 @@ const Transactions = () => {
         break;
     }
 
-    setFilteredTransactions(filtered);
+    const uniqueTransactions = Array.from(
+      new Map(filtered.map((transaction) => [transaction.id, transaction])).values()
+    );
+
+    setFilteredTransactions(uniqueTransactions);
     setCurrentPage(1); // Reset to page 1 when filters change
   }, [transactions, search, typeFilter, statusFilter, categoryFilter, tagFilter, periodFilter, customDateFrom, customDateTo, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed, sortOrder]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -629,6 +626,11 @@ const Transactions = () => {
   };
 
   const exportToCSV = () => {
+    // Prefix fields that start with formula-trigger chars to prevent CSV injection
+    const sanitize = (v: string) => (/^[=+\-@\t\r]/.test(v) ? `'${v}` : v);
+    // Wrap field in quotes and escape inner quotes
+    const csvField = (v: string) => `"${sanitize(v).replace(/"/g, '""')}"`;
+
     const headers = ["Data", "Descrição", "Categoria", "Tipo", "Valor", "Status"];
     const rows = filteredTransactions.map((t) => [
       formatDate(t.date),
@@ -639,8 +641,12 @@ const Transactions = () => {
       getStatusLabelLocal(t.status),
     ]);
 
-    const csvContent = [headers, ...rows].map((row) => row.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map(csvField).join(","))
+      .join("\n");
+
+    // BOM ensures Excel on Windows renders UTF-8 correctly (ã, ç, é, etc.)
+    const blob = new Blob(["﻿" + csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = "transacoes.csv";

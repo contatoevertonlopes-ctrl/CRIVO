@@ -68,12 +68,16 @@ const TransactionsTable = ({
     return { startDate: start, endDate: end };
   }, [customDateFrom, customDateTo, periodDays]);
 
+  const uniqueTransactions = useMemo(() => {
+    return Array.from(new Map(transactions.map((transaction) => [transaction.id, transaction])).values());
+  }, [transactions]);
+
   const filteredByPeriod = useMemo(() => {
-    return transactions.filter((t) => {
+    return uniqueTransactions.filter((t) => {
       const txDate = new Date(t.date + "T00:00:00");
       return txDate >= startDate && txDate <= endDate;
     });
-  }, [transactions, startDate, endDate]);
+  }, [uniqueTransactions, startDate, endDate]);
 
   // Sort by transaction date (what matters to the period), not created_at
   const sortedTransactions = useMemo(() => {
