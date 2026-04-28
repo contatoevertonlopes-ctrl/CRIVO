@@ -45,30 +45,46 @@ serve(async (req) => {
 
     logStep("Date calculations", { today: todayStr, fiveDaysFromNow: fiveDaysFromNowStr });
 
-    // Single atomic RPC — both updates run inside one PL/pgSQL transaction.
-    // Defined in: supabase/migrations/20260411231240_update_transaction_statuses_rpc.sql
-    const { data: rpcResult, error: rpcError } = await supabase.rpc(
-      "update_transaction_statuses",
-      { today_date: todayStr, upcoming_date: fiveDaysFromNowStr }
-    );
+    // 1. em_aberto / pending → a_vencer (due within next 5 days, today inclusive)
+    const { data: toUpcoming, error: toUpcomingError } = await supabase
+      .from("transactions")
+      .update({ status: "a_vencer" })
+      .in("status", ["em_aberto", "pending"])
+      .gte("date", todayStr)
+      .lte("date", fiveDaysFromNowStr)
+      .select("id");
 
-    if (rpcError) {
-      throw new Error(`RPC update_transaction_statuses failed: ${rpcError.message}`);
+    if (toUpcomingError) {
+      logStep("Error updating to a_vencer", { error: toUpcomingError.message });
+    } else {
+      logStep("Updated to a_vencer", { count: toUpcoming?.length ?? 0 });
     }
 
-    logStep("RPC completed", rpcResult);
+    // 2. a_vencer / em_aberto / upcoming / pending → vencido (past due)
+    const { data: toOverdue, error: toOverdueError } = await supabase
+      .from("transactions")
+      .update({ status: "vencido" })
+      .in("status", ["a_vencer", "em_aberto", "upcoming", "pending"])
+      .lt("date", todayStr)
+      .select("id");
+
+    if (toOverdueError) {
+      logStep("Error updating to vencido", { error: toOverdueError.message });
+    } else {
+      logStep("Updated to vencido", { count: toOverdue?.length ?? 0 });
+    }
 
     // 3. Generate next occurrence for recurring transactions that hit their due date
     const { error: recurError } = await supabase.rpc("process_recurrence_on_due_date");
     if (recurError) {
-      logStep("Error processing recurrence on due date", { error: recurError });
+      logStep("Error processing recurrence on due date", { error: recurError.message });
     } else {
       logStep("Processed recurrence on due date");
     }
 
     const summary = {
-      updated_to_upcoming: rpcResult?.updated_to_upcoming ?? 0,
-      updated_to_overdue: rpcResult?.updated_to_overdue ?? 0,
+      updated_to_upcoming: toUpcoming?.length ?? 0,
+      updated_to_overdue: toOverdue?.length ?? 0,
       recurrence_processed: !recurError,
       processed_at: new Date().toISOString(),
     };
