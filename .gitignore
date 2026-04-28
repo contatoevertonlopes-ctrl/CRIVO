@@ -1,3 +1,6 @@
+# Scripts com secrets (nunca commitar com valor real)
+supabase/scripts/
+
 # Logs
 logs
 *.log

@@ -304,7 +304,7 @@ export const useNotifications = (): UseNotificationsReturn => {
     try {
       const { error } = await supabase
         .from("transactions")
-        .update({ status: "paid" })
+        .update({ status: "pagamento_concluido", paid_date: new Date().toISOString().split("T")[0] })
         .eq("id", id);
       if (error) throw error;
       toast.success(type === "income" ? "Recebimento confirmado!" : "Conta marcada como paga!");
