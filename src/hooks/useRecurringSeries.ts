@@ -8,7 +8,7 @@ export interface RecurringSeries {
   amount: number;
   category: string;
   type: "income" | "expense";
-  interval: "weekly" | "biweekly" | "monthly" | "yearly";
+  interval: "weekly" | "biweekly" | "monthly" | "quarterly" | "yearly";
   start_date: string;
   tag: string | null;
   payment_method: string | null;

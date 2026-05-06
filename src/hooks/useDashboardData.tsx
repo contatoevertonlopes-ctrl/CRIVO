@@ -304,10 +304,10 @@ export const useDashboardData = (period: number = 30, customDateFrom?: Date, cus
       }
     }
 
-    // Calculate expenses by category (excluding transfers)
+    // Calculate expenses by category (paid only, excluding transfers)
     const categoryMap = new Map<string, number>();
     currentPeriodTransactions
-      .filter((t) => t.type === "expense" && !isTransfer(t))
+      .filter((t) => t.type === "expense" && !isTransfer(t) && PAID_STATUSES.includes(t.status as (typeof PAID_STATUSES)[number]))
       .forEach((t) => {
         const current = categoryMap.get(t.category) || 0;
         categoryMap.set(t.category, current + Number(t.amount));

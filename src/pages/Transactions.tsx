@@ -20,7 +20,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { toast } from "sonner";
-import { Search, Plus, Edit2, Trash2, Filter, Download, Lock, Crown, RefreshCw, Calendar, Copy, ArrowUpDown, ChevronUp, ChevronDown, ChevronRight, CheckSquare, X, ArrowRightLeft } from "lucide-react";
+import { Search, Plus, Edit2, Trash2, Filter, Download, Lock, Crown, RefreshCw, Calendar, Copy, ArrowUpDown, ChevronUp, ChevronDown, ChevronRight, CheckSquare, X, ArrowRightLeft, AlertCircle, TrendingDown, CalendarClock } from "lucide-react";
 import AddTransactionCompactDialog from "@/components/AddTransactionCompactDialog";
 import Sidebar from "@/components/Sidebar";
 import ImportTransactionsDialog from "@/components/ImportTransactionsDialog";
@@ -34,7 +34,7 @@ import TransactionPagination from "@/components/TransactionPagination";
 import BulkEditDialog from "@/components/BulkEditDialog";
 import ThemeToggle from "@/components/ThemeToggle";
 import { sortTransactionsByPriority } from "@/utils/transactionSort";
-import { startOfMonth, endOfMonth, subMonths, addMonths, format } from "date-fns";
+import { startOfMonth, endOfMonth, subMonths, addMonths, addDays, format } from "date-fns";
 import { calculateTransactionTotals } from "@/utils/transactionTotals";
 import { useTransactionCategories } from "@/hooks/useTransactionCategories";
 import { deleteRecurringSeries } from "@/hooks/useRecurringSeries";
@@ -149,9 +149,6 @@ const TransactionRow = ({
       </td>
     )}
     <td className="py-4 px-4 whitespace-nowrap">{formatDate(transaction.date)}</td>
-    <td className="py-4 px-4 whitespace-nowrap text-muted-foreground">
-      {transaction.due_date ? formatDate(transaction.due_date) : "-"}
-    </td>
     <td className="py-4 px-4 font-medium">
       <div className="flex items-center gap-2">
         <span className="truncate max-w-[120px] sm:max-w-[200px]">{transaction.description}</span>
@@ -162,7 +159,6 @@ const TransactionRow = ({
         )}
       </div>
     </td>
-    <td className="py-4 px-4">{transaction.category}</td>
     <td className="py-4 px-4">
       <span
         className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full ${
@@ -174,7 +170,6 @@ const TransactionRow = ({
         {transaction.type === "income" ? "Entrada" : "Saída"}
       </span>
     </td>
-    <td className="py-4 px-4 whitespace-nowrap">{getPaymentMethodLabel(transaction.payment_method)}</td>
     <td className="py-4 px-4 whitespace-nowrap">{formatCurrency(transaction.amount)}</td>
     <td className="py-4 px-4">
       <StatusSelector
@@ -184,10 +179,13 @@ const TransactionRow = ({
         onStatusChange={onStatusChange}
       />
     </td>
+    <td className="py-4 px-4 whitespace-nowrap text-muted-foreground">
+      {transaction.paid_date ? formatDate(transaction.paid_date) : "-"}
+    </td>
     <td className="py-4 px-4">
       {transaction.tag && (
         <span className={`inline-flex items-center text-[10px] px-2 py-0.5 rounded-full ${
-          transaction.tag === "fixa" 
+          transaction.tag === "fixa"
             ? "bg-blue-500/20 text-blue-300"
             : transaction.tag === "variavel"
             ? "bg-orange-500/20 text-orange-300"
@@ -197,9 +195,8 @@ const TransactionRow = ({
         </span>
       )}
     </td>
-    <td className="py-4 px-4 whitespace-nowrap text-muted-foreground">
-      {transaction.paid_date ? formatDate(transaction.paid_date) : "-"}
-    </td>
+    <td className="py-4 px-4">{transaction.category}</td>
+    <td className="py-4 px-4 whitespace-nowrap">{getPaymentMethodLabel(transaction.payment_method)}</td>
     <td className="py-4 px-4">
       <div className="flex items-center gap-1">
         <button
@@ -261,6 +258,7 @@ const Transactions = () => {
   const [groupBy, setGroupBy] = useState<"none" | "month" | "category">("none");
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
+  const filterKeyRef = React.useRef<string>("");
   const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
@@ -392,7 +390,15 @@ const Transactions = () => {
     );
 
     setFilteredTransactions(uniqueTransactions);
-    setCurrentPage(1); // Reset to page 1 when filters change
+
+    // Reset to page 1 only when filter inputs change, not on background data refreshes.
+    // Without this guard, every status update (which refetches `transactions`) would
+    // reset the page because `transactions` is a dependency of this effect.
+    const newFilterKey = JSON.stringify([search, typeFilter, statusFilter, categoryFilter, tagFilter, periodFilter, customDateFrom, customDateTo, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed, sortOrder]);
+    if (newFilterKey !== filterKeyRef.current) {
+      filterKeyRef.current = newFilterKey;
+      setCurrentPage(1);
+    }
   }, [transactions, search, typeFilter, statusFilter, categoryFilter, tagFilter, periodFilter, customDateFrom, customDateTo, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed, sortOrder]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const categories = useMemo(() => {
@@ -693,6 +699,35 @@ const Transactions = () => {
 
   const totals = calculateTransactionTotals(filteredTransactions, { excludeTransfers: true });
 
+  const predictability = useMemo(() => {
+    const today = new Date();
+    const todayStr = format(today, "yyyy-MM-dd");
+    const sevenDaysStr = format(addDays(today, 7), "yyyy-MM-dd");
+
+    const overdue = transactions.filter(
+      (t) => normalizeStatus(t.status) === "overdue" && t.type === "expense"
+    );
+    const dueToday = transactions.filter(
+      (t) => t.date === todayStr && normalizeStatus(t.status) !== "paid" && t.type === "expense"
+    );
+    const next7Days = transactions.filter(
+      (t) =>
+        t.type === "expense" &&
+        t.date > todayStr &&
+        t.date <= sevenDaysStr &&
+        normalizeStatus(t.status) !== "paid"
+    );
+
+    return {
+      overdueCount: overdue.length,
+      overdueAmount: overdue.reduce((sum, t) => sum + t.amount, 0),
+      dueTodayCount: dueToday.length,
+      dueTodayAmount: dueToday.reduce((sum, t) => sum + t.amount, 0),
+      next7DaysCount: next7Days.length,
+      next7DaysAmount: next7Days.reduce((sum, t) => sum + t.amount, 0),
+    };
+  }, [transactions]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -707,8 +742,11 @@ const Transactions = () => {
       
       <main className="flex-1 min-w-0 pt-16 pb-24 lg:pt-0 lg:pb-0">
         <div className="max-w-6xl mx-auto px-4 py-4 lg:px-6 lg:py-6 flex flex-col gap-4 lg:gap-5">
-          {/* Header */}
-          <div className="flex flex-col gap-4 lg:pl-0">
+          {/* Gradient accent line — premium visual anchor */}
+          <div className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent -mx-4 lg:-mx-6" />
+
+          {/* Header — glass surface */}
+          <div className="flex flex-col gap-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 px-4 py-4 card-shadow-soft">
             <div className="flex items-start justify-between">
               <div>
                 <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -757,6 +795,51 @@ const Transactions = () => {
                   </Button>
                 }
               />
+            </div>
+          </div>
+
+          {/* Predictability Panel */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Atrasados */}
+            <div className="flex items-center gap-3 rounded-xl bg-destructive/8 border border-destructive/25 px-4 py-3 card-shadow-soft">
+              <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-destructive/15 flex items-center justify-center">
+                <AlertCircle className="w-4 h-4 text-destructive" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Atrasados</p>
+                <p className="text-lg font-bold text-destructive leading-tight">
+                  {formatCurrency(predictability.overdueAmount)}
+                </p>
+                <p className="text-[10px] text-muted-foreground">{predictability.overdueCount} {predictability.overdueCount === 1 ? "despesa" : "despesas"}</p>
+              </div>
+            </div>
+
+            {/* A Pagar Hoje */}
+            <div className="flex items-center gap-3 rounded-xl bg-warning/8 border border-warning/25 px-4 py-3 card-shadow-soft">
+              <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-warning/15 flex items-center justify-center">
+                <Calendar className="w-4 h-4 text-warning" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">A Pagar Hoje</p>
+                <p className="text-lg font-bold text-warning leading-tight">
+                  {formatCurrency(predictability.dueTodayAmount)}
+                </p>
+                <p className="text-[10px] text-muted-foreground">{predictability.dueTodayCount} {predictability.dueTodayCount === 1 ? "despesa" : "despesas"}</p>
+              </div>
+            </div>
+
+            {/* Previsão Próximos 7 Dias */}
+            <div className="flex items-center gap-3 rounded-xl bg-primary/8 border border-primary/25 px-4 py-3 card-shadow-soft">
+              <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
+                <CalendarClock className="w-4 h-4 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Próximos 7 Dias</p>
+                <p className="text-lg font-bold text-primary leading-tight">
+                  {formatCurrency(predictability.next7DaysAmount)}
+                </p>
+                <p className="text-[10px] text-muted-foreground">{predictability.next7DaysCount} {predictability.next7DaysCount === 1 ? "despesa" : "despesas"}</p>
+              </div>
             </div>
           </div>
 
@@ -1376,7 +1459,7 @@ const Transactions = () => {
                         {showMember && (
                           <th className="py-4 px-3 w-10"></th>
                         )}
-                        <th 
+                        <th
                           className="text-left py-4 px-4 font-medium cursor-pointer hover:text-foreground transition-colors select-none"
                           onClick={() => setSortOrder(sortOrder === "date_desc" ? "date_asc" : "date_desc")}
                         >
@@ -1391,12 +1474,9 @@ const Transactions = () => {
                             )}
                           </div>
                         </th>
-                        <th className="text-left py-4 px-4 font-medium">Vencimento</th>
                         <th className="text-left py-4 px-4 font-medium">Descrição</th>
-                        <th className="text-left py-4 px-4 font-medium">Categoria</th>
                         <th className="text-left py-4 px-4 font-medium">Tipo</th>
-                        <th className="text-left py-4 px-4 font-medium">Forma de Pagamento</th>
-                        <th 
+                        <th
                           className="text-left py-4 px-4 font-medium cursor-pointer hover:text-foreground transition-colors select-none"
                           onClick={() => setSortOrder(sortOrder === "amount_desc" ? "amount_asc" : "amount_desc")}
                         >
@@ -1412,8 +1492,10 @@ const Transactions = () => {
                           </div>
                         </th>
                         <th className="text-left py-4 px-4 font-medium">Status</th>
+                        <th className="text-left py-4 px-4 font-medium">Data de Pagamento</th>
                         <th className="text-left py-4 px-4 font-medium">Tag</th>
-                        <th className="text-left py-4 px-4 font-medium">Data Pgto</th>
+                        <th className="text-left py-4 px-4 font-medium">Categoria</th>
+                        <th className="text-left py-4 px-4 font-medium">Forma de Pagamento</th>
                         <th className="text-left py-4 px-4 font-medium">Ações</th>
                       </tr>
                     </thead>
@@ -1454,7 +1536,7 @@ const Transactions = () => {
                                 className="bg-secondary/40 border-b border-secondary cursor-pointer hover:bg-secondary/60 transition-colors"
                                 onClick={() => toggleGroupCollapse(key)}
                               >
-                                <td colSpan={showMember ? 10 : 9} className="py-3 px-4">
+                                <td colSpan={showMember ? 11 : 10} className="py-3 px-4">
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                       <ChevronRight className={`w-4 h-4 transition-transform ${isCollapsed ? "" : "rotate-90"}`} />
