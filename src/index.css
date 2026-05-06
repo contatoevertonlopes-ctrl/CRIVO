@@ -111,12 +111,14 @@
     --gradient-survival: linear-gradient(135deg, hsl(220 13% 95%), hsl(210 17% 98%));
     --gradient-prosperity: linear-gradient(135deg, hsl(220 13% 95%), hsl(210 17% 98%));
 
-    /* Mesh background — light (Aura Esmeralda) */
+    /* Mesh background — light (Aurora Profunda) */
     --mesh-bg:
-      radial-gradient(ellipse 110% 70% at 50% 20%,  hsl(210 30% 99%)        0px, transparent 68%),
-      radial-gradient(ellipse  55% 75% at  5% 55%,  hsl(214 45% 93%)        0px, transparent 58%),
-      radial-gradient(ellipse  48% 58% at 94% 12%,  hsl(156 40% 95%)        0px, transparent 52%),
-      radial-gradient(ellipse  85% 42% at 50% 112%, hsl(214 38% 91%)        0px, transparent 55%);
+      radial-gradient(ellipse 165% 48% at  8% -12%, hsl(214 55% 92%)        0px, transparent 62%),
+      radial-gradient(ellipse 125% 36% at 94%  -6%, hsl(156 42% 94%)        0px, transparent 54%),
+      radial-gradient(ellipse  82% 42% at 48%   2%, hsl(210 25% 98%)        0px, transparent 57%),
+      radial-gradient(ellipse 112% 52% at 50% 118%, hsl(214 38% 91%)        0px, transparent 60%),
+      radial-gradient(ellipse  38% 78% at  -3%  50%, hsl(214 42% 93%)       0px, transparent 52%);
+    --vignette-bg: radial-gradient(ellipse 86% 80% at 50% 50%, transparent 32%, hsl(214 45% 88% / 0.30) 100%);
 
     /* Shadows — light */
     --shadow-soft: 0 2px 8px rgba(26, 46, 74, 0.06);
@@ -221,12 +223,14 @@
     --gradient-survival: linear-gradient(135deg, hsl(214 40% 13%), hsl(214 50% 10%));
     --gradient-prosperity: linear-gradient(135deg, hsl(214 38% 12%), hsl(214 50% 10%));
 
-    /* Mesh background — dark (Aura Esmeralda) */
+    /* Mesh background — dark (Aurora Profunda) */
     --mesh-bg:
-      radial-gradient(ellipse 105% 68% at 50% 28%,  hsl(156 35% 14%)        0px, transparent 72%),
-      radial-gradient(ellipse  58% 82% at  7% 55%,  hsl(214 62% 13%)        0px, transparent 60%),
-      radial-gradient(ellipse  46% 56% at 93% 16%,  hsl(214 58% 12%)        0px, transparent 52%),
-      radial-gradient(ellipse  88% 42% at 50% 108%, hsl(214 68%  7%)        0px, transparent 56%);
+      radial-gradient(ellipse 168% 52% at  8% -14%, hsl(156 48% 17%)        0px, transparent 63%),
+      radial-gradient(ellipse 122% 38% at 92%  -8%, hsl(180 40% 13%)        0px, transparent 56%),
+      radial-gradient(ellipse  84% 46% at 46%   4%, hsl(156 36% 14%)        0px, transparent 60%),
+      radial-gradient(ellipse 115% 56% at 50% 118%, hsl(214 72%  6%)        0px, transparent 62%),
+      radial-gradient(ellipse  40% 82% at  -4%  50%, hsl(214 65% 11%)       0px, transparent 54%);
+    --vignette-bg: radial-gradient(ellipse 88% 84% at 50% 50%, transparent 26%, hsl(214 65% 5% / 0.68) 100%);
 
     /* Shadows — dark */
     --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.40), 0 1px 4px rgba(0, 0, 0, 0.20);
@@ -290,6 +294,16 @@
     inset: 0;
     background-image: var(--mesh-bg);
     background-color: transparent;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Vignette layer — darkens edges to create depth between mesh and content */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: var(--vignette-bg);
     pointer-events: none;
     z-index: 0;
   }
