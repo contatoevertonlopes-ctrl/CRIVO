@@ -111,12 +111,12 @@
     --gradient-survival: linear-gradient(135deg, hsl(220 13% 95%), hsl(210 17% 98%));
     --gradient-prosperity: linear-gradient(135deg, hsl(220 13% 95%), hsl(210 17% 98%));
 
-    /* Mesh background — light */
+    /* Mesh background — light (Aura Esmeralda) */
     --mesh-bg:
-      radial-gradient(at 18% 12%,  hsl(214 50% 91%) 0px, transparent 52%),
-      radial-gradient(at 82%  8%,  hsl(156 55% 90%) 0px, transparent 46%),
-      radial-gradient(at 55% 85%,  hsl(220 35% 93%) 0px, transparent 54%),
-      radial-gradient(at 10% 75%,  hsl(214 40% 94%) 0px, transparent 42%);
+      radial-gradient(ellipse 110% 70% at 50% 20%,  hsl(210 30% 99%)        0px, transparent 68%),
+      radial-gradient(ellipse  55% 75% at  5% 55%,  hsl(214 45% 93%)        0px, transparent 58%),
+      radial-gradient(ellipse  48% 58% at 94% 12%,  hsl(156 40% 95%)        0px, transparent 52%),
+      radial-gradient(ellipse  85% 42% at 50% 112%, hsl(214 38% 91%)        0px, transparent 55%);
 
     /* Shadows — light */
     --shadow-soft: 0 2px 8px rgba(26, 46, 74, 0.06);
@@ -221,12 +221,12 @@
     --gradient-survival: linear-gradient(135deg, hsl(214 40% 13%), hsl(214 50% 10%));
     --gradient-prosperity: linear-gradient(135deg, hsl(214 38% 12%), hsl(214 50% 10%));
 
-    /* Mesh background — dark */
+    /* Mesh background — dark (Aura Esmeralda) */
     --mesh-bg:
-      radial-gradient(at 18% 12%,  hsl(214 65% 17%) 0px, transparent 52%),
-      radial-gradient(at 80%  6%,  hsl(156 48% 11%) 0px, transparent 46%),
-      radial-gradient(at 55% 88%,  hsl(220 52%  7%) 0px, transparent 54%),
-      radial-gradient(at  8% 72%,  hsl(214 55% 13%) 0px, transparent 42%);
+      radial-gradient(ellipse 105% 68% at 50% 28%,  hsl(156 35% 14%)        0px, transparent 72%),
+      radial-gradient(ellipse  58% 82% at  7% 55%,  hsl(214 62% 13%)        0px, transparent 60%),
+      radial-gradient(ellipse  46% 56% at 93% 16%,  hsl(214 58% 12%)        0px, transparent 52%),
+      radial-gradient(ellipse  88% 42% at 50% 108%, hsl(214 68%  7%)        0px, transparent 56%);
 
     /* Shadows — dark */
     --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.40), 0 1px 4px rgba(0, 0, 0, 0.20);
