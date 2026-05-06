@@ -40,12 +40,13 @@ serve(async (req) => {
     });
 
     const today = new Date();
-    const todayStr = today.toISOString().split("T")[0];
-    
+    const brt = (d: Date) => new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Sao_Paulo" }).format(d);
+    const todayStr = brt(today);
+
     // Calculate date 3 days from now for "a_vencer" alerts
     const threeDaysFromNow = new Date(today);
     threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
-    const threeDaysFromNowStr = threeDaysFromNow.toISOString().split("T")[0];
+    const threeDaysFromNowStr = brt(threeDaysFromNow);
 
     const notificationsToCreate: Array<{
       user_id: string;

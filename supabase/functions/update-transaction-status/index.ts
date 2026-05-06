@@ -36,12 +36,13 @@ serve(async (req) => {
     });
 
     const today = new Date();
-    const todayStr = today.toISOString().split("T")[0];
+    const brt = (d: Date) => new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Sao_Paulo" }).format(d);
+    const todayStr = brt(today);
 
     // 5 days from now — threshold for "A vencer"
     const fiveDaysFromNow = new Date(today);
     fiveDaysFromNow.setDate(fiveDaysFromNow.getDate() + 5);
-    const fiveDaysFromNowStr = fiveDaysFromNow.toISOString().split("T")[0];
+    const fiveDaysFromNowStr = brt(fiveDaysFromNow);
 
     logStep("Date calculations", { today: todayStr, fiveDaysFromNow: fiveDaysFromNowStr });
 

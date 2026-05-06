@@ -81,10 +81,11 @@ export const isPendingStatus = (status: string): boolean =>
  */
 export const computeUnpaidStatus = (dateStr: string): string => {
   const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
+  const brt = (d: Date) => new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Sao_Paulo" }).format(d);
+  const todayStr = brt(today);
   const fiveDaysFromNow = new Date(today);
   fiveDaysFromNow.setDate(fiveDaysFromNow.getDate() + 5);
-  const fiveDaysFromNowStr = fiveDaysFromNow.toISOString().split("T")[0];
+  const fiveDaysFromNowStr = brt(fiveDaysFromNow);
 
   if (dateStr < todayStr) return "vencido";
   if (dateStr <= fiveDaysFromNowStr) return "a_vencer";
