@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { householdKeys } from "@/hooks/useHouseholdContext";
 
 interface HouseholdMember {
   user_id: string;
@@ -22,21 +23,24 @@ interface HouseholdInvite {
   used_at: string | null;
 }
 
+interface HouseholdData {
+  household: Household | null;
+  members: HouseholdMember[];
+  invites: HouseholdInvite[];
+}
+
+const householdDetailKey = (userId: string | undefined) =>
+  [...householdKeys.all, "detail", userId] as const;
+
 export const useHousehold = () => {
   const { user } = useAuth();
-  const [household, setHousehold] = useState<Household | null>(null);
-  const [members, setMembers] = useState<HouseholdMember[]>([]);
-  const [invites, setInvites] = useState<HouseholdInvite[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchHousehold = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+  const { data, isLoading, refetch } = useQuery<HouseholdData>({
+    queryKey: householdDetailKey(user?.id),
+    queryFn: async (): Promise<HouseholdData> => {
+      if (!user) return { household: null, members: [], invites: [] };
 
-    try {
-      // Get user's household_id from profile
       const { data: profile } = await supabase
         .from("profiles")
         .select("household_id")
@@ -44,89 +48,70 @@ export const useHousehold = () => {
         .single();
 
       if (!profile?.household_id) {
-        setLoading(false);
-        return;
+        return { household: null, members: [], invites: [] };
       }
 
-      // Get household details
-      const { data: householdData } = await supabase
-        .from("households")
-        .select("*")
-        .eq("id", profile.household_id)
-        .single();
+      const householdId = profile.household_id;
 
-      if (householdData) {
-        setHousehold(householdData);
-      }
+      // Fetch household details, members and active invites in parallel
+      const [{ data: householdData }, { data: membersData }, { data: invitesData }] =
+        await Promise.all([
+          supabase.from("households").select("*").eq("id", householdId).single(),
+          supabase
+            .from("profiles")
+            .select("user_id, full_name, avatar_url")
+            .eq("household_id", householdId),
+          supabase
+            .from("household_invites")
+            .select("*")
+            .eq("household_id", householdId)
+            .is("used_at", null)
+            .gt("expires_at", new Date().toISOString()),
+        ]);
 
-      // Get all members of the household
-      const { data: membersData } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, avatar_url")
-        .eq("household_id", profile.household_id);
+      // Generate signed URLs for member avatars (policy allows same-household reads)
+      const members = await Promise.all(
+        (membersData ?? []).map(async (member) => {
+          const raw = member.avatar_url;
+          if (!raw || /^https?:\/\//i.test(raw)) return member;
 
-      if (membersData) {
-        // Private avatars: only the owner can read their own object.
-        // For other members, keep avatar_url only if it's an actual URL (legacy/public setup).
-        const hydrated = await Promise.all(
-          membersData.map(async (member) => {
-            const raw = member.avatar_url;
+          const { data: signed, error } = await supabase.storage
+            .from("avatars")
+            .createSignedUrl(raw, 60 * 60 * 24 * 7);
 
-            if (!raw) return member;
+          if (error) return { ...member, avatar_url: null };
+          const signedUrl = signed?.signedUrl ?? null;
+          return { ...member, avatar_url: signedUrl };
+        })
+      );
 
-            // Legacy/back-compat: already a full URL
-            if (/^https?:\/\//i.test(raw)) return member;
+      return {
+        household: householdData ?? null,
+        members,
+        invites: invitesData ?? [],
+      };
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
 
-            // Generate a signed URL for any household member (policy allows same-household reads)
-            const { data: signed, error } = await supabase.storage
-              .from("avatars")
-              .createSignedUrl(raw, 60 * 60 * 24 * 7);
-
-            if (error) return { ...member, avatar_url: null };
-
-            const signedUrl = (signed as any)?.signedUrl || (signed as any)?.signedURL || null;
-            return { ...member, avatar_url: signedUrl };
-          })
-        );
-
-        setMembers(hydrated);
-      }
-
-      // Get active invites
-      const { data: invitesData } = await supabase
-        .from("household_invites")
-        .select("*")
-        .eq("household_id", profile.household_id)
-        .is("used_at", null)
-        .gt("expires_at", new Date().toISOString());
-
-      if (invitesData) {
-        setInvites(invitesData);
-      }
-    } catch (error) {
-      console.error("Error fetching household:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Invalidates the full household cache tree (detail + context)
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: householdKeys.all });
 
   const createInvite = async () => {
-    if (!user || !household) return null;
-
+    if (!user || !data?.household) return null;
     try {
-      const { data, error } = await supabase
+      const { data: invite, error } = await supabase
         .from("household_invites")
-        .insert({
-          household_id: household.id,
-          created_by: user.id,
-        })
+        .insert({ household_id: data.household.id, created_by: user.id })
         .select()
         .single();
-
       if (error) throw error;
-
-      await fetchHousehold();
-      return data;
+      await invalidate();
+      return invite;
     } catch (error) {
       console.error("Error creating invite:", error);
       return null;
@@ -135,25 +120,15 @@ export const useHousehold = () => {
 
   const acceptInvite = async (inviteCode: string): Promise<{ success: boolean; error?: string }> => {
     if (!user) return { success: false, error: "Usuário não autenticado" };
-
     try {
-      // Normaliza o código: remove espaços e converte para lowercase
       const normalizedCode = inviteCode.trim().toLowerCase();
-      
-      const { data, error } = await supabase.rpc("accept_household_invite", {
+      const { data: result, error } = await supabase.rpc("accept_household_invite", {
         p_invite_code: normalizedCode,
       });
-
-
       if (error) throw error;
-
-      const result = data as { success: boolean; error?: string };
-
-      if (result.success) {
-        await fetchHousehold();
-      }
-
-      return result;
+      const res = result as { success: boolean; error?: string };
+      if (res.success) await invalidate();
+      return res;
     } catch (error: any) {
       console.error("Error accepting invite:", error);
       return { success: false, error: error.message };
@@ -161,17 +136,14 @@ export const useHousehold = () => {
   };
 
   const updateHouseholdName = async (name: string) => {
-    if (!household) return false;
-
+    if (!data?.household) return false;
     try {
       const { error } = await supabase
         .from("households")
         .update({ name })
-        .eq("id", household.id);
-
+        .eq("id", data.household.id);
       if (error) throw error;
-
-      await fetchHousehold();
+      await invalidate();
       return true;
     } catch (error) {
       console.error("Error updating household name:", error);
@@ -181,38 +153,27 @@ export const useHousehold = () => {
 
   const leaveHousehold = async (): Promise<{ success: boolean; error?: string }> => {
     if (!user) return { success: false, error: "Usuário não autenticado" };
-
     try {
-      const { data, error } = await supabase.rpc("leave_household");
-
+      const { data: result, error } = await supabase.rpc("leave_household");
       if (error) throw error;
-
-      const result = data as { success: boolean; error?: string };
-
-      if (result.success) {
-        await fetchHousehold();
-      }
-
-      return result;
+      const res = result as { success: boolean; error?: string };
+      if (res.success) await invalidate();
+      return res;
     } catch (error: any) {
       console.error("Error leaving household:", error);
       return { success: false, error: error.message };
     }
   };
 
-  useEffect(() => {
-    fetchHousehold();
-  }, [user]);
-
   return {
-    household,
-    members,
-    invites,
-    loading,
+    household: data?.household ?? null,
+    members: data?.members ?? [],
+    invites: data?.invites ?? [],
+    loading: isLoading,
     createInvite,
     acceptInvite,
     updateHouseholdName,
     leaveHousehold,
-    refetch: fetchHousehold,
+    refetch,
   };
 };

@@ -56,14 +56,20 @@ const GoalItemLinkDialog = ({
       if (!user || !open) return;
       setLoading(true);
       try {
+        type GoalRow = {
+          id: string;
+          title: string;
+          goal_items: Array<{ id: string; title: string; estimated_amount: number; is_paid: boolean }>;
+        };
         const { data: goals } = await supabase
           .from("goals")
           .select(`id, title, goal_items!goal_items_goal_id_fkey (id, title, estimated_amount, is_paid)`)
           .eq("status", "active");
-        if (goals) {
+        const typedGoals = (goals ?? []) as GoalRow[];
+        if (typedGoals.length > 0) {
           const items: GoalItem[] = [];
-          for (const goal of goals) {
-            for (const item of (goal as any).goal_items || []) {
+          for (const goal of typedGoals) {
+            for (const item of goal.goal_items || []) {
               if (!item.is_paid) {
                 items.push({ id: item.id, title: item.title, estimated_amount: item.estimated_amount, goal_id: goal.id, goal_title: goal.title, is_paid: item.is_paid });
               }

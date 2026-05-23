@@ -67,11 +67,11 @@ const BulkEditDialog = ({
 
   const handleBulkUpdate = async () => {
     if (selectedIds.length === 0) return;
-    const updates: Record<string, string> = {};
+    const updates: Record<string, string | null> = {};
     if (updateCategory && category) updates.category = category;
     if (updateStatus && status) updates.status = status;
     if (updateType && type) updates.type = type;
-    if (updateTag) updates.tag = tag || (null as any);
+    if (updateTag) updates.tag = tag || null;
     if (Object.keys(updates).length === 0) {
       toast.error("Selecione pelo menos um campo para atualizar");
       return;

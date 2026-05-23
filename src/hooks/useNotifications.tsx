@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useSharedHousehold } from "@/hooks/useSharedHousehold";
+import { useHouseholdContext } from "@/hooks/useHouseholdContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { RealtimeChannel } from "@supabase/supabase-js";
@@ -48,7 +48,7 @@ interface UseNotificationsReturn {
 
 export const useNotifications = (): UseNotificationsReturn => {
   const { user } = useAuth();
-  const { isShared, householdId, loading: householdLoading } = useSharedHousehold();
+  const { isShared, householdId, loading: householdLoading } = useHouseholdContext();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [upcomingBills, setUpcomingBills] = useState<UpcomingBill[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,8 +107,7 @@ export const useNotifications = (): UseNotificationsReturn => {
 
       // Subscribe via service worker
       const registration = await navigator.serviceWorker.ready;
-      const pushManager = (registration as any).pushManager;
-      const subscription = await pushManager.subscribe({
+      const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey,
       });

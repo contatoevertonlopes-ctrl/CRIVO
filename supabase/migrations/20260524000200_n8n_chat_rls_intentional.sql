@@ -1,0 +1,15 @@
+-- n8n_chat_histories: RLS enabled with no policies — intentional.
+--
+-- This table is written and read exclusively by n8n via the service_role key,
+-- which bypasses RLS entirely. The table has no user_id column, so per-user
+-- row filtering is not applicable.
+--
+-- Current access matrix (correct and intentional):
+--   service_role → full access (bypasses RLS)
+--   authenticated → blocked (no matching policy)
+--   anon         → blocked (no matching policy)
+--
+-- Do NOT add USING (true) policies — that would expose every user's chat
+-- history to any authenticated session without any ownership check.
+-- If direct frontend access is ever needed, add a user_id column first and
+-- then create scoped policies.

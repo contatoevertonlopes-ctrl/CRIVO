@@ -120,11 +120,19 @@ export const useCards = (options: UseCardsOptions = {}) => {
       const today = new Date();
       const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("card_transactions")
         .select("*")
         .gte("billing_month", currentMonth.toISOString().split("T")[0])
         .order("billing_month");
+
+      if (isShared && householdId) {
+        query = query.eq("household_id", householdId);
+      } else {
+        query = query.eq("user_id", user.id);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return (data as CardTransaction[]) || [];
