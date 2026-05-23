@@ -46,36 +46,20 @@ serve(async (req) => {
 
     logStep("Date calculations", { today: todayStr, fiveDaysFromNow: fiveDaysFromNowStr });
 
-    // 1. em_aberto / pending → a_vencer (due within next 5 days, today inclusive)
-    const { data: toUpcoming, error: toUpcomingError } = await supabase
-      .from("transactions")
-      .update({ status: "a_vencer" })
-      .in("status", ["em_aberto", "pending"])
-      .gte("date", todayStr)
-      .lte("date", fiveDaysFromNowStr)
-      .select("id");
+    // Single atomic RPC — runs both UPDATEs in one transaction
+    const { data: rpcResult, error: rpcError } = await supabase.rpc(
+      "update_transaction_statuses",
+      { today_date: todayStr, upcoming_date: fiveDaysFromNowStr }
+    );
 
-    if (toUpcomingError) {
-      logStep("Error updating to a_vencer", { error: toUpcomingError.message });
-    } else {
-      logStep("Updated to a_vencer", { count: toUpcoming?.length ?? 0 });
+    if (rpcError) {
+      logStep("Error calling update_transaction_statuses", { error: rpcError.message });
+      throw new Error(rpcError.message);
     }
 
-    // 2. a_vencer / em_aberto / upcoming / pending → vencido (past due)
-    const { data: toOverdue, error: toOverdueError } = await supabase
-      .from("transactions")
-      .update({ status: "vencido" })
-      .in("status", ["a_vencer", "em_aberto", "upcoming", "pending"])
-      .lt("date", todayStr)
-      .select("id");
+    logStep("Statuses updated", rpcResult);
 
-    if (toOverdueError) {
-      logStep("Error updating to vencido", { error: toOverdueError.message });
-    } else {
-      logStep("Updated to vencido", { count: toOverdue?.length ?? 0 });
-    }
-
-    // 3. Generate next occurrence for recurring transactions that hit their due date
+    // Generate next occurrence for recurring transactions that hit their due date
     const { error: recurError } = await supabase.rpc("process_recurrence_on_due_date");
     if (recurError) {
       logStep("Error processing recurrence on due date", { error: recurError.message });
@@ -84,8 +68,8 @@ serve(async (req) => {
     }
 
     const summary = {
-      updated_to_upcoming: toUpcoming?.length ?? 0,
-      updated_to_overdue: toOverdue?.length ?? 0,
+      updated_to_upcoming: (rpcResult as any)?.updated_to_upcoming ?? 0,
+      updated_to_overdue:  (rpcResult as any)?.updated_to_overdue  ?? 0,
       recurrence_processed: !recurError,
       processed_at: new Date().toISOString(),
     };
