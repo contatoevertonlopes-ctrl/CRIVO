@@ -172,24 +172,24 @@ const TransactionCard = ({ transaction, onEdit, onDelete, onDuplicate, onStatusC
           />
         </div>
 
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+        <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-150">
           <button
             onClick={() => onDuplicate(transaction)}
-            className="p-1.5 rounded-lg hover:bg-primary/12 text-muted-foreground hover:text-primary transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-primary/12 text-muted-foreground hover:text-primary transition-colors"
           >
-            <Copy className="w-3.5 h-3.5" />
+            <Copy className="w-4 h-4" />
           </button>
           <button
             onClick={() => onEdit(transaction)}
-            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
           >
-            <Edit2 className="w-3.5 h-3.5" />
+            <Edit2 className="w-4 h-4" />
           </button>
           <button
             onClick={() => onDelete(transaction.id)}
-            className="p-1.5 rounded-lg hover:bg-expense-muted text-muted-foreground hover:text-expense transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-expense-muted text-muted-foreground hover:text-expense transition-colors"
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
