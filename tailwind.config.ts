@@ -108,8 +108,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["Outfit", "system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
-        display: ["Calistoga", "serif"],
+        sans: ["Space Grotesk", "system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        display: ["Space Grotesk", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       borderRadius: {

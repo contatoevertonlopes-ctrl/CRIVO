@@ -62,7 +62,7 @@ export function SplashScreen({ onComplete }: Props) {
     tc.width  = tW;
     tc.height = tH;
     const tctx = tc.getContext("2d")!;
-    tctx.font        = `700 ${fontSize}px "Outfit","Helvetica Neue",Arial,sans-serif`;
+    tctx.font        = `700 ${fontSize}px "Space Grotesk","Helvetica Neue",Arial,sans-serif`;
     tctx.fillStyle   = "#fff";
     tctx.textAlign   = "center";
     tctx.textBaseline = "middle";
@@ -242,7 +242,7 @@ export function SplashScreen({ onComplete }: Props) {
       }
     };
 
-    // Wait for Outfit font before sampling text
+    // Wait for Space Grotesk before sampling text pixels
     document.fonts.ready.then(() => {
       if (running) animId = requestAnimationFrame(render);
     });
@@ -302,7 +302,7 @@ export function SplashScreen({ onComplete }: Props) {
           left: 0,
           right: 0,
           textAlign: "center",
-          fontFamily: '"Outfit","Helvetica Neue",Arial,sans-serif',
+          fontFamily: '"Space Grotesk","Helvetica Neue",Arial,sans-serif',
           fontSize: "0.65rem",
           fontWeight: 500,
           letterSpacing: "0.45em",

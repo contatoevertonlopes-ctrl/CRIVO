@@ -143,8 +143,8 @@
        #6B7280 Cinza Sofist.  → muted text         (220  9% 46%)
     */
 
-    /* Background — ultra-dark navy abyss */
-    --background: 215 55% 5%;
+    /* Background — deep navy void, near-black with brand tint */
+    --background: 215 72% 3%;
     --foreground: 210 17% 94%;
 
     /* Cards — branded dark navy surface (#0f1d31) */
@@ -180,7 +180,7 @@
     --ring: 161 63% 49%;
 
     /* Sidebar — deepest navy void */
-    --sidebar-background: 215 55% 6%;
+    --sidebar-background: 215 72% 2.5%;
     --sidebar-foreground: 210 17% 72%;
     --sidebar-primary: 161 63% 49%;
     --sidebar-primary-foreground: 215 55% 5%;
@@ -206,8 +206,8 @@
     --text-muted: 220 9% 50%;
 
     /* Survival Mode Colors — dark */
-    --survival-background: 215 55% 5%;
-    --survival-card: 215 50% 12%;
+    --survival-background: 215 72% 3%;
+    --survival-card: 215 52% 10%;
     --survival-border: 215 47% 21%;
     --survival-primary: 210 85% 58%;
     --survival-secondary: 215 47% 17%;
@@ -220,8 +220,8 @@
     --survival-accent: 25 82% 56%;
 
     /* Prosperity Mode Colors — dark */
-    --prosperity-background: 215 55% 5%;
-    --prosperity-card: 215 50% 12%;
+    --prosperity-background: 215 72% 3%;
+    --prosperity-card: 215 52% 10%;
     --prosperity-border: 215 47% 21%;
     --prosperity-primary: 161 63% 49%;
     --prosperity-secondary: 215 47% 17%;
@@ -237,22 +237,25 @@
     --gradient-survival: linear-gradient(135deg, hsl(215 48% 11%), hsl(215 55% 5%));
     --gradient-prosperity: linear-gradient(135deg, hsl(215 48% 11%), hsl(215 55% 5%));
 
-    /* ─── Mesh background — EXTRAORDINARY ───────────────────────────────────
-       Effect: emerald beacon blazing from the top, illuminating a deep navy abyss.
-       The user feels they are inside a branded portal of light.
+    /* ─── Mesh background — CINEMATIC INTENSITY ─────────────────────────────
+       Effect: emerald sun blazing from above the viewport into a near-black
+       navy abyss. The beacon is 2x brighter/wider. Edge vignette is aggressive.
+       Cards feel like they're lit from above by the brand color itself.
     */
     --mesh-bg:
-      /* Emerald core — tight, bright focal point above viewport */
-      radial-gradient(ellipse 30% 20% at 50% -14%, hsl(161 70% 32%)  0px, transparent 55%),
-      /* Emerald halo — wider diffusion around the core */
-      radial-gradient(ellipse 65% 32% at 50% -8%,  hsl(161 60% 20%)  0px, transparent 68%),
-      /* Deep navy left chamber */
-      radial-gradient(ellipse 55% 80% at  -4% 50%, hsl(215 55% 8%)   0px, transparent 62%),
-      /* Deep navy right chamber */
-      radial-gradient(ellipse 50% 65% at 104% 35%, hsl(215 52% 7%)   0px, transparent 56%),
-      /* Bottom void — pulls all light upward */
-      radial-gradient(ellipse 80% 48% at 50% 115%, hsl(215 65% 3%)   0px, transparent 64%);
-    --vignette-bg: radial-gradient(ellipse 85% 75% at 50% 50%, transparent 28%, hsl(215 68% 3% / 0.75) 100%);
+      /* Emerald core — razor-bright, overshoots the viewport ceiling */
+      radial-gradient(ellipse 28% 26% at 50% -18%, hsl(161 85% 46%)  0px, transparent 48%),
+      /* Emerald mid-halo — wide luminous bloom */
+      radial-gradient(ellipse 78% 42% at 50%  -6%, hsl(161 68% 26%)  0px, transparent 74%),
+      /* Emerald outer atmosphere — fades into the navy */
+      radial-gradient(ellipse 100% 28% at 50%   2%, hsl(161 45% 11%) 0px, transparent 82%),
+      /* Navy left void — pulls left edge into darkness */
+      radial-gradient(ellipse 62% 95% at  -10% 42%, hsl(215 68% 4%)  0px, transparent 66%),
+      /* Navy right void */
+      radial-gradient(ellipse 58% 75% at 110% 28%, hsl(215 65% 3%)   0px, transparent 60%),
+      /* Bottom abyss — total black gravity */
+      radial-gradient(ellipse 95% 60% at 50% 125%, hsl(215 82% 1%)   0px, transparent 72%);
+    --vignette-bg: radial-gradient(ellipse 78% 68% at 50% 50%, transparent 18%, hsl(215 80% 1.5% / 0.92) 100%);
 
     /* Shadows — dark, Cinema Mobile hairline + emerald brand glow */
     --shadow-soft:  0 1px 3px hsl(215 65% 2% / 0.7), 0 1px 2px hsl(215 65% 2% / 0.4);
@@ -309,7 +312,7 @@
 
   html, body {
     @apply text-foreground font-sans;
-    font-family: "Outfit", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: hsl(var(--background));
     overflow-x: hidden;
     max-width: 100vw;
@@ -320,9 +323,9 @@
     touch-action: manipulation;
   }
 
-  /* Outfit — geometric sans: tighter tracking at display sizes */
+  /* Space Grotesk — technical geometric: tighter tracking at display sizes */
   body {
-    letter-spacing: 0.01em;
+    letter-spacing: -0.01em;
     line-height: 1.6;
   }
 
@@ -332,11 +335,11 @@
     outline-offset: 2px;
   }
 
-  /* Headings — Calistoga: warm editorial feel, premium fintech character */
+  /* Headings — Space Grotesk heavy: sharp, technical, premium fintech */
   h1, h2, h3 {
-    font-family: "Calistoga", serif;
-    font-weight: 400;
-    letter-spacing: -0.02em;
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.03em;
   }
 
   body {
