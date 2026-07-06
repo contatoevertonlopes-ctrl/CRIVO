@@ -125,7 +125,7 @@ const Landing = () => {
         .slide-down{animation:slideDown .22s ease}
       `}</style>
 
-      <div className="min-h-screen bg-[#F8F9FA] font-sans antialiased overflow-x-hidden">
+      <div className="min-h-[100dvh] bg-[#F8F9FA] font-sans antialiased overflow-x-hidden">
 
         {/* ═══ NAVBAR ═══ */}
         <header

@@ -56,7 +56,7 @@ const Install = () => {
 
   if (isInstalled) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="min-h-[100dvh] flex items-center justify-center p-4 bg-background">
         <Card className="w-full max-w-md text-center">
           <CardHeader>
             <div className="mx-auto w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4">
@@ -78,7 +78,7 @@ const Install = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+    <div className="min-h-[100dvh] flex items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4">

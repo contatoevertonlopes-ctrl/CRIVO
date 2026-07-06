@@ -148,7 +148,7 @@ const Onboarding = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -157,7 +157,7 @@ const Onboarding = () => {
   // Personalization Loading Screen
   if (showPersonalization) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-card p-4">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-background via-background to-card p-4">
         <div className="text-center max-w-md animate-in fade-in duration-500">
           <div className={`w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center ${
             data.mode === "survival" 
@@ -192,7 +192,7 @@ const Onboarding = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-card">
+    <div className="min-h-[100dvh] flex flex-col bg-gradient-to-br from-background via-background to-card">
       {/* Progress Bar */}
       <div className="p-4">
         <Progress value={progress} className="h-1.5 bg-secondary" />

@@ -89,7 +89,7 @@ const Plans = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/95 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-[100dvh] bg-gradient-to-br from-background via-background to-background/95 p-4 sm:p-6 lg:p-8">
       <div className="max-w-5xl mx-auto">
 
         {/* ── Header ── */}

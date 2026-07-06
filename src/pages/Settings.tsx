@@ -246,10 +246,10 @@ const Settings = () => {
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-[100dvh] w-full bg-background">
       <Sidebar />
       
-      <main className="flex-1 min-w-0 pt-16 pb-24 lg:pt-0 lg:pb-0">
+      <main className="flex-1 min-w-0 pt-16 pb-nav-safe lg:pt-0 lg:pb-0">
         <div className="max-w-6xl mx-auto px-4 py-4 lg:px-6 lg:py-6 flex flex-col gap-4 lg:gap-5">
           <div className="flex items-start justify-between gap-3">
             <div>

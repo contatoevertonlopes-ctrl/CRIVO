@@ -70,7 +70,7 @@ export default function CurrencyInput({
           onValueChange(nextDigits ? digitsToDecimalString(nextDigits) : "");
         }}
         onBlur={onBlur}
-        className={inputClassName}
+        className={cn("finance-value", inputClassName)}
       />
     </div>
   );

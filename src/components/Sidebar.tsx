@@ -60,10 +60,14 @@ const Sidebar = () => {
 
       {/* Mobile Bottom Tab Bar */}
       <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur-md border-t border-sidebar-border/80 safe-area-pb"
-        style={{ paddingLeft: 'env(safe-area-inset-left,0px)', paddingRight: 'env(safe-area-inset-right,0px)' }}
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-sidebar/95 backdrop-blur-md border-t border-sidebar-border/80"
+        style={{
+          paddingLeft: 'env(safe-area-inset-left, 0px)',
+          paddingRight: 'env(safe-area-inset-right, 0px)',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        }}
       >
-        <div className="flex items-center justify-around w-full px-1 py-1.5">
+        <div className="flex items-center justify-around w-full px-1 py-2">
           {mobileTabItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
@@ -72,19 +76,28 @@ const Sidebar = () => {
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  "relative flex-1 min-w-0 flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all duration-200 active:scale-95",
+                  "relative flex-1 min-w-0 flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-xl transition-all duration-200 active:scale-[0.92]",
                   isActive
                     ? "text-sidebar-primary"
-                    : "text-sidebar-foreground/60 hover:text-sidebar-foreground"
+                    : "text-sidebar-foreground/50 hover:text-sidebar-foreground/80"
                 )}
               >
+                {/* Active dot indicator */}
+                {isActive && (
+                  <span className="absolute top-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-sidebar-primary" />
+                )}
                 {/* Active pill background */}
                 {isActive && (
-                  <span className="absolute inset-x-2 inset-y-1 rounded-xl bg-sidebar-primary/15" />
+                  <span className="absolute inset-x-1.5 inset-y-0.5 rounded-xl bg-sidebar-primary/12" />
                 )}
-                <Icon className={cn("relative w-[21px] h-[21px] shrink-0 transition-transform duration-200", isActive ? "scale-110 sidebar-icon-active" : "sidebar-icon")} />
+                <Icon
+                  className={cn(
+                    "relative w-5 h-5 shrink-0 transition-all duration-200 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]",
+                    isActive ? "scale-110 sidebar-icon-active" : "sidebar-icon"
+                  )}
+                />
                 <span className={cn(
-                  "relative hidden xs:block text-[10px] truncate w-full text-center leading-tight font-medium",
+                  "relative text-[9px] xs:text-[10px] truncate w-full text-center leading-tight tracking-wide",
                   isActive ? "font-semibold" : "font-normal"
                 )}>
                   {item.label}

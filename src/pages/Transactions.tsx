@@ -170,7 +170,7 @@ const TransactionRow = ({
         {transaction.type === "income" ? "Entrada" : "Saída"}
       </span>
     </td>
-    <td className="py-4 px-4 whitespace-nowrap">{formatCurrency(transaction.amount)}</td>
+    <td className="py-4 px-4 whitespace-nowrap finance-value">{formatCurrency(transaction.amount)}</td>
     <td className="py-4 px-4">
       <StatusSelector
         transactionId={transaction.id}
@@ -201,21 +201,24 @@ const TransactionRow = ({
       <div className="flex items-center gap-1">
         <button
           onClick={() => onDuplicate(transaction)}
-          className="p-1.5 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
+          className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+          aria-label="Duplicar transação"
           title="Duplicar"
         >
           <Copy className="w-4 h-4" />
         </button>
         <button
           onClick={() => onEdit(transaction)}
-          className="p-1.5 rounded-lg hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors"
+          className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          aria-label="Editar transação"
           title="Editar"
         >
           <Edit2 className="w-4 h-4" />
         </button>
         <button
           onClick={() => onDelete(transaction.id)}
-          className="p-1.5 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+          className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+          aria-label="Excluir transação"
           title="Excluir"
         >
           <Trash2 className="w-4 h-4" />
@@ -730,17 +733,17 @@ const Transactions = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-[100dvh] flex items-center justify-center">
         <div className="text-muted-foreground">Carregando...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-[100dvh]">
       <Sidebar />
       
-      <main className="flex-1 min-w-0 pt-16 pb-24 lg:pt-0 lg:pb-0">
+      <main className="flex-1 min-w-0 pt-16 pb-nav-safe lg:pt-0 lg:pb-0">
         <div className="max-w-6xl mx-auto px-4 py-4 lg:px-6 lg:py-6 flex flex-col gap-4 lg:gap-5">
           {/* Gradient accent line — premium visual anchor */}
           <div className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent -mx-4 lg:-mx-6" />
@@ -807,7 +810,7 @@ const Transactions = () => {
               </div>
               <div className="min-w-0">
                 <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Atrasados</p>
-                <p className="text-lg font-bold text-destructive leading-tight">
+                <p className="text-lg font-bold text-destructive leading-tight finance-value">
                   {formatCurrency(predictability.overdueAmount)}
                 </p>
                 <p className="text-[10px] text-muted-foreground">{predictability.overdueCount} {predictability.overdueCount === 1 ? "despesa" : "despesas"}</p>
@@ -821,7 +824,7 @@ const Transactions = () => {
               </div>
               <div className="min-w-0">
                 <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">A Pagar Hoje</p>
-                <p className="text-lg font-bold text-warning leading-tight">
+                <p className="text-lg font-bold text-warning leading-tight finance-value">
                   {formatCurrency(predictability.dueTodayAmount)}
                 </p>
                 <p className="text-[10px] text-muted-foreground">{predictability.dueTodayCount} {predictability.dueTodayCount === 1 ? "despesa" : "despesas"}</p>
@@ -835,7 +838,7 @@ const Transactions = () => {
               </div>
               <div className="min-w-0">
                 <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Próximos 7 Dias</p>
-                <p className="text-lg font-bold text-primary leading-tight">
+                <p className="text-lg font-bold text-primary leading-tight finance-value">
                   {formatCurrency(predictability.next7DaysAmount)}
                 </p>
                 <p className="text-[10px] text-muted-foreground">{predictability.next7DaysCount} {predictability.next7DaysCount === 1 ? "despesa" : "despesas"}</p>
@@ -847,25 +850,25 @@ const Transactions = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Entradas</p>
-              <p className="text-lg sm:text-2xl font-bold text-primary">{formatCurrency(totals.incomePaid)}</p>
+              <p className="text-lg sm:text-2xl font-bold text-primary finance-value">{formatCurrency(totals.incomePaid)}</p>
             </div>
             <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Saídas</p>
-              <p className="text-lg sm:text-2xl font-bold text-destructive">{formatCurrency(totals.expensePaid)}</p>
+              <p className="text-lg sm:text-2xl font-bold text-destructive finance-value">{formatCurrency(totals.expensePaid)}</p>
             </div>
             <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">Saldo</p>
-              <p className={`text-lg sm:text-2xl font-bold ${totals.balancePaid >= 0 ? "text-primary" : "text-destructive"}`}>
+              <p className={`text-lg sm:text-2xl font-bold finance-value ${totals.balancePaid >= 0 ? "text-primary" : "text-destructive"}`}>
                 {formatCurrency(totals.balancePaid)}
               </p>
             </div>
             <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">A Receber</p>
-              <p className="text-lg sm:text-2xl font-bold text-blue-500">{formatCurrency(totals.pendingIncome)}</p>
+              <p className="text-lg sm:text-2xl font-bold text-blue-500 finance-value">{formatCurrency(totals.pendingIncome)}</p>
             </div>
             <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">A Pagar</p>
-              <p className="text-lg sm:text-2xl font-bold text-warning">{formatCurrency(totals.pendingExpense)}</p>
+              <p className="text-lg sm:text-2xl font-bold text-warning finance-value">{formatCurrency(totals.pendingExpense)}</p>
             </div>
           </div>
 
@@ -879,7 +882,7 @@ const Transactions = () => {
                   placeholder="Buscar..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 h-10 text-sm"
+                  className="pl-10 h-10"
                 />
               </div>
 
@@ -906,7 +909,7 @@ const Transactions = () => {
                       <div className="space-y-1.5">
                         <Label className="text-xs text-muted-foreground">Agrupar</Label>
                         <Select value={groupBy} onValueChange={(v) => setGroupBy(v as "none" | "month" | "category")}>
-                          <SelectTrigger className="h-10 text-sm">
+                          <SelectTrigger className="h-10 text-base md:text-sm">
                             <SelectValue placeholder="Agrupar" />
                           </SelectTrigger>
                           <SelectContent>
@@ -920,7 +923,7 @@ const Transactions = () => {
                       <div className="space-y-1.5">
                         <Label className="text-xs text-muted-foreground">Período</Label>
                         <Select value={periodFilter} onValueChange={setPeriodFilter}>
-                          <SelectTrigger className="h-10 text-sm">
+                          <SelectTrigger className="h-10 text-base md:text-sm">
                             <SelectValue placeholder="Período" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1146,7 +1149,7 @@ const Transactions = () => {
                   placeholder="Buscar..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 h-10 text-sm"
+                  className="pl-10 h-10"
                 />
               </div>
             </div>
@@ -1156,7 +1159,7 @@ const Transactions = () => {
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Agrupar</Label>
                 <Select value={groupBy} onValueChange={(v) => setGroupBy(v as "none" | "month" | "category")}>
-                  <SelectTrigger className="h-10 text-sm">
+                  <SelectTrigger className="h-10 text-base md:text-sm">
                     <SelectValue placeholder="Agrupar" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1170,7 +1173,7 @@ const Transactions = () => {
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Período</Label>
                 <Select value={periodFilter} onValueChange={setPeriodFilter}>
-                  <SelectTrigger className="h-10 text-sm">
+                  <SelectTrigger className="h-10 text-base md:text-sm">
                     <SelectValue placeholder="Período" />
                   </SelectTrigger>
                   <SelectContent>

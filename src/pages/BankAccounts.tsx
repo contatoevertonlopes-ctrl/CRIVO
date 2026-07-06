@@ -49,7 +49,7 @@ const BankAccounts = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
         <div className="animate-pulse flex flex-col items-center gap-4">
           <Landmark className="w-12 h-12 text-primary" />
           <p className="text-muted-foreground">Carregando...</p>
@@ -101,10 +101,10 @@ const BankAccounts = () => {
   const totalPositive = positiveAccounts.reduce((sum, a) => sum + a.balance, 0);
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className="min-h-[100dvh] flex w-full bg-background">
       <Sidebar />
       
-      <main className="flex-1 min-w-0 pt-16 pb-24 lg:pt-0 lg:pb-0">
+      <main className="flex-1 min-w-0 pt-16 pb-nav-safe lg:pt-0 lg:pb-0">
         <div className="max-w-6xl mx-auto px-4 py-4 lg:px-6 lg:py-6 flex flex-col gap-4 lg:gap-5">
         {/* Header */}
         <div className="flex items-start justify-between gap-4">

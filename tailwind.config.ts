@@ -108,7 +108,7 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        sans: ["Outfit", "system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
         display: ["Calistoga", "serif"],
         mono: ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "monospace"],
       },

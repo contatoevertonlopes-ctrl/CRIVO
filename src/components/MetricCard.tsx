@@ -26,7 +26,7 @@ const MetricCard = ({ title, value, pill, trend, trendUp = true, icon: Icon, val
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border p-4 transition-all duration-200 hover:scale-[1.015] hover:shadow-md card-shadow-soft",
+        "relative overflow-hidden rounded-2xl border p-4 transition-all duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:brightness-[1.04] card-shadow-soft",
         isSurvival
           ? "bg-survival-card border-survival-border/60"
           : "bg-prosperity-card border-prosperity-border/60"
