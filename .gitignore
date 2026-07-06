@@ -1,6 +1,9 @@
 # Scripts com secrets (nunca commitar com valor real)
 supabase/scripts/
 
+# Supabase CLI ephemeral files
+supabase/.temp/
+
 # Logs
 logs
 *.log

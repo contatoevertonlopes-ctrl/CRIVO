@@ -793,20 +793,20 @@ const Index = () => {
             </ResponsiveGridLayout>
           </section>
 
-          {/* Mobile/Tablet: layout estático (bloqueado) */}
+          {/* Mobile/Tablet: layout estático com stagger animation */}
           <section className="lg:hidden flex flex-col gap-4">
-            {BalanceCard}
+            <div className="stagger-child" style={{ "--i": 0 } as React.CSSProperties}>{BalanceCard}</div>
             {(modules.bankAccounts || modules.creditCards) && (
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4 stagger-child" style={{ "--i": 1 } as React.CSSProperties}>
                 {modules.bankAccounts && AccountsCard}
                 {modules.creditCards && CardsCard}
               </div>
             )}
-            <PayReceiveCards />
-            <CashflowChart data={cashflowData} periodLabel={getPeriodLabel()} />
-            {showGoalsWidget && <GoalWidget />}
-            <ExpenseChart data={expensesByCategory} period={effectivePeriod} periodLabel={getPeriodLabel()} />
-            {showPlansWidget && <PlansCard />}
+            <div className="stagger-child" style={{ "--i": 2 } as React.CSSProperties}><PayReceiveCards /></div>
+            <div className="stagger-child" style={{ "--i": 3 } as React.CSSProperties}><CashflowChart data={cashflowData} periodLabel={getPeriodLabel()} /></div>
+            {showGoalsWidget && <div className="stagger-child" style={{ "--i": 4 } as React.CSSProperties}><GoalWidget /></div>}
+            <div className="stagger-child" style={{ "--i": 5 } as React.CSSProperties}><ExpenseChart data={expensesByCategory} period={effectivePeriod} periodLabel={getPeriodLabel()} /></div>
+            {showPlansWidget && <div className="stagger-child" style={{ "--i": 6 } as React.CSSProperties}><PlansCard /></div>}
           </section>
 
           {/* Charts Row (desktop agora é no grid) */}

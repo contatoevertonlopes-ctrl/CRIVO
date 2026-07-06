@@ -82,9 +82,9 @@ const Sidebar = () => {
                     : "text-sidebar-foreground/50 hover:text-sidebar-foreground/80"
                 )}
               >
-                {/* Active dot indicator */}
+                {/* Active dot indicator — breathes via CSS animation */}
                 {isActive && (
-                  <span className="absolute top-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-sidebar-primary" />
+                  <span className="sidebar-dot-active absolute top-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-sidebar-primary" />
                 )}
                 {/* Active pill background */}
                 {isActive && (
@@ -244,7 +244,7 @@ const Sidebar = () => {
           )}
           onClick={() => navigate("/")}
         >
-          <AppLogo size={28} className="text-sidebar-primary shrink-0" />
+          <AppLogo size={28} className="text-sidebar-primary shrink-0 ambient-float" />
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold tracking-[2px] uppercase leading-tight text-sidebar-foreground">CRIVO</span>
