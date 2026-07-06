@@ -335,11 +335,11 @@ const Index = () => {
         </div>
 
         <div className="mt-3">
-          <div className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
+          <div className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground finance-value">
             {formatCurrency(metrics.currentBalance)}
           </div>
           <div className="mt-1 text-[11px] text-muted-foreground">
-            Previsto: <span className="font-semibold text-foreground">{formatCurrency(metrics.projectedBalance)}</span>
+            Previsto: <span className="font-semibold text-foreground finance-value">{formatCurrency(metrics.projectedBalance)}</span>
           </div>
         </div>
 
@@ -349,16 +349,16 @@ const Index = () => {
               <TrendingUp className="w-4 h-4 text-prosperity-emerald" />
               <p className="text-[11px] text-muted-foreground">Entradas</p>
             </div>
-            <p className="mt-1 text-base font-semibold text-prosperity-emerald">{formatCurrency(metrics.monthlyIncome)}</p>
-            <p className="text-[10px] text-muted-foreground">Previsto: {formatCurrency(metrics.monthlyIncomePending)}</p>
+            <p className="mt-1 text-base font-semibold text-prosperity-emerald finance-value">{formatCurrency(metrics.monthlyIncome)}</p>
+            <p className="text-[10px] text-muted-foreground finance-value">Prev: {formatCurrency(metrics.monthlyIncomePending)}</p>
           </div>
           <div className="rounded-xl border border-border/70 bg-background/40 p-3">
             <div className="flex items-center gap-2">
               <Receipt className="w-4 h-4 text-destructive" />
               <p className="text-[11px] text-muted-foreground">Saídas</p>
             </div>
-            <p className="mt-1 text-base font-semibold text-destructive">{formatCurrency(metrics.monthlyExpenses)}</p>
-            <p className="text-[10px] text-muted-foreground">Previsto: {formatCurrency(metrics.monthlyExpensesPending)}</p>
+            <p className="mt-1 text-base font-semibold text-destructive finance-value">{formatCurrency(metrics.monthlyExpenses)}</p>
+            <p className="text-[10px] text-muted-foreground finance-value">Prev: {formatCurrency(metrics.monthlyExpensesPending)}</p>
           </div>
         </div>
       </CardContent>
