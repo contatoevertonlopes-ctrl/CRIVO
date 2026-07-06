@@ -315,50 +315,65 @@ const Index = () => {
     <Card
       className={
         [
-          "rounded-2xl border-border/70 bg-card/50 backdrop-blur card-shadow-soft h-full relative",
+          "glass-card rounded-2xl h-full relative overflow-hidden",
           isEditingLayout && wiggleOnce ? "dashboard-edit-wiggle-card" : "",
         ]
           .filter(Boolean)
           .join(" ")
       }
     >
+      {/* Emerald ambient beacon — top-left glow emanating from brand source */}
+      <div
+        aria-hidden="true"
+        className="absolute -top-12 -left-8 w-56 h-48 rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(ellipse at 40% 40%, hsl(161 63% 49% / 0.13) 0%, transparent 70%)" }}
+      />
       {isEditingLayout && <OverlayGrip />}
       <CardContent className="p-5 h-full flex flex-col overflow-hidden">
+        {/* Header row */}
         <div className="flex items-start justify-between gap-3 shrink-0">
           <div>
-            <p className="text-xs text-muted-foreground">Visão geral</p>
-            <p className="text-lg font-semibold text-foreground">Saldo geral</p>
+            <p className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground/60 mb-0.5">Visão geral</p>
+            <p className="text-sm font-semibold text-foreground tracking-tight">Saldo geral</p>
           </div>
-          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap bg-secondary text-muted-foreground border border-border/70">
+          <span className="text-[10px] px-2.5 py-1 rounded-full font-medium whitespace-nowrap bg-secondary/50 text-muted-foreground border border-border/40 backdrop-blur-sm">
             {getPeriodLabel()}
           </span>
         </div>
 
-        <div className="mt-3">
-          <div className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground finance-value">
+        {/* Hero balance — dominant number */}
+        <div className="mt-4 shrink-0">
+          <div className="text-[2.15rem] lg:text-5xl font-bold tracking-tighter text-foreground finance-value number-enter leading-none">
             {formatCurrency(metrics.currentBalance)}
           </div>
-          <div className="mt-1 text-[11px] text-muted-foreground">
-            Previsto: <span className="font-semibold text-foreground finance-value">{formatCurrency(metrics.projectedBalance)}</span>
+          {/* Brand streak */}
+          <div className="mt-2.5 flex items-center gap-2">
+            <div className="h-px w-14 rounded-full bg-gradient-to-r from-[#2ECC9A] to-transparent" />
+            <p className="text-[10px] text-muted-foreground/80">
+              Previsto: <span className="font-semibold text-foreground/90 finance-value">{formatCurrency(metrics.projectedBalance)}</span>
+            </p>
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-border/70 bg-background/40 p-3">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-prosperity-emerald" />
-              <p className="text-[11px] text-muted-foreground">Entradas</p>
+        {/* Income / Expense — left-border accent treatment */}
+        <div className="mt-4 grid grid-cols-2 gap-2.5">
+          <div className="relative rounded-xl border border-border/50 bg-background/25 p-3 overflow-hidden">
+            <div className="absolute inset-y-0 left-0 w-[2px] rounded-full bg-income" />
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <TrendingUp className="w-3 h-3 text-income" />
+              <p className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70">Entradas</p>
             </div>
-            <p className="mt-1 text-base font-semibold text-prosperity-emerald finance-value">{formatCurrency(metrics.monthlyIncome)}</p>
-            <p className="text-[10px] text-muted-foreground finance-value">Prev: {formatCurrency(metrics.monthlyIncomePending)}</p>
+            <p className="text-sm font-bold text-income finance-value leading-tight">{formatCurrency(metrics.monthlyIncome)}</p>
+            <p className="text-[9px] text-muted-foreground/60 mt-0.5 finance-value">+{formatCurrency(metrics.monthlyIncomePending)} prev.</p>
           </div>
-          <div className="rounded-xl border border-border/70 bg-background/40 p-3">
-            <div className="flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-destructive" />
-              <p className="text-[11px] text-muted-foreground">Saídas</p>
+          <div className="relative rounded-xl border border-border/50 bg-background/25 p-3 overflow-hidden">
+            <div className="absolute inset-y-0 left-0 w-[2px] rounded-full bg-destructive" />
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <Receipt className="w-3 h-3 text-destructive" />
+              <p className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70">Saídas</p>
             </div>
-            <p className="mt-1 text-base font-semibold text-destructive finance-value">{formatCurrency(metrics.monthlyExpenses)}</p>
-            <p className="text-[10px] text-muted-foreground finance-value">Prev: {formatCurrency(metrics.monthlyExpensesPending)}</p>
+            <p className="text-sm font-bold text-destructive finance-value leading-tight">{formatCurrency(metrics.monthlyExpenses)}</p>
+            <p className="text-[9px] text-muted-foreground/60 mt-0.5 finance-value">{formatCurrency(metrics.monthlyExpensesPending)} prev.</p>
           </div>
         </div>
       </CardContent>
@@ -369,7 +384,7 @@ const Index = () => {
     <Card
       className={
         [
-          "rounded-2xl border-border/70 bg-card/50 backdrop-blur card-shadow-soft h-full relative",
+          "glass-card rounded-2xl h-full relative",
           isEditingLayout && wiggleOnce ? "dashboard-edit-wiggle-card" : "",
         ]
           .filter(Boolean)
@@ -422,7 +437,7 @@ const Index = () => {
     <Card
       className={
         [
-          "rounded-2xl border-border/70 bg-card/50 backdrop-blur card-shadow-soft h-full relative",
+          "glass-card rounded-2xl h-full relative",
           isEditingLayout && wiggleOnce ? "dashboard-edit-wiggle-card" : "",
         ]
           .filter(Boolean)
@@ -503,7 +518,7 @@ const Index = () => {
     <Card
       className={
         [
-          "rounded-2xl border-border/70 bg-card/50 backdrop-blur card-shadow-soft h-full relative",
+          "glass-card rounded-2xl h-full relative",
           isEditingLayout && wiggleOnce ? "dashboard-edit-wiggle-card" : "",
         ]
           .filter(Boolean)
@@ -547,7 +562,7 @@ const Index = () => {
     <Card
       className={
         [
-          "rounded-2xl border-border/70 bg-card/50 backdrop-blur card-shadow-soft h-full relative",
+          "glass-card rounded-2xl h-full relative",
           isEditingLayout && wiggleOnce ? "dashboard-edit-wiggle-card" : "",
         ]
           .filter(Boolean)

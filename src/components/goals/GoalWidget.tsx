@@ -39,10 +39,10 @@ const GoalWidget = ({ className }: GoalWidgetProps) => {
   if (loading) {
     return (
       <div className={cn(
-        "rounded-2xl border p-4 animate-pulse card-shadow-soft",
-        isSurvival 
-          ? "bg-survival-card border-survival-border/50" 
-          : "bg-prosperity-card border-prosperity-border/50",
+        "rounded-2xl glass-card p-4 animate-pulse",
+        isSurvival
+          ? "border-survival-border/40"
+          : "border-prosperity-border/40",
         className
       )}>
         <div className="h-4 bg-muted rounded w-1/3 mb-3"></div>
@@ -57,10 +57,10 @@ const GoalWidget = ({ className }: GoalWidgetProps) => {
       <div 
         onClick={() => navigate("/goals")}
         className={cn(
-          "rounded-2xl border p-4 transition-all hover:scale-[1.02] cursor-pointer card-shadow-soft",
-          isSurvival 
-            ? "bg-survival-card border-survival-border/50" 
-            : "bg-prosperity-card border-prosperity-border/50",
+          "rounded-2xl glass-card p-4 transition-all hover:scale-[1.015] cursor-pointer",
+          isSurvival
+            ? "border-survival-border/40"
+            : "border-prosperity-border/40",
           className
         )}
       >

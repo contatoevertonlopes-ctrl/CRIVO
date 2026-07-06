@@ -161,16 +161,22 @@ const TransactionRow = ({
     </td>
     <td className="py-4 px-4">
       <span
-        className={`inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full ${
+        className={`inline-flex items-center justify-center text-[10px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full ${
           transaction.type === "income"
-            ? "bg-primary/10 text-primary"
-            : "bg-destructive/10 text-destructive"
+            ? "bg-income-muted text-income-muted-foreground"
+            : "bg-expense-muted text-expense-muted-foreground"
         }`}
       >
         {transaction.type === "income" ? "Entrada" : "Saída"}
       </span>
     </td>
-    <td className="py-4 px-4 whitespace-nowrap finance-value">{formatCurrency(transaction.amount)}</td>
+    <td className="py-4 px-4 whitespace-nowrap">
+      <span className={`text-[14px] font-bold finance-value tabular-nums ${
+        transaction.type === "income" ? "text-income" : "text-destructive"
+      }`}>
+        {transaction.type === "income" ? "+" : "−"}{formatCurrency(transaction.amount)}
+      </span>
+    </td>
     <td className="py-4 px-4">
       <StatusSelector
         transactionId={transaction.id}
@@ -749,7 +755,7 @@ const Transactions = () => {
           <div className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent -mx-4 lg:-mx-6" />
 
           {/* Header — glass surface */}
-          <div className="flex flex-col gap-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 px-4 py-4 card-shadow-soft">
+          <div className="flex flex-col gap-4 rounded-2xl glass-card px-4 py-4">
             <div className="flex items-start justify-between">
               <div>
                 <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -848,33 +854,38 @@ const Transactions = () => {
 
           {/* Summary Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Entradas</p>
-              <p className="text-lg sm:text-2xl font-bold text-primary finance-value">{formatCurrency(totals.incomePaid)}</p>
+            <div className="stagger-child rounded-xl sm:rounded-2xl glass-card p-3 sm:p-4 relative overflow-hidden" style={{ "--i": 0 } as React.CSSProperties}>
+              <div className="absolute inset-y-0 left-0 w-[2px] rounded-full bg-income" />
+              <p className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70 mb-1">Entradas</p>
+              <p className="text-xl sm:text-2xl font-bold text-income finance-value number-enter leading-tight">{formatCurrency(totals.incomePaid)}</p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Saídas</p>
-              <p className="text-lg sm:text-2xl font-bold text-destructive finance-value">{formatCurrency(totals.expensePaid)}</p>
+            <div className="stagger-child rounded-xl sm:rounded-2xl glass-card p-3 sm:p-4 relative overflow-hidden" style={{ "--i": 1 } as React.CSSProperties}>
+              <div className="absolute inset-y-0 left-0 w-[2px] rounded-full bg-destructive" />
+              <p className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70 mb-1">Saídas</p>
+              <p className="text-xl sm:text-2xl font-bold text-destructive finance-value number-enter leading-tight">{formatCurrency(totals.expensePaid)}</p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Saldo</p>
-              <p className={`text-lg sm:text-2xl font-bold finance-value ${totals.balancePaid >= 0 ? "text-primary" : "text-destructive"}`}>
+            <div className="stagger-child rounded-xl sm:rounded-2xl glass-card p-3 sm:p-4 relative overflow-hidden" style={{ "--i": 2 } as React.CSSProperties}>
+              <div className={`absolute inset-y-0 left-0 w-[2px] rounded-full ${totals.balancePaid >= 0 ? "bg-income" : "bg-destructive"}`} />
+              <p className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70 mb-1">Saldo</p>
+              <p className={`text-xl sm:text-2xl font-bold finance-value number-enter leading-tight ${totals.balancePaid >= 0 ? "text-income" : "text-destructive"}`}>
                 {formatCurrency(totals.balancePaid)}
               </p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-1">A Receber</p>
-              <p className="text-lg sm:text-2xl font-bold text-blue-500 finance-value">{formatCurrency(totals.pendingIncome)}</p>
+            <div className="stagger-child rounded-xl sm:rounded-2xl glass-card p-3 sm:p-4 relative overflow-hidden" style={{ "--i": 3 } as React.CSSProperties}>
+              <div className="absolute inset-y-0 left-0 w-[2px] rounded-full bg-primary" />
+              <p className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70 mb-1">A Receber</p>
+              <p className="text-xl sm:text-2xl font-bold text-primary finance-value number-enter leading-tight">{formatCurrency(totals.pendingIncome)}</p>
             </div>
-            <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-1">A Pagar</p>
-              <p className="text-lg sm:text-2xl font-bold text-warning finance-value">{formatCurrency(totals.pendingExpense)}</p>
+            <div className="stagger-child rounded-xl sm:rounded-2xl glass-card p-3 sm:p-4 relative overflow-hidden" style={{ "--i": 4 } as React.CSSProperties}>
+              <div className="absolute inset-y-0 left-0 w-[2px] rounded-full bg-warning" />
+              <p className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70 mb-1">A Pagar</p>
+              <p className="text-xl sm:text-2xl font-bold text-warning finance-value number-enter leading-tight">{formatCurrency(totals.pendingExpense)}</p>
             </div>
           </div>
 
           {/* Filters */}
           {/* Mobile: compact search + drawer */}
-          <div className="sm:hidden rounded-xl bg-card/50 backdrop-blur border border-border/70 p-3 mb-4 card-shadow-soft">
+          <div className="sm:hidden rounded-xl glass-card p-3 mb-4">
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -1121,7 +1132,7 @@ const Transactions = () => {
           </div>
 
           {/* Desktop: full filters card */}
-          <div className="hidden sm:block rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-4 mb-6 card-shadow-soft">
+          <div className="hidden sm:block rounded-2xl glass-card p-4 mb-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Filter className="w-4 h-4 text-muted-foreground" />
@@ -1359,7 +1370,7 @@ const Transactions = () => {
           </div>
 
           {/* Transactions List */}
-          <div className="rounded-xl sm:rounded-2xl lg:rounded-2xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft overflow-hidden">
+          <div className="rounded-xl sm:rounded-2xl lg:rounded-2xl glass-card overflow-hidden">
             {loading ? (
               <div className="text-center py-12 text-muted-foreground text-sm">Carregando...</div>
             ) : transactionsError ? (

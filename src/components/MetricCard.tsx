@@ -26,19 +26,20 @@ const MetricCard = ({ title, value, pill, trend, trendUp = true, icon: Icon, val
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border p-4 transition-all duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:brightness-[1.04] card-shadow-soft",
+        "relative overflow-hidden rounded-2xl border p-4 glass-card card-lift stagger-child",
         isSurvival
-          ? "bg-survival-card border-survival-border/60"
-          : "bg-prosperity-card border-prosperity-border/60"
+          ? "border-survival-border/40"
+          : "border-prosperity-border/40"
       )}
     >
-      {/* Subtle gradient overlay */}
+      {/* Accent beacon — top-right ambient */}
       <div
+        aria-hidden="true"
         className={cn(
-          "absolute inset-0 opacity-20 pointer-events-none",
+          "absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none",
           isSurvival
-            ? "bg-gradient-to-br from-survival-primary/8 to-transparent"
-            : "bg-gradient-to-br from-prosperity-emerald/8 to-transparent"
+            ? "bg-[radial-gradient(ellipse_at_60%_40%,hsl(210_85%_58%/0.12)_0%,transparent_70%)]"
+            : "bg-[radial-gradient(ellipse_at_60%_40%,hsl(161_63%_49%/0.12)_0%,transparent_70%)]"
         )}
       />
       
@@ -80,7 +81,7 @@ const MetricCard = ({ title, value, pill, trend, trendUp = true, icon: Icon, val
         {/* Value */}
         <div
           className={cn(
-            "text-xl lg:text-2xl font-bold tracking-tight mb-2 text-foreground finance-value",
+            "text-2xl lg:text-3xl font-bold tracking-tighter mb-2 text-foreground finance-value number-enter leading-none",
             valueClassName
           )}
         >

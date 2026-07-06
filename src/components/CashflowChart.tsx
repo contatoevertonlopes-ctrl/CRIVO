@@ -19,8 +19,8 @@ const CashflowChart = ({ data = [], periodLabel, fitHeight = false }: CashflowCh
     <div
       className={
         fitHeight
-          ? "relative min-w-0 overflow-hidden rounded-xl bg-card border border-border/70 shadow-sm p-4 h-full flex flex-col"
-          : "relative min-w-0 overflow-hidden rounded-xl bg-card border border-border/70 shadow-sm p-4"
+          ? "relative min-w-0 overflow-hidden rounded-xl glass-card p-4 h-full flex flex-col"
+          : "relative min-w-0 overflow-hidden rounded-xl glass-card p-4"
       }
     >
       {/* Subtle gradient accent */}
