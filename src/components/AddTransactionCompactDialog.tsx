@@ -486,12 +486,19 @@ const AddTransactionCompactDialog = ({
     return (
       <Drawer open={open} onOpenChange={handleOpenChange}>
         {trigger ? <DrawerTrigger asChild>{trigger}</DrawerTrigger> : null}
-        <DrawerContent className="max-h-[90vh]">
-          <DrawerHeader className="pb-2">
+        <DrawerContent className="flex flex-col max-h-[92dvh]">
+          <DrawerHeader className="pb-2 shrink-0 border-b border-border/40">
             <DrawerTitle>{resolvedTitle}</DrawerTitle>
             {resolvedDescription ? <DrawerDescription>{resolvedDescription}</DrawerDescription> : null}
           </DrawerHeader>
-          <div className="px-4 pb-4 overflow-auto">
+          {/* Scrollable form area — flex-1 + min-h-0 required for iOS overflow to work */}
+          <div
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pt-3"
+            style={{
+              WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"],
+              paddingBottom: "env(safe-area-inset-bottom, 1rem)",
+            }}
+          >
             <TransactionForm
               formData={formData}
               setFormData={(data) => setFormData(data)}

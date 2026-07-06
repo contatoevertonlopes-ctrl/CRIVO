@@ -156,7 +156,7 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
       description: true,
       amount: true,
       category: !isCompact,
-      payment_method: true,
+      payment_method: false,
       bank_account_id: requiresBankAccount,
       card_id: requiresCard,
     };
@@ -171,12 +171,11 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
       ? (formData.paid_date || todayStr)
       : formData.paid_date;
 
-    // Validate all fields
-    const hasErrors = !formData.description.trim() || 
-      !formData.amount || 
-      parseFloat(formData.amount) <= 0 || 
+    // Validate all fields (payment_method is optional — nullable in DB)
+    const hasErrors = !formData.description.trim() ||
+      !formData.amount ||
+      parseFloat(formData.amount) <= 0 ||
       (!isCompact && !formData.category.trim()) ||
-      !formData.payment_method ||
       (requiresBankAccount && accounts.length > 0 && !formData.bank_account_id) ||
       (requiresCard && cards.length > 0 && !formData.card_id);
 
@@ -1047,10 +1046,18 @@ const TransactionForm = ({ formData, setFormData, onSubmit, submitLabel, subscri
         )
       )}
 
-      <div className="flex justify-end gap-2 pt-4">
-        <Button onClick={handleSubmit}>
-          {isInstallment && parseInt(installmentCount) > 1 
-            ? `Criar ${installmentCount} parcelas` 
+      <div className={cn(
+        "flex gap-2 pt-4",
+        isCompact
+          ? "sticky bottom-0 -mx-4 px-4 pb-4 pt-3 bg-background/95 backdrop-blur-sm border-t border-border/40 justify-stretch"
+          : "justify-end"
+      )}>
+        <Button
+          onClick={handleSubmit}
+          className={cn(isCompact && "flex-1 h-12 text-base font-semibold")}
+        >
+          {isInstallment && parseInt(installmentCount) > 1
+            ? `Criar ${installmentCount} parcelas`
             : submitLabel}
         </Button>
       </div>

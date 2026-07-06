@@ -104,17 +104,9 @@ function AnimatedRoutes() {
 const App = () => {
   useVersionCheck();
 
-  // Show splash only on first session visit
-  const [showSplash, setShowSplash] = useState(() => {
-    try {
-      return !sessionStorage.getItem("crivo_intro_v1");
-    } catch {
-      return true;
-    }
-  });
+  const [showSplash, setShowSplash] = useState(true);
 
   const handleSplashComplete = useCallback(() => {
-    try { sessionStorage.setItem("crivo_intro_v1", "1"); } catch { /* private */ }
     setShowSplash(false);
   }, []);
 
@@ -130,7 +122,7 @@ const App = () => {
                   <Sonner />
                   <PwaUpdateNotifier />
 
-                  {/* ── Splash screen (first load only) ── */}
+                  {/* ── Splash screen (every load) ── */}
                   <AnimatePresence>
                     {showSplash && (
                       <SplashScreen onComplete={handleSplashComplete} />
