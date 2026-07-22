@@ -251,7 +251,7 @@ const Transactions = () => {
   const [statusFilter, setStatusFilter] = useState<string[]>(searchParams.get("status") ? [searchParams.get("status")!] : []);
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [tagFilter, setTagFilter] = useState<string[]>([]);
-  const [periodFilter, setPeriodFilter] = useState<string>("all");
+  const [periodFilter, setPeriodFilter] = useState<string>("this_month");
   const [customDateFrom, setCustomDateFrom] = useState("");
   const [customDateTo, setCustomDateTo] = useState("");
   const [dateFrom, setDateFrom] = useState("");

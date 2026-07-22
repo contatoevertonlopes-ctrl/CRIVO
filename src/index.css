@@ -312,7 +312,7 @@
 
   html, body {
     @apply text-foreground font-sans;
-    font-family: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: hsl(var(--background));
     overflow-x: hidden;
     max-width: 100vw;
@@ -323,7 +323,7 @@
     touch-action: manipulation;
   }
 
-  /* Space Grotesk — technical geometric: tighter tracking at display sizes */
+  /* DM Sans — humanist geometric: clean, readable, premium fintech */
   body {
     letter-spacing: -0.01em;
     line-height: 1.6;
@@ -335,9 +335,9 @@
     outline-offset: 2px;
   }
 
-  /* Headings — Space Grotesk heavy: sharp, technical, premium fintech */
+  /* Headings — DM Sans heavy: sharp, technical, premium fintech */
   h1, h2, h3 {
-    font-family: "Space Grotesk", system-ui, sans-serif;
+    font-family: "DM Sans", system-ui, sans-serif;
     font-weight: 700;
     letter-spacing: -0.03em;
   }
@@ -434,9 +434,9 @@
             drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
   }
 
-  /* Financial value typography — JetBrains Mono for precision */
+  /* Financial value typography — DM Mono for precision */
   .finance-value {
-    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+    font-family: "DM Mono", ui-monospace, SFMono-Regular, monospace;
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum", "zero";
     letter-spacing: -0.02em;

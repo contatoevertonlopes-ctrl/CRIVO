@@ -8,7 +8,6 @@ export function PwaUpdateNotifier() {
   const { toast, dismiss } = useToast();
   const toastIdRef = useRef<string | null>(null);
   const hasShownRef = useRef(false);
-  const hasAutoReloadedThisSessionRef = useRef(false);
 
   useEffect(() => {
     let updateInterval: number | undefined;
@@ -47,12 +46,14 @@ export function PwaUpdateNotifier() {
 
       },
       onNeedRefresh() {
-        // "Sempre na última versão": aplica o update e recarrega automaticamente.
-        // Observação: o SW pode atualizar em background, mas o código JS em memória só muda com reload.
-        // A proteção contra loop é feita apenas pelo ref em memória — sessionStorage não é usado
-        // pois ele persiste durante reloads e bloquearia updates legítimos em sessões longas.
-        if (!hasAutoReloadedThisSessionRef.current) {
-          hasAutoReloadedThisSessionRef.current = true;
+        // Auto-reload once per tab session when SW has a new version.
+        // Uses sessionStorage (survives page reload within the same tab) to
+        // prevent an infinite reload loop: if the SW still reports needsRefresh
+        // after the reload, we show a toast instead of reloading again.
+        const SESSION_KEY = "crivo_sw_reloaded";
+        const alreadyReloaded = !!sessionStorage.getItem(SESSION_KEY);
+        if (!alreadyReloaded) {
+          sessionStorage.setItem(SESSION_KEY, "1");
           updateSW(true);
           return;
         }

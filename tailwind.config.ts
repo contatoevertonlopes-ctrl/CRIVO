@@ -108,9 +108,9 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["Space Grotesk", "system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
-        display: ["Space Grotesk", "system-ui", "sans-serif"],
-        mono: ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "monospace"],
+        sans: ["DM Sans", "system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        display: ["DM Sans", "system-ui", "sans-serif"],
+        mono: ["DM Mono", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       borderRadius: {
         lg: "var(--radius)",
