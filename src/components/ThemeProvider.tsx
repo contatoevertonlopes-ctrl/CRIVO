@@ -8,7 +8,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
       attribute="class"
       defaultTheme="light"
       enableSystem={false}
-      storageKey="crivo-theme"
+      storageKey="crivo-theme-v2"
       {...props}
     >
       {children}
