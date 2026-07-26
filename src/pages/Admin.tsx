@@ -378,7 +378,7 @@ const Admin = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-5 card-shadow-soft">
+          <div className="rounded-xl sm:rounded-2xl glass-card p-3 sm:p-5 card-shadow-soft">
             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
                 <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
@@ -388,7 +388,7 @@ const Admin = () => {
             <p className="text-xl sm:text-3xl font-bold">{revenue.total_users}</p>
           </div>
 
-          <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-5 card-shadow-soft">
+          <div className="rounded-xl sm:rounded-2xl glass-card p-3 sm:p-5 card-shadow-soft">
             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                 <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
@@ -398,7 +398,7 @@ const Admin = () => {
             <p className="text-xl sm:text-3xl font-bold text-primary">{revenue.active_subscriptions}</p>
           </div>
 
-          <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-5 card-shadow-soft">
+          <div className="rounded-xl sm:rounded-2xl glass-card p-3 sm:p-5 card-shadow-soft">
             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
                 <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
@@ -408,7 +408,7 @@ const Admin = () => {
             <p className="text-lg sm:text-3xl font-bold text-green-400">{formatCurrency(revenue.monthly_revenue)}</p>
           </div>
 
-          <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-5 card-shadow-soft">
+          <div className="rounded-xl sm:rounded-2xl glass-card p-3 sm:p-5 card-shadow-soft">
             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
                 <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
@@ -420,7 +420,7 @@ const Admin = () => {
         </div>
 
         {/* Pricing Management */}
-        <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-4 sm:p-6 card-shadow-soft">
+        <div className="rounded-xl sm:rounded-2xl glass-card p-4 sm:p-6 card-shadow-soft">
           <div className="flex items-center gap-2 mb-4">
             <DollarSign className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium">Gerenciar Preços da Assinatura</span>
@@ -506,7 +506,7 @@ const Admin = () => {
         </div>
 
         {/* Coupon Management */}
-        <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-4 sm:p-6 card-shadow-soft">
+        <div className="rounded-xl sm:rounded-2xl glass-card p-4 sm:p-6 card-shadow-soft">
           <div className="flex items-center gap-2 mb-4">
             <Tag className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium">Criar Cupom de Desconto</span>
@@ -600,7 +600,7 @@ const Admin = () => {
         </div>
 
         {/* Filters */}
-        <div className="rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur border border-border/70 p-3 sm:p-4 card-shadow-soft">
+        <div className="rounded-xl sm:rounded-2xl glass-card p-3 sm:p-4 card-shadow-soft">
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
             <Search className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium">Filtros</span>
@@ -665,7 +665,7 @@ const Admin = () => {
         </div>
 
         {/* Users Table */}
-        <div className="rounded-3xl bg-card/50 backdrop-blur border border-border/70 card-shadow-soft overflow-hidden">
+        <div className="rounded-3xl glass-card overflow-hidden">
           <div className="p-4 border-b border-border/30">
             <h3 className="font-semibold flex items-center gap-2">
               <Users className="w-4 h-4" />

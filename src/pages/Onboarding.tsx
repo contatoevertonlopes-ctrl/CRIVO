@@ -207,7 +207,7 @@ const Onboarding = () => {
           {/* Step 1: Welcome */}
           {step === 1 && (
             <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary via-primary to-green-900 flex items-center justify-center shadow-[0_0_60px_rgba(34,197,94,0.5)]">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/70 flex items-center justify-center shadow-md">
                 <span className="text-4xl font-bold text-white tracking-[3px]">C</span>
               </div>
               
@@ -222,7 +222,7 @@ const Onboarding = () => {
               <Button 
                 size="lg" 
                 onClick={() => setStep(2)}
-                className="w-full max-w-xs bg-gradient-to-r from-primary to-green-600 shadow-[0_8px_25px_rgba(34,197,94,0.4)]"
+                className="w-full max-w-xs bg-primary shadow-md"
               >
                 Vamos começar
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -327,7 +327,7 @@ const Onboarding = () => {
                 <Button 
                   size="lg" 
                   onClick={handleDataSubmit}
-                  className="w-full bg-gradient-to-r from-primary to-green-600"
+                  className="w-full bg-primary"
                 >
                   Continuar
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -363,7 +363,7 @@ const Onboarding = () => {
                 size="lg" 
                 onClick={handleFinish}
                 disabled={saving}
-                className="w-full max-w-xs bg-gradient-to-r from-primary to-green-600 shadow-[0_8px_25px_rgba(34,197,94,0.4)]"
+                className="w-full max-w-xs bg-primary shadow-md"
               >
                 {saving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

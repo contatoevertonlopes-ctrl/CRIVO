@@ -176,7 +176,7 @@ const Plans = () => {
             "relative overflow-hidden rounded-2xl sm:rounded-3xl bg-card border-2 p-6 sm:p-8 transition-all",
             isCurrentPlan("monthly") ? "border-primary" : "border-primary/40",
           )}>
-            <div className="absolute inset-[-40%] bg-[radial-gradient(circle_at_0%_0%,rgba(34,197,94,0.06),transparent_55%)] pointer-events-none" />
+            <div className="absolute inset-[-40%] bg-accent/5 pointer-events-none" />
             <div className="absolute top-4 right-4">
               <span className="text-xs px-3 py-1 rounded-full bg-primary/20 border border-primary/50 text-primary flex items-center gap-1">
                 <Zap className="w-3 h-3" />
@@ -230,10 +230,10 @@ const Plans = () => {
 
           {/* Annual — featured */}
           <div className={cn(
-            "relative overflow-hidden rounded-2xl sm:rounded-3xl bg-card border-2 p-6 sm:p-8 transition-all shadow-[0_0_60px_rgba(34,197,94,0.15)]",
+            "relative overflow-hidden rounded-2xl sm:rounded-3xl bg-card border-2 p-6 sm:p-8 transition-all shadow-md",
             isCurrentPlan("annual") ? "border-primary" : "border-primary/60",
           )}>
-            <div className="absolute inset-[-40%] bg-[radial-gradient(circle_at_0%_0%,rgba(34,197,94,0.09),transparent_55%)] pointer-events-none" />
+            <div className="absolute inset-[-40%] bg-accent/5 pointer-events-none" />
             <div className="absolute top-4 right-4">
               <span className="text-xs px-3 py-1 rounded-full bg-primary/20 border border-primary/50 text-primary flex items-center gap-1">
                 <Crown className="w-3 h-3" />

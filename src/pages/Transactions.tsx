@@ -192,10 +192,10 @@ const TransactionRow = ({
       {transaction.tag && (
         <span className={`inline-flex items-center text-[10px] px-2 py-0.5 rounded-full ${
           transaction.tag === "fixa"
-            ? "bg-blue-500/20 text-blue-300"
+            ? "bg-primary/10 text-primary"
             : transaction.tag === "variavel"
-            ? "bg-orange-500/20 text-orange-300"
-            : "bg-purple-500/20 text-purple-300"
+            ? "bg-warning/15 text-warning-foreground"
+            : "bg-muted text-muted-foreground"
         }`}>
           {transaction.tag === "fixa" ? "Fixa" : transaction.tag === "variavel" ? "Variável" : "Esporádica"}
         </span>

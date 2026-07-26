@@ -37,7 +37,7 @@ const ColumnMapper = ({ headers, mapping, onMappingChange, onApply }: ColumnMapp
   const hasCreditDebit = mapping.credit || mapping.debit;
 
   return (
-    <div className="space-y-4 p-4 rounded-xl bg-card/50 border border-border/70">
+    <div className="space-y-4 p-4 rounded-xl glass-card">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Settings2 className="w-4 h-4 text-muted-foreground" />

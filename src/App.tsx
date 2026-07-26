@@ -15,7 +15,6 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { PwaUpdateNotifier } from "@/components/PwaUpdateNotifier";
 import { LocationSync } from "@/components/LocationSync";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { useVersionCheck } from "@/hooks/useVersionCheck";
 
 // Eager: lightweight redirectors hit on every load
 import Home from "./pages/Home";
@@ -102,8 +101,6 @@ function AnimatedRoutes() {
 
 // ── App root ─────────────────────────────────────────────────────────────────
 const App = () => {
-  useVersionCheck();
-
   const [showSplash, setShowSplash] = useState(true);
 
   const handleSplashComplete = useCallback(() => {

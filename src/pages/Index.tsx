@@ -239,7 +239,7 @@ const Index = () => {
   const PayReceiveCards = ({ className }: { className?: string }) => {
     return (
       <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${className ?? ""}`.trim()}>
-        <Card className="rounded-2xl border-border/70 bg-card/50 backdrop-blur card-shadow-soft">
+        <Card className="rounded-2xl glass-card">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
@@ -269,7 +269,7 @@ const Index = () => {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-border/70 bg-card/50 backdrop-blur card-shadow-soft">
+        <Card className="rounded-2xl glass-card">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
