@@ -10,16 +10,13 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
-  define: {
-    // Injetado em cada build para que useVersionCheck detecte mudanças no localStorage
-    __APP_BUILD_ID__: JSON.stringify(new Date().toISOString()),
-  },
   plugins: [
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
       injectRegister: false,
-      registerType: "autoUpdate",
+      registerType: "prompt",
+      devOptions: { enabled: false },
       includeAssets: ["favicon.ico", "robots.txt"],
       manifest: {
         name: "CRIVO — Clareza Financeira",
@@ -52,19 +49,17 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         navigateFallbackDenylist: [/^\/~oauth/, /^\/sw-push\.js/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: "CacheFirst",
+            handler: "StaleWhileRevalidate",
             options: {
-              cacheName: "google-fonts-cache",
+              cacheName: "google-fonts-cache-v2",
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
               },
             },
           },
