@@ -12,7 +12,6 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { AppModeProvider } from "@/contexts/AppModeContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { PwaUpdateNotifier } from "@/components/PwaUpdateNotifier";
 import { LocationSync } from "@/components/LocationSync";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -117,7 +116,6 @@ const App = () => {
                 <TooltipProvider>
                   <Toaster />
                   <Sonner />
-                  <PwaUpdateNotifier />
 
                   {/* ── Splash screen (every load) ── */}
                   <AnimatePresence>
