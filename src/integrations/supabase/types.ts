@@ -673,18 +673,21 @@ export type Database = {
       profiles_private: {
         Row: {
           created_at: string
+          Grupo: number | null
           phone: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          Grupo?: number | null
           phone?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          Grupo?: number | null
           phone?: string | null
           updated_at?: string
           user_id?: string
@@ -796,6 +799,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sessions: {
+        Row: {
+          dados: Json | null
+          household_id: string | null
+          id: string
+          intent: string | null
+          telefone: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          dados?: Json | null
+          household_id?: string | null
+          id?: string
+          intent?: string | null
+          telefone: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          dados?: Json | null
+          household_id?: string | null
+          id?: string
+          intent?: string | null
+          telefone?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       subscriptions: {
         Row: {
@@ -1049,6 +1082,10 @@ export type Database = {
       }
       leave_household: { Args: never; Returns: Json }
       process_recurrence_on_due_date: { Args: never; Returns: undefined }
+      update_transaction_statuses: {
+        Args: { today_date: string; upcoming_date: string }
+        Returns: Json
+      }
       user_household_id: { Args: { _user_id: string }; Returns: string }
     }
     Enums: {

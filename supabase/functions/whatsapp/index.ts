@@ -145,19 +145,49 @@ serve(async (req) => {
 
     logStep("Request received", { method: req.method, action });
 
-    // ACTION: Send notifications (called by cron or manually)
+    // ACTION: Send notifications (called by cron or trusted server-side callers)
     if (action === "send_notifications") {
       logStep("Sending notifications for upcoming transactions");
 
-      const targetPhone = url.searchParams.get("phone");
-      const userId = url.searchParams.get("user_id");
+      // Require CRON_SECRET or the service-role key. This endpoint used to
+      // accept an arbitrary phone/user_id from the query string, which let
+      // anyone trigger WhatsApp messages to any number using another user's
+      // financial data.
+      const cronSecret = Deno.env.get("CRON_SECRET");
+      const authHeader = req.headers.get("Authorization") ?? "";
+      const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+      const providedCron = req.headers.get("x-cron-secret") ?? "";
+      const isCron = !!cronSecret && (providedCron === cronSecret || bearer === cronSecret);
+      const isService = bearer === supabaseServiceKey;
+      if (!isCron && !isService) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
-      if (!targetPhone || !userId) {
+      const userId = url.searchParams.get("user_id");
+      if (!userId || !/^[0-9a-fA-F-]{36}$/.test(userId)) {
         return new Response(
-          JSON.stringify({ error: "Missing phone or user_id parameter" }),
+          JSON.stringify({ error: "Invalid user_id" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+
+      // Look up the phone from profiles_private server-side rather than
+      // trusting the caller-supplied value.
+      const { data: profilePriv, error: profileErr } = await supabase
+        .from("profiles_private")
+        .select("phone")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (profileErr || !profilePriv?.phone) {
+        return new Response(
+          JSON.stringify({ error: "Phone not registered for user" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const targetPhone = String(profilePriv.phone);
 
       // Get transactions due in the next 3 days
       const today = new Date();
