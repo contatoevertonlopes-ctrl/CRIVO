@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
 // Web Push requires signing JWT with VAPID private key
@@ -41,7 +41,6 @@ async function generateVapidJwt(
     new TextEncoder().encode(unsignedToken)
   );
 
-  // Convert DER signature to raw r||s format (already raw from WebCrypto)
   const sigBase64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
@@ -50,11 +49,18 @@ async function generateVapidJwt(
   return `${unsignedToken}.${sigBase64}`;
 }
 
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const rawData = atob(base64);
-  return Uint8Array.from(rawData, (char) => char.charCodeAt(0));
+// Only allow safe relative URLs, or same-origin absolute URLs
+function sanitizeUrl(input: unknown): string {
+  if (typeof input !== "string" || input.length === 0 || input.length > 512) return "/";
+  // Disallow protocol-relative and javascript: URIs
+  if (input.startsWith("//") || /^[a-z]+:/i.test(input)) return "/";
+  if (!input.startsWith("/")) return "/";
+  return input;
+}
+
+function sanitizeText(input: unknown, max: number): string {
+  if (typeof input !== "string") return "";
+  return input.slice(0, max);
 }
 
 serve(async (req) => {
@@ -63,13 +69,42 @@ serve(async (req) => {
   }
 
   try {
+    // AUTH: only allow calls from server-side callers holding the service-role key
+    // (edge functions such as check-notifications) or an approved cron secret.
+    const cronSecret = Deno.env.get("CRON_SECRET");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+    const providedCron = req.headers.get("x-cron-secret") ?? "";
+
+    const isServiceCall = !!serviceRoleKey && bearer === serviceRoleKey;
+    const isCronCall = !!cronSecret && (providedCron === cronSecret || bearer === cronSecret);
+
+    if (!isServiceCall && !isCronCall) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    const supabase = createClient(supabaseUrl, serviceRoleKey!, {
       auth: { persistSession: false },
     });
 
-    const { user_id, title, body, url, tag } = await req.json();
+    const payloadIn = await req.json().catch(() => null);
+    if (!payloadIn || typeof payloadIn !== "object") {
+      return new Response(JSON.stringify({ error: "Invalid body" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const user_id = typeof payloadIn.user_id === "string" ? payloadIn.user_id : "";
+    const title = sanitizeText(payloadIn.title, 200);
+    const body = sanitizeText(payloadIn.body, 500);
+    const url = sanitizeUrl(payloadIn.url);
+    const tag = sanitizeText(payloadIn.tag, 64) || "notification";
 
     if (!user_id || !title) {
       return new Response(JSON.stringify({ error: "user_id and title required" }), {
@@ -78,7 +113,6 @@ serve(async (req) => {
       });
     }
 
-    // Get user's push subscriptions
     const { data: subscriptions } = await supabase
       .from("push_subscriptions")
       .select("*")
@@ -90,7 +124,6 @@ serve(async (req) => {
       });
     }
 
-    // Get VAPID keys
     const { data: vapidData } = await supabase
       .from("vapid_keys")
       .select("*")
@@ -109,10 +142,10 @@ serve(async (req) => {
 
     const payload = JSON.stringify({
       title,
-      body: body || "",
+      body,
       icon: "/pwa-192x192.png",
-      url: url || "/",
-      tag: tag || "notification",
+      url,
+      tag,
     });
 
     let sent = 0;
@@ -143,17 +176,13 @@ serve(async (req) => {
         if (response.status === 201 || response.status === 200) {
           sent++;
         } else if (response.status === 410 || response.status === 404) {
-          // Subscription expired, remove it
-          await supabase
-            .from("push_subscriptions")
-            .delete()
-            .eq("id", sub.id);
+          await supabase.from("push_subscriptions").delete().eq("id", sub.id);
           failed.push(`${sub.id}: expired`);
         } else {
           failed.push(`${sub.id}: ${response.status}`);
         }
-      } catch (err) {
-        failed.push(`${sub.id}: ${err instanceof Error ? err.message : String(err)}`);
+      } catch (_err) {
+        failed.push(`${sub.id}: send_error`);
       }
     }
 
@@ -165,7 +194,7 @@ serve(async (req) => {
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("[SEND-PUSH] Error:", msg);
-    return new Response(JSON.stringify({ error: msg }), {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
