@@ -65,11 +65,11 @@ const TransactionCard = ({ transaction, onEdit, onDelete, onDuplicate, onStatusC
   const getTagStyle = (tag: string) => {
     switch (tag) {
       case "fixa":
-        return "bg-blue-500/12 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300 ring-1 ring-blue-500/20";
+        return "bg-primary/10 text-primary ring-1 ring-primary/20";
       case "variavel":
-        return "bg-orange-500/12 text-orange-600 dark:bg-orange-500/20 dark:text-orange-300 ring-1 ring-orange-500/20";
+        return "bg-warning/12 text-warning-foreground ring-1 ring-warning/20";
       case "esporadica":
-        return "bg-purple-500/12 text-purple-600 dark:bg-purple-500/20 dark:text-purple-300 ring-1 ring-purple-500/20";
+        return "bg-muted text-muted-foreground ring-1 ring-border/30";
       default:
         return "bg-secondary/60 text-muted-foreground ring-1 ring-border/30";
     }

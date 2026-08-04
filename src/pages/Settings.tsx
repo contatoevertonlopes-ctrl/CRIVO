@@ -409,7 +409,7 @@ const Settings = () => {
             {/* WhatsApp Section */}
             <section className="rounded-2xl glass-card p-5 sm:p-6">
               <div className="flex items-center gap-2 mb-4">
-                <MessageSquare className="w-4 h-4 text-green-500" />
+                <MessageSquare className="w-4 h-4 text-accent" />
                 <h3 className="text-sm font-medium">WhatsApp</h3>
               </div>
               <p className="text-xs text-muted-foreground mb-4">
@@ -443,8 +443,8 @@ const Settings = () => {
               </form>
 
               {phone && (
-                <div className="mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/30">
-                  <p className="text-xs text-green-400">
+                <div className="mt-4 p-3 rounded-lg bg-accent/10 border border-accent/30">
+                  <p className="text-xs text-accent">
                     ✓ WhatsApp vinculado: {phone}
                   </p>
                 </div>

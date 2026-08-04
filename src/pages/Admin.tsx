@@ -380,8 +380,8 @@ const Admin = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="rounded-xl sm:rounded-2xl glass-card p-3 sm:p-5 card-shadow-soft">
             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
               <span className="text-xs sm:text-sm text-muted-foreground">Usuários</span>
             </div>
@@ -400,12 +400,12 @@ const Admin = () => {
 
           <div className="rounded-xl sm:rounded-2xl glass-card p-3 sm:p-5 card-shadow-soft">
             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
-                <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-accent/15 flex items-center justify-center">
+                <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
               </div>
               <span className="text-xs sm:text-sm text-muted-foreground">Receita/Mês</span>
             </div>
-            <p className="text-lg sm:text-3xl font-bold text-green-400">{formatCurrency(revenue.monthly_revenue)}</p>
+            <p className="text-lg sm:text-3xl font-bold text-accent">{formatCurrency(revenue.monthly_revenue)}</p>
           </div>
 
           <div className="rounded-xl sm:rounded-2xl glass-card p-3 sm:p-5 card-shadow-soft">

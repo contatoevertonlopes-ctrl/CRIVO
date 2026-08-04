@@ -292,7 +292,7 @@ const Plans = () => {
         </div>{/* /.grid */}
 
         {/* ── Trust signals ── */}
-        <div className="bg-card/50 rounded-2xl border border-border p-6 mb-8">
+        <div className="glass-card rounded-2xl p-6 mb-8">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-center">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Lock className="w-4 h-4 text-primary" />

@@ -313,7 +313,7 @@ const Reports = () => {
             </div>
             <div className="rounded-xl sm:rounded-2xl glass-card p-3 sm:p-4 card-shadow-soft">
               <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
+                <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                 <p className="text-sm text-muted-foreground">Saldo Total</p>
               </div>
               <p className={`text-xl sm:text-2xl font-bold ${stats.balance >= 0 ? "text-primary" : "text-destructive"}`}>

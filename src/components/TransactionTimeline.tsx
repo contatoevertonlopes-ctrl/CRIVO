@@ -258,11 +258,11 @@ const TransactionTimeline = ({
                           <>
                             <span>•</span>
                             <span className={`px-1.5 py-0.5 rounded text-[10px] ${
-                              transaction.tag === "fixa" 
-                                ? "bg-blue-500/15 text-blue-400"
+                              transaction.tag === "fixa"
+                                ? "bg-primary/10 text-primary"
                                 : transaction.tag === "variavel"
-                                  ? "bg-purple-500/15 text-purple-400"
-                                  : "bg-orange-500/15 text-orange-400"
+                                  ? "bg-warning/15 text-warning-foreground"
+                                  : "bg-muted text-muted-foreground"
                             }`}>
                               {transaction.tag === "fixa" ? "Fixa" : transaction.tag === "variavel" ? "Variável" : "Esporádica"}
                             </span>

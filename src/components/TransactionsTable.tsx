@@ -158,11 +158,11 @@ const TransactionsTable = ({
   const getTagStyle = (tag: string | null | undefined) => {
     switch (tag) {
       case "fixa":
-        return "bg-blue-500/15 text-blue-400 border-blue-500/30";
+        return "bg-primary/10 text-primary border-primary/20";
       case "variavel":
-        return "bg-purple-500/15 text-purple-400 border-purple-500/30";
+        return "bg-warning/15 text-warning-foreground border-warning/20";
       case "esporadica":
-        return "bg-orange-500/15 text-orange-400 border-orange-500/30";
+        return "bg-muted text-muted-foreground border-border/30";
       default:
         return "bg-secondary text-muted-foreground border-border/30";
     }
