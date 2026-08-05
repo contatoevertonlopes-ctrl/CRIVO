@@ -133,37 +133,37 @@
   }
 
   .dark {
-    /* Dark theme — CRIVO v3: brand palette authentic
-       #1A2E4A Azul Profundo  → surfaces & depth  (215 47% 19%)
-       #2ECC9A Verde Clareza  → accent & glow      (161 63% 49%)
-       #F8F9FA Branco Leve    → foreground text    (210 17% 98%)
-       #6B7280 Cinza Sofist.  → muted text         (220  9% 46%)
+    /* Dark theme — derivado da paleta da marca CRIVO
+       Base: #1A2E4A Azul Profundo (215 47% 19%)
+       Background = escurecimento do navy, NÃO preto puro
+       Accent: #2ECC9A Verde Clareza (161 63% 49%)
+       Muted text: #9CB8D4 (210 38% 73%) — do design system
     */
 
-    /* Background — deep navy void, near-black with brand tint */
-    --background: 215 72% 3%;
-    --foreground: 210 17% 94%;
+    /* Background — navy profundo, claramente azul */
+    --background: 215 52% 8%;
+    --foreground: 210 35% 93%;
 
-    /* Cards — branded dark navy surface (#0f1d31) */
-    --card: 215 50% 12%;
-    --card-foreground: 210 17% 94%;
+    /* Cards — #112238 (rect do logo CRIVO) */
+    --card: 215 50% 13%;
+    --card-foreground: 210 35% 93%;
 
-    --popover: 215 52% 9%;
-    --popover-foreground: 210 17% 94%;
+    --popover: 215 52% 11%;
+    --popover-foreground: 210 35% 93%;
 
-    /* Primary — Verde Clareza exact #2ECC9A */
+    /* Primary — Verde Clareza #2ECC9A */
     --primary: 161 63% 49%;
-    --primary-foreground: 215 55% 5%;
+    --primary-foreground: 215 55% 7%;
 
-    /* Secondary — mid-dark navy surface */
-    --secondary: 215 47% 17%;
-    --secondary-foreground: 210 17% 82%;
+    /* Secondary — exatamente #1A2E4A */
+    --secondary: 215 47% 19%;
+    --secondary-foreground: 210 30% 84%;
 
-    --muted: 215 47% 17%;
-    --muted-foreground: 220 9% 50%;
+    --muted: 215 47% 19%;
+    --muted-foreground: 210 30% 62%;
 
     --accent: 161 63% 49%;
-    --accent-foreground: 215 55% 5%;
+    --accent-foreground: 215 55% 7%;
 
     --destructive: 0 72% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -171,96 +171,86 @@
     --warning: 38 90% 54%;
     --warning-foreground: 38 80% 8%;
 
-    /* Borders — branded navy (#1d3153), feels DNA-native */
-    --border: 215 47% 21%;
-    --input: 215 47% 21%;
+    /* Borders — navy claro, dentro da família de cor */
+    --border: 215 45% 24%;
+    --input: 215 45% 24%;
     --ring: 161 63% 49%;
 
-    /* Sidebar — deepest navy void */
-    --sidebar-background: 215 72% 2.5%;
-    --sidebar-foreground: 210 17% 72%;
+    /* Sidebar — levemente mais escuro que o background */
+    --sidebar-background: 215 55% 6%;
+    --sidebar-foreground: 210 30% 68%;
     --sidebar-primary: 161 63% 49%;
-    --sidebar-primary-foreground: 215 55% 5%;
-    --sidebar-accent: 215 50% 13%;
-    --sidebar-accent-foreground: 210 17% 92%;
+    --sidebar-primary-foreground: 215 55% 7%;
+    --sidebar-accent: 215 47% 17%;
+    --sidebar-accent-foreground: 210 35% 93%;
     --sidebar-border: 215 47% 16%;
     --sidebar-ring: 161 63% 49%;
 
     /* Semantic finance tokens — dark */
     --income: 161 63% 49%;
-    --income-foreground: 215 55% 5%;
-    --income-muted: 161 45% 10%;
-    --income-muted-foreground: 161 60% 52%;
+    --income-foreground: 215 55% 7%;
+    --income-muted: 161 45% 12%;
+    --income-muted-foreground: 161 60% 55%;
     --expense: 0 72% 60%;
     --expense-foreground: 0 0% 100%;
-    --expense-muted: 0 38% 10%;
+    --expense-muted: 0 38% 12%;
     --expense-muted-foreground: 0 68% 65%;
 
     /* Custom CRIVO tokens */
-    --bg-elevated: 215 48% 15%;
-    --bg-card-soft: 215 50% 12%;
+    --bg-elevated: 215 48% 17%;
+    --bg-card-soft: 215 50% 13%;
     --accent-glow: 161 63% 49%;
-    --text-muted: 220 9% 50%;
+    --text-muted: 210 30% 62%;
 
     /* Survival Mode Colors — dark */
-    --survival-background: 215 72% 3%;
-    --survival-card: 215 52% 10%;
-    --survival-border: 215 47% 21%;
-    --survival-primary: 210 85% 58%;
-    --survival-secondary: 215 47% 17%;
+    --survival-background: 215 52% 8%;
+    --survival-card: 215 50% 13%;
+    --survival-border: 215 45% 24%;
+    --survival-primary: 210 80% 60%;
+    --survival-secondary: 215 47% 19%;
     --survival-emergency: 0 72% 60%;
     --survival-critical: 25 88% 54%;
     --survival-warning: 38 90% 54%;
     --survival-good: 161 63% 49%;
     --survival-excellent: 161 63% 43%;
-    --survival-muted: 220 9% 50%;
+    --survival-muted: 210 30% 62%;
     --survival-accent: 25 82% 56%;
 
     /* Prosperity Mode Colors — dark */
-    --prosperity-background: 215 72% 3%;
-    --prosperity-card: 215 52% 10%;
-    --prosperity-border: 215 47% 21%;
+    --prosperity-background: 215 52% 8%;
+    --prosperity-card: 215 50% 13%;
+    --prosperity-border: 215 45% 24%;
     --prosperity-primary: 161 63% 49%;
-    --prosperity-secondary: 215 47% 17%;
+    --prosperity-secondary: 215 47% 19%;
     --prosperity-accent: 43 88% 52%;
-    --prosperity-muted: 215 40% 18%;
+    --prosperity-muted: 215 40% 19%;
     --prosperity-gold: 43 88% 56%;
     --prosperity-emerald: 161 63% 49%;
 
-    /* Gradients */
-    --gradient-primary: radial-gradient(circle at top left, hsl(215 48% 14%), hsl(215 55% 5%));
-    --gradient-elevated: radial-gradient(circle at top, hsl(215 50% 13%), hsl(215 55% 5%));
+    /* Gradients — dentro da família navy */
+    --gradient-primary: radial-gradient(circle at top left, hsl(215 47% 19%), hsl(215 52% 8%));
+    --gradient-elevated: radial-gradient(circle at top, hsl(215 48% 17%), hsl(215 52% 8%));
     --gradient-accent: linear-gradient(135deg, hsl(161 63% 49%), hsl(161 63% 36%));
-    --gradient-survival: linear-gradient(135deg, hsl(215 48% 11%), hsl(215 55% 5%));
-    --gradient-prosperity: linear-gradient(135deg, hsl(215 48% 11%), hsl(215 55% 5%));
+    --gradient-survival: linear-gradient(135deg, hsl(215 47% 17%), hsl(215 52% 8%));
+    --gradient-prosperity: linear-gradient(135deg, hsl(215 47% 17%), hsl(215 52% 8%));
 
-    /* ─── Mesh background — CINEMATIC INTENSITY ─────────────────────────────
-       Effect: emerald sun blazing from above the viewport into a near-black
-       navy abyss. The beacon is 2x brighter/wider. Edge vignette is aggressive.
-       Cards feel like they're lit from above by the brand color itself.
-    */
+    /* Mesh — glow esmeralda suave sobre navy profundo (sem preto puro) */
     --mesh-bg:
-      /* Emerald core — razor-bright, overshoots the viewport ceiling */
-      radial-gradient(ellipse 28% 26% at 50% -18%, hsl(161 85% 46%)  0px, transparent 48%),
-      /* Emerald mid-halo — wide luminous bloom */
-      radial-gradient(ellipse 78% 42% at 50%  -6%, hsl(161 68% 26%)  0px, transparent 74%),
-      /* Emerald outer atmosphere — fades into the navy */
-      radial-gradient(ellipse 100% 28% at 50%   2%, hsl(161 45% 11%) 0px, transparent 82%),
-      /* Navy left void — pulls left edge into darkness */
-      radial-gradient(ellipse 62% 95% at  -10% 42%, hsl(215 68% 4%)  0px, transparent 66%),
-      /* Navy right void */
-      radial-gradient(ellipse 58% 75% at 110% 28%, hsl(215 65% 3%)   0px, transparent 60%),
-      /* Bottom abyss — total black gravity */
-      radial-gradient(ellipse 95% 60% at 50% 125%, hsl(215 82% 1%)   0px, transparent 72%);
-    --vignette-bg: radial-gradient(ellipse 78% 68% at 50% 50%, transparent 18%, hsl(215 80% 1.5% / 0.92) 100%);
+      radial-gradient(ellipse 32% 28% at 50% -8%,  hsl(161 75% 40%)  0px, transparent 52%),
+      radial-gradient(ellipse 72% 36% at 50%  4%,  hsl(161 55% 20%)  0px, transparent 68%),
+      radial-gradient(ellipse 95% 24% at 50%  10%, hsl(161 40% 10%)  0px, transparent 78%),
+      radial-gradient(ellipse 55% 80% at -8%  44%, hsl(215 52% 6%)   0px, transparent 60%),
+      radial-gradient(ellipse 50% 65% at 108% 30%, hsl(215 50% 5%)   0px, transparent 55%),
+      radial-gradient(ellipse 90% 52% at 50% 118%, hsl(215 52% 5%)   0px, transparent 68%);
+    --vignette-bg: radial-gradient(ellipse 82% 72% at 50% 50%, transparent 22%, hsl(215 55% 5% / 0.80) 100%);
 
-    /* Shadows — dark, Cinema Mobile hairline + emerald brand glow */
-    --shadow-soft:  0 1px 3px hsl(215 65% 2% / 0.7), 0 1px 2px hsl(215 65% 2% / 0.4);
-    --shadow-card:  0 0 0 1px rgba(255, 255, 255, 0.07), 0 0 0 1px hsl(161 63% 49% / 0.06), 0 4px 28px hsl(215 62% 3% / 0.70);
-    --shadow-glow-blue:  0 0 24px hsl(215 85% 60% / 0.22);
-    --shadow-glow-green: 0 0 28px hsl(161 63% 49% / 0.32);
-    --shadow-glow-gold:  0 0 20px hsl(43 88% 56% / 0.18);
-    --shadow-float: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 8px 40px hsl(215 65% 3% / 0.80), 0 3px 12px hsl(215 65% 3% / 0.45);
+    /* Shadows */
+    --shadow-soft:  0 1px 3px hsl(215 55% 4% / 0.55), 0 1px 2px hsl(215 55% 4% / 0.30);
+    --shadow-card:  0 0 0 1px rgba(255,255,255,0.06), 0 0 0 1px hsl(161 63% 49% / 0.05), 0 4px 24px hsl(215 55% 5% / 0.55);
+    --shadow-glow-blue:  0 0 24px hsl(215 80% 55% / 0.20);
+    --shadow-glow-green: 0 0 28px hsl(161 63% 49% / 0.28);
+    --shadow-glow-gold:  0 0 20px hsl(43 88% 56% / 0.16);
+    --shadow-float: 0 0 0 1px rgba(255,255,255,0.05), 0 8px 36px hsl(215 55% 5% / 0.60), 0 3px 12px hsl(215 55% 5% / 0.35);
   }
 }
 
