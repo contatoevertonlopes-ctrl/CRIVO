@@ -191,7 +191,7 @@ const TransactionPreviewTable = ({
                 </td>
                 <td className={cn(
                   "p-2 text-right font-medium font-mono",
-                  t.type === "income" ? "text-green-500" : "text-red-400"
+                  t.type === "income" ? "text-income" : "text-expense"
                 )}>
                   {t.type === "income" ? "+" : "-"}{formatCurrency(t.amount)}
                 </td>
@@ -205,7 +205,7 @@ const TransactionPreviewTable = ({
                       Duplicada
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-green-500">
+                    <span className="inline-flex items-center gap-1 text-income">
                       <Check className="w-3 h-3" />
                       Válida
                     </span>

@@ -25,7 +25,7 @@ const PlansCard = () => {
               Desbloqueie previsões avançadas, exportação e integrações automáticas.
             </p>
           </div>
-          <span className="text-[11px] px-2.5 py-1 rounded-full bg-primary/10 border border-primary/50 text-green-200">
+          <span className="text-[11px] px-2.5 py-1 rounded-full bg-accent/15 border border-accent/40 text-accent-foreground">
             💰 Economize no anual
           </span>
         </div>

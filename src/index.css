@@ -18,41 +18,45 @@
   }
 
   :root {
-    /* Light theme — CRIVO brand palette exact:
-       #F8F9FA background, #1A2E4A sidebar/primary, #2ECC9A accent, #6B7280 muted
+    /* Light theme — CRIVO Design System exact palette:
+       #F8F9FA background, #1A2E4A primary/foreground, #2ECC9A accent
+       #E5E7EB border, #EDEFF2 card-border, #F3F4F6 muted
+       #0F9E6A income text, #EAFAF4 income bg
+       #DC2626 expense text, #FEF2F2 expense bg
+       #6B7280 muted-foreground
     */
-    --background: 210 17% 98%;
-    --foreground: 215 47% 12%;
+    --background: 210 17% 98%;        /* #F8F9FA */
+    --foreground: 215 47% 19%;        /* #1A2E4A — Azul Profundo */
 
-    --card: 0 0% 100%;
-    --card-foreground: 215 47% 12%;
+    --card: 0 0% 100%;                /* #FFFFFF */
+    --card-foreground: 215 47% 19%;   /* #1A2E4A */
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 47% 12%;
+    --popover-foreground: 215 47% 19%;
 
     /* Primary — Azul Profundo exact #1A2E4A */
     --primary: 215 47% 19%;
     --primary-foreground: 210 17% 98%;
 
-    --secondary: 215 20% 94%;
+    --secondary: 220 14% 96%;         /* #F3F4F6 — Neutro 100 */
     --secondary-foreground: 215 47% 19%;
 
-    --muted: 215 20% 94%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 220 14% 96%;             /* #F3F4F6 */
+    --muted-foreground: 220 9% 46%;   /* #6B7280 — Cinza Sofisticado */
 
     /* Accent — Verde Clareza exact #2ECC9A */
     --accent: 161 63% 49%;
-    --accent-foreground: 215 47% 12%;
+    --accent-foreground: 160 97% 12%; /* #0B3B2A */
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 72% 51%;         /* #DC2626 */
     --destructive-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 38 80% 12%;
 
-    --border: 215 20% 88%;
-    --input: 215 20% 88%;
-    --ring: 161 63% 49%;
+    --border: 220 13% 91%;            /* #E5E7EB — borda geral */
+    --input: 220 13% 91%;             /* #E5E7EB */
+    --ring: 161 63% 49%;              /* #2ECC9A */
 
     --radius: 0.75rem;
 
@@ -60,32 +64,32 @@
     --sidebar-background: 215 47% 19%;
     --sidebar-foreground: 210 17% 92%;
     --sidebar-primary: 161 63% 49%;
-    --sidebar-primary-foreground: 215 47% 12%;
+    --sidebar-primary-foreground: 160 97% 12%;
     --sidebar-accent: 215 40% 26%;
     --sidebar-accent-foreground: 210 17% 96%;
     --sidebar-border: 215 38% 26%;
     --sidebar-ring: 161 63% 49%;
 
-    /* Semantic finance tokens — light */
-    --income: 161 63% 34%;
+    /* Semantic finance tokens — light — exact design system values */
+    --income: 153 83% 34%;            /* #0F9E6A — verde texto (não o emerald) */
     --income-foreground: 0 0% 100%;
-    --income-muted: 161 55% 94%;
-    --income-muted-foreground: 161 60% 26%;
-    --expense: 0 72% 51%;
+    --income-muted: 152 55% 94%;      /* #EAFAF4 — fundo tag positiva */
+    --income-muted-foreground: 153 83% 34%; /* #0F9E6A */
+    --expense: 0 72% 51%;             /* #DC2626 */
     --expense-foreground: 0 0% 100%;
-    --expense-muted: 0 72% 96%;
-    --expense-muted-foreground: 0 65% 40%;
+    --expense-muted: 0 86% 97%;       /* #FEF2F2 — fundo tag negativa */
+    --expense-muted-foreground: 0 72% 40%; /* escurecido para contraste */
 
     /* Custom CRIVO tokens */
     --bg-elevated: 0 0% 100%;
-    --bg-card-soft: 215 20% 94%;
+    --bg-card-soft: 220 14% 96%;      /* #F3F4F6 */
     --accent-glow: 161 63% 49%;
-    --text-muted: 220 9% 46%;
+    --text-muted: 220 9% 46%;         /* #6B7280 */
 
     /* Survival Mode Colors — light */
     --survival-background: 210 17% 98%;
     --survival-card: 0 0% 100%;
-    --survival-border: 215 20% 88%;
+    --survival-border: 220 13% 91%;
     --survival-primary: 210 90% 50%;
     --survival-secondary: 215 20% 94%;
     --survival-emergency: 0 72% 51%;
@@ -99,7 +103,7 @@
     /* Prosperity Mode Colors — light */
     --prosperity-background: 210 17% 98%;
     --prosperity-card: 0 0% 100%;
-    --prosperity-border: 215 20% 88%;
+    --prosperity-border: 220 13% 91%;
     --prosperity-primary: 161 63% 49%;
     --prosperity-secondary: 215 20% 94%;
     --prosperity-accent: 43 90% 45%;
@@ -642,7 +646,7 @@
 .glass-card {
   /* Light mode: design system — card branco com borda #EDEFF2 */
   background: hsl(var(--card));
-  border: 1px solid hsl(215 20% 90%);
+  border: 1px solid hsl(220 13% 94%); /* #EDEFF2 — borda de card do design system */
   box-shadow: var(--shadow-card);
 }
 

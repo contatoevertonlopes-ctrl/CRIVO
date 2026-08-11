@@ -245,7 +245,7 @@ export const QuickAddInput = ({ onTransactionAdded, onFallbackToForm }: QuickAdd
           <p className="text-sm text-muted-foreground mb-3">Confirmar lançamento:</p>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className={`text-lg font-semibold ${parsed.type === "income" ? "text-green-500" : "text-red-500"}`}>
+              <p className={`text-lg font-semibold ${parsed.type === "income" ? "text-income" : "text-expense"}`}>
                 {parsed.type === "income" ? "+" : "-"}R$ {parsed.amount.toFixed(2)}
               </p>
               <p className="text-sm text-foreground">{parsed.description}</p>
