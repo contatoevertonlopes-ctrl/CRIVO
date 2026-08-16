@@ -20,7 +20,11 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { toast } from "sonner";
-import { Search, Plus, Edit2, Trash2, Filter, Download, Lock, Crown, RefreshCw, Calendar, Copy, ArrowUpDown, ChevronUp, ChevronDown, ChevronRight, CheckSquare, X, ArrowRightLeft, AlertCircle, TrendingDown, CalendarClock } from "lucide-react";
+import {
+  Search, Plus, Edit2, Trash2, Filter, Download, Lock, Crown,
+  RefreshCw, Calendar, Copy, ArrowUpDown, ChevronUp, ChevronDown,
+  ChevronRight, CheckSquare, X, AlertCircle, CalendarClock,
+} from "lucide-react";
 import AddTransactionCompactDialog from "@/components/AddTransactionCompactDialog";
 import Sidebar from "@/components/Sidebar";
 import ImportTransactionsDialog from "@/components/ImportTransactionsDialog";
@@ -85,11 +89,11 @@ interface TransactionRowProps {
   showMember?: boolean;
 }
 
-const TransactionRow = ({ 
-  transaction, 
-  onEdit, 
-  onDelete, 
-  onDuplicate, 
+const TransactionRow = ({
+  transaction,
+  onEdit,
+  onDelete,
+  onDuplicate,
   onStatusChange,
   formatDate,
   formatCurrency,
@@ -97,29 +101,11 @@ const TransactionRow = ({
   onToggleSelect,
   selectionMode,
   memberInfo,
-  showMember
-}: TransactionRowProps) => {
-  const getPaymentMethodLabel = (method?: string | null) => {
-    switch (method) {
-      case "pix":
-        return "PIX";
-      case "credit_card":
-        return "Cartão de crédito";
-      case "debit_card":
-        return "Cartão de débito";
-      case "bank_transfer":
-        return "Transferência bancária";
-      case "boleto":
-        return "Boleto";
-      default:
-        return method || "-";
-    }
-  };
-
-  return (
-  <tr className={`border-b border-secondary/50 hover:bg-secondary/30 transition-colors ${isSelected ? "bg-primary/10" : ""}`}>
+  showMember,
+}: TransactionRowProps) => (
+  <tr className={`border-b border-border/40 hover:bg-secondary/25 transition-colors group ${isSelected ? "bg-primary/8" : ""}`}>
     {selectionMode && (
-      <td className="py-4 px-2">
+      <td className="py-3 px-3">
         <Checkbox
           checked={isSelected}
           onCheckedChange={() => onToggleSelect?.(transaction.id)}
@@ -128,56 +114,67 @@ const TransactionRow = ({
       </td>
     )}
     {showMember && (
-      <td className="py-2 px-3">
+      <td className="py-3 px-3">
         {memberInfo && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>
-                <Avatar className="w-7 h-7 ring-1 ring-border/40">
+                <Avatar className="w-6 h-6 ring-1 ring-border/40">
                   <AvatarImage src={memberInfo.avatar || undefined} />
-                  <AvatarFallback className="text-[10px] bg-primary/20 text-primary">
+                  <AvatarFallback className="text-[9px] bg-primary/20 text-primary">
                     {memberInfo.initials}
                   </AvatarFallback>
                 </Avatar>
               </TooltipTrigger>
-              <TooltipContent>
-                <p>{memberInfo.name}</p>
-              </TooltipContent>
+              <TooltipContent><p>{memberInfo.name}</p></TooltipContent>
             </Tooltip>
           </TooltipProvider>
         )}
       </td>
     )}
-    <td className="py-4 px-4 whitespace-nowrap">{formatDate(transaction.date)}</td>
-    <td className="py-4 px-4 font-medium">
+
+    {/* Data */}
+    <td className="py-3 px-4 whitespace-nowrap text-sm text-muted-foreground tabular-nums">
+      {formatDate(transaction.date)}
+    </td>
+
+    {/* Descrição + tag inline */}
+    <td className="py-3 px-4">
       <div className="flex items-center gap-2">
-        <span className="truncate max-w-[120px] sm:max-w-[200px]">{transaction.description}</span>
+        <span className="font-medium text-sm truncate max-w-[200px]">{transaction.description}</span>
         {transaction.is_recurring && (
-          <span title="Recorrente">
-            <RefreshCw className="w-3 h-3 text-primary shrink-0" />
+          <RefreshCw className="w-3 h-3 text-muted-foreground/50 shrink-0" title="Recorrente" />
+        )}
+        {transaction.tag && (
+          <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold tracking-wide shrink-0 ${
+            transaction.tag === "fixa"
+              ? "bg-primary/10 text-primary"
+              : transaction.tag === "variavel"
+              ? "bg-warning/15 text-warning-foreground"
+              : "bg-muted text-muted-foreground"
+          }`}>
+            {transaction.tag === "fixa" ? "Fixa" : transaction.tag === "variavel" ? "Var" : "Esp"}
           </span>
         )}
       </div>
     </td>
-    <td className="py-4 px-4">
-      <span
-        className={`inline-flex items-center justify-center text-[10px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full ${
-          transaction.type === "income"
-            ? "bg-income-muted text-income-muted-foreground"
-            : "bg-expense-muted text-expense-muted-foreground"
-        }`}
-      >
-        {transaction.type === "income" ? "Entrada" : "Saída"}
-      </span>
+
+    {/* Categoria */}
+    <td className="py-3 px-4">
+      <span className="text-xs text-muted-foreground">{transaction.category}</span>
     </td>
-    <td className="py-4 px-4 whitespace-nowrap">
-      <span className={`text-[14px] font-bold finance-value tabular-nums ${
+
+    {/* Valor */}
+    <td className="py-3 px-4 whitespace-nowrap">
+      <span className={`text-sm font-semibold finance-value tabular-nums ${
         transaction.type === "income" ? "text-income" : "text-destructive"
       }`}>
         {transaction.type === "income" ? "+" : "−"}{formatCurrency(transaction.amount)}
       </span>
     </td>
-    <td className="py-4 px-4">
+
+    {/* Status */}
+    <td className="py-3 px-4">
       <StatusSelector
         transactionId={transaction.id}
         currentStatus={transaction.status}
@@ -185,55 +182,35 @@ const TransactionRow = ({
         onStatusChange={onStatusChange}
       />
     </td>
-    <td className="py-4 px-4 whitespace-nowrap text-muted-foreground">
-      {transaction.paid_date ? formatDate(transaction.paid_date) : "-"}
-    </td>
-    <td className="py-4 px-4">
-      {transaction.tag && (
-        <span className={`inline-flex items-center text-[10px] px-2 py-0.5 rounded-full ${
-          transaction.tag === "fixa"
-            ? "bg-primary/10 text-primary"
-            : transaction.tag === "variavel"
-            ? "bg-warning/15 text-warning-foreground"
-            : "bg-muted text-muted-foreground"
-        }`}>
-          {transaction.tag === "fixa" ? "Fixa" : transaction.tag === "variavel" ? "Variável" : "Esporádica"}
-        </span>
-      )}
-    </td>
-    <td className="py-4 px-4">{transaction.category}</td>
-    <td className="py-4 px-4 whitespace-nowrap">{getPaymentMethodLabel(transaction.payment_method)}</td>
-    <td className="py-4 px-4">
-      <div className="flex items-center gap-1">
+
+    {/* Ações — visíveis só no hover */}
+    <td className="py-3 px-3">
+      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={() => onDuplicate(transaction)}
-          className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
-          aria-label="Duplicar transação"
+          className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-primary/15 text-muted-foreground hover:text-primary transition-colors"
           title="Duplicar"
         >
-          <Copy className="w-4 h-4" />
+          <Copy className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => onEdit(transaction)}
-          className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-          aria-label="Editar transação"
+          className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
           title="Editar"
         >
-          <Edit2 className="w-4 h-4" />
+          <Edit2 className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => onDelete(transaction.id)}
-          className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
-          aria-label="Excluir transação"
+          className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-destructive/15 text-muted-foreground hover:text-destructive transition-colors"
           title="Excluir"
         >
-          <Trash2 className="w-4 h-4" />
+          <Trash2 className="w-3.5 h-3.5" />
         </button>
       </div>
     </td>
   </tr>
-  );
-};
+);
 
 const Transactions = () => {
   const { user, loading: authLoading } = useAuth();
@@ -271,57 +248,36 @@ const Transactions = () => {
   const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
-  // Recurring delete dialog
   const [recurringDeleteTarget, setRecurringDeleteTarget] = useState<Transaction | null>(null);
-  const itemsPerPage = 10;
+  const itemsPerPage = 15;
   const loading = authLoading || transactionsLoading;
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth");
-    }
+    if (!authLoading && !user) navigate("/auth");
   }, [user, authLoading, navigate]);
 
-  const fetchTransactions = async () => {
-    await refetchTransactions();
-  };
+  const fetchTransactions = async () => { await refetchTransactions(); };
 
   useEffect(() => {
     let filtered = transactions;
 
     if (search) {
-      filtered = filtered.filter(
-        (t) =>
-          t.description.toLowerCase().includes(search.toLowerCase()) ||
-          t.category.toLowerCase().includes(search.toLowerCase())
+      filtered = filtered.filter((t) =>
+        t.description.toLowerCase().includes(search.toLowerCase()) ||
+        t.category.toLowerCase().includes(search.toLowerCase())
       );
     }
-
-    if (typeFilter.length > 0) {
-      filtered = filtered.filter((t) => typeFilter.includes(t.type));
-    }
-
+    if (typeFilter.length > 0) filtered = filtered.filter((t) => typeFilter.includes(t.type));
     if (statusFilter.length > 0) {
-      filtered = filtered.filter((t) => {
-        const normalized = normalizeStatus(t.status);
-        return statusFilter.includes(normalized);
-      });
+      filtered = filtered.filter((t) => statusFilter.includes(normalizeStatus(t.status)));
     }
+    if (categoryFilter.length > 0) filtered = filtered.filter((t) => categoryFilter.includes(t.category));
+    if (tagFilter.length > 0) filtered = filtered.filter((t) => t.tag != null && tagFilter.includes(t.tag));
 
-    if (categoryFilter.length > 0) {
-      filtered = filtered.filter((t) => categoryFilter.includes(t.category));
-    }
-
-    if (tagFilter.length > 0) {
-      filtered = filtered.filter((t) => t.tag != null && tagFilter.includes(t.tag));
-    }
-
-    // Period filter
     if (periodFilter !== "all") {
       const now = new Date();
       let periodStart: Date;
       let periodEnd: Date;
-
       switch (periodFilter) {
         case "last_month":
           periodStart = startOfMonth(subMonths(now, 1));
@@ -336,18 +292,13 @@ const Transactions = () => {
           periodEnd = endOfMonth(addMonths(now, 1));
           break;
         case "custom":
-          if (customDateFrom) {
-            filtered = filtered.filter((t) => t.date >= customDateFrom);
-          }
-          if (customDateTo) {
-            filtered = filtered.filter((t) => t.date <= customDateTo);
-          }
+          if (customDateFrom) filtered = filtered.filter((t) => t.date >= customDateFrom);
+          if (customDateTo) filtered = filtered.filter((t) => t.date <= customDateTo);
           break;
         default:
           periodStart = new Date(0);
           periodEnd = new Date(9999, 11, 31);
       }
-
       if (periodFilter !== "custom") {
         const startStr = format(periodStart!, "yyyy-MM-dd");
         const endStr = format(periodEnd!, "yyyy-MM-dd");
@@ -355,156 +306,92 @@ const Transactions = () => {
       }
     }
 
-    // Pro filters
     if (subscribed) {
-      if (dateFrom) {
-        filtered = filtered.filter((t) => t.date >= dateFrom);
-      }
-      if (dateTo) {
-        filtered = filtered.filter((t) => t.date <= dateTo);
-      }
-      if (minAmount) {
-        filtered = filtered.filter((t) => t.amount >= parseFloat(minAmount));
-      }
-      if (maxAmount) {
-        filtered = filtered.filter((t) => t.amount <= parseFloat(maxAmount));
-      }
-      if (recurringOnly) {
-        filtered = filtered.filter((t) => t.is_recurring);
-      }
+      if (dateFrom) filtered = filtered.filter((t) => t.date >= dateFrom);
+      if (dateTo) filtered = filtered.filter((t) => t.date <= dateTo);
+      if (minAmount) filtered = filtered.filter((t) => t.amount >= parseFloat(minAmount));
+      if (maxAmount) filtered = filtered.filter((t) => t.amount <= parseFloat(maxAmount));
+      if (recurringOnly) filtered = filtered.filter((t) => t.is_recurring);
     }
 
-    // Apply sorting
     switch (sortOrder) {
-      case "amount_desc":
-        filtered = [...filtered].sort((a, b) => b.amount - a.amount);
-        break;
-      case "amount_asc":
-        filtered = [...filtered].sort((a, b) => a.amount - b.amount);
-        break;
-      case "date_asc":
-        filtered = [...filtered].sort((a, b) => a.date.localeCompare(b.date));
-        break;
-      case "date_desc":
-        filtered = [...filtered].sort((a, b) => b.date.localeCompare(a.date));
-        break;
-      case "priority":
-      default:
-        filtered = sortTransactionsByPriority(filtered);
-        break;
+      case "amount_desc": filtered = [...filtered].sort((a, b) => b.amount - a.amount); break;
+      case "amount_asc":  filtered = [...filtered].sort((a, b) => a.amount - b.amount); break;
+      case "date_asc":    filtered = [...filtered].sort((a, b) => a.date.localeCompare(b.date)); break;
+      case "date_desc":   filtered = [...filtered].sort((a, b) => b.date.localeCompare(a.date)); break;
+      default:            filtered = sortTransactionsByPriority(filtered); break;
     }
 
-    const uniqueTransactions = Array.from(
-      new Map(filtered.map((transaction) => [transaction.id, transaction])).values()
-    );
+    const unique = Array.from(new Map(filtered.map((t) => [t.id, t])).values());
+    setFilteredTransactions(unique);
 
-    setFilteredTransactions(uniqueTransactions);
-
-    // Reset to page 1 only when filter inputs change, not on background data refreshes.
-    // Without this guard, every status update (which refetches `transactions`) would
-    // reset the page because `transactions` is a dependency of this effect.
-    const newFilterKey = JSON.stringify([search, typeFilter, statusFilter, categoryFilter, tagFilter, periodFilter, customDateFrom, customDateTo, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed, sortOrder]);
-    if (newFilterKey !== filterKeyRef.current) {
-      filterKeyRef.current = newFilterKey;
+    const newKey = JSON.stringify([search, typeFilter, statusFilter, categoryFilter, tagFilter, periodFilter, customDateFrom, customDateTo, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed, sortOrder]);
+    if (newKey !== filterKeyRef.current) {
+      filterKeyRef.current = newKey;
       setCurrentPage(1);
     }
   }, [transactions, search, typeFilter, statusFilter, categoryFilter, tagFilter, periodFilter, customDateFrom, customDateTo, dateFrom, dateTo, minAmount, maxAmount, recurringOnly, subscribed, sortOrder]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const categories = useMemo(() => {
     const map = new Map<string, string>();
-
-    for (const c of predefinedCategories) {
-      map.set(c.name.toLowerCase(), c.name);
-    }
-
+    for (const c of predefinedCategories) map.set(c.name.toLowerCase(), c.name);
     for (const t of transactions) {
       const name = (t.category || "").trim();
-      if (!name) continue;
-      map.set(name.toLowerCase(), name);
+      if (name) map.set(name.toLowerCase(), name);
     }
-
     return Array.from(map.values()).sort((a, b) => a.localeCompare(b, "pt-BR"));
   }, [transactions, predefinedCategories]);
 
-  // Group transactions by month or category
   const groupedTransactions = useMemo(() => {
-    if (groupBy === "none") {
-      return { "all": filteredTransactions };
-    }
-
+    if (groupBy === "none") return { all: filteredTransactions };
     const groups: Record<string, Transaction[]> = {};
-    
     filteredTransactions.forEach((t) => {
       let key: string;
       if (groupBy === "month") {
-        const date = new Date(t.date + "T00:00:00");
-        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const d = new Date(t.date + "T00:00:00");
+        key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       } else {
         key = t.category;
       }
-      
-      if (!groups[key]) {
-        groups[key] = [];
-      }
+      if (!groups[key]) groups[key] = [];
       groups[key].push(t);
     });
-
-    // Sort keys
-    const sortedKeys = Object.keys(groups).sort((a, b) => {
-      if (groupBy === "month") {
-        return b.localeCompare(a); // Most recent first
-      }
-      return a.localeCompare(b); // Alphabetical
-    });
-
-    const sortedGroups: Record<string, Transaction[]> = {};
-    sortedKeys.forEach(key => {
-      sortedGroups[key] = groups[key];
-    });
-
-    return sortedGroups;
+    const sortedKeys = Object.keys(groups).sort((a, b) =>
+      groupBy === "month" ? b.localeCompare(a) : a.localeCompare(b)
+    );
+    const sorted: Record<string, Transaction[]> = {};
+    sortedKeys.forEach((k) => { sorted[k] = groups[k]; });
+    return sorted;
   }, [filteredTransactions, groupBy]);
 
   const formatGroupHeader = (key: string) => {
-    if (groupBy === "month") {
-      const [year, month] = key.split("-");
-      const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
-                          "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-      return `${monthNames[parseInt(month) - 1]} ${year}`;
-    }
-    return key;
+    if (groupBy !== "month") return key;
+    const [year, month] = key.split("-");
+    const months = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    return `${months[parseInt(month) - 1]} ${year}`;
   };
 
-  const getGroupStats = (transactions: Transaction[]) => {
-    const groupTotals = calculateTransactionTotals(transactions, { excludeTransfers: true });
-    return {
-      income: groupTotals.incomePaid,
-      expense: groupTotals.expensePaid,
-      balance: groupTotals.balancePaid,
-    };
+  const getGroupStats = (txs: Transaction[]) => {
+    const t = calculateTransactionTotals(txs, { excludeTransfers: true });
+    return { income: t.incomePaid, expense: t.expensePaid, balance: t.balancePaid };
   };
 
   const toggleGroupCollapse = (key: string) => {
-    const newCollapsed = new Set(collapsedGroups);
-    if (newCollapsed.has(key)) {
-      newCollapsed.delete(key);
-    } else {
-      newCollapsed.add(key);
-    }
-    setCollapsedGroups(newCollapsed);
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
   };
 
-  // Flatten for pagination when not grouping
-  const paginatedTransactions = groupBy === "none" 
+  const paginatedTransactions = groupBy === "none"
     ? filteredTransactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
     : filteredTransactions;
+
   const handleDelete = (id: string) => {
     const tx = (transactions as Transaction[]).find((t) => t.id === id);
-    if (tx?.recurring_series_id) {
-      setRecurringDeleteTarget(tx);
-    } else {
-      handleDeleteSingle(id);
-    }
+    if (tx?.recurring_series_id) setRecurringDeleteTarget(tx);
+    else handleDeleteSingle(id);
   };
 
   const handleDeleteSingle = async (id: string) => {
@@ -513,30 +400,24 @@ const Transactions = () => {
       if (error) throw error;
       toast.success("Transação excluída.");
       fetchTransactions();
-    } catch (error) {
-      console.error("Error deleting transaction:", error);
+    } catch {
       toast.error("Erro ao excluir transação");
     }
   };
 
   const handleDeleteSeries = async (seriesId: string) => {
     try {
-      const todayStr = new Date().toISOString().split("T")[0];
-      await deleteRecurringSeries(seriesId, todayStr);
+      const today = new Date().toISOString().split("T")[0];
+      await deleteRecurringSeries(seriesId, today);
       toast.success("Série e ocorrências futuras excluídas.");
       fetchTransactions();
-    } catch (error) {
-      console.error("Error deleting series:", error);
+    } catch {
       toast.error("Erro ao excluir série");
     }
   };
 
-  // Normalize legacy status values to canonical English
-  const normalizeStatusValue = (status: string) => normalizeStatus(status);
-
   const handleDuplicate = async (transaction: Transaction) => {
     if (!user) return;
-
     try {
       const { error } = await supabase.from("transactions").insert({
         user_id: user.id,
@@ -545,20 +426,17 @@ const Transactions = () => {
         amount: transaction.amount,
         category: transaction.category,
         type: transaction.type,
-        status: transaction.status, // Keep original DB status (already Portuguese)
+        status: transaction.status,
         date: transaction.date,
         tag: transaction.tag || null,
         is_recurring: transaction.is_recurring || false,
         recurring_interval: transaction.recurring_interval || null,
         payment_method: transaction.payment_method || null,
       });
-
       if (error) throw error;
-
-      toast.success("Transação duplicada com sucesso!");
+      toast.success("Transação duplicada!");
       fetchTransactions();
-    } catch (error) {
-      console.error("Error duplicating transaction:", error);
+    } catch {
       toast.error("Erro ao duplicar transação");
     }
   };
@@ -591,119 +469,46 @@ const Transactions = () => {
     };
   }, [editingTransaction]);
 
-  const getStatusLabelLocal = (status: string) => {
-    const normalized = normalizeStatusValue(status);
-    const statusMap: Record<string, string> = {
-      pending: "Em aberto",
-      upcoming: "A vencer",
-      overdue: "Vencido",
-      paid: "Pagamento concluído",
-    };
-    return statusMap[normalized] || status;
-  };
-
-  const getStatusStyleLocal = (status: string) => {
-    const normalized = normalizeStatusValue(status);
-    switch (normalized) {
-      case "paid":
-        return "bg-primary/10 text-primary";
-      case "upcoming":
-        return "bg-warning/10 text-warning";
-      case "overdue":
-        return "bg-destructive/10 text-destructive";
-      default:
-        return "bg-secondary/50 text-muted-foreground";
-    }
-  };
-
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "-";
-    const normalizedDate = dateStr.includes("T") ? dateStr : `${dateStr}T00:00:00`;
-    const date = new Date(normalizedDate);
-    return Number.isNaN(date.getTime()) ? dateStr : date.toLocaleDateString("pt-BR");
+    const d = new Date(dateStr.includes("T") ? dateStr : `${dateStr}T00:00:00`);
+    return Number.isNaN(d.getTime()) ? dateStr : d.toLocaleDateString("pt-BR");
   };
 
-  const showMember = isShared && members.length > 1;
-
-  const getMemberInfo = (userId: string) => {
-    const member = members.find((m) => m.user_id === userId);
-    if (!member) return { name: "Usuário", initials: "U", avatar: null };
-    const name = member.full_name || "Usuário";
-    const initials = name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
-    return { name, initials, avatar: member.avatar_url };
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  };
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
   const exportToCSV = () => {
-    // Prefix fields that start with formula-trigger chars to prevent CSV injection
     const sanitize = (v: string) => (/^[=+\-@\t\r]/.test(v) ? `'${v}` : v);
-    // Wrap field in quotes and escape inner quotes
     const csvField = (v: string) => `"${sanitize(v).replace(/"/g, '""')}"`;
-
     const headers = ["Data", "Descrição", "Categoria", "Tipo", "Valor", "Status"];
     const rows = filteredTransactions.map((t) => [
-      formatDate(t.date),
-      t.description,
-      t.category,
+      formatDate(t.date), t.description, t.category,
       t.type === "income" ? "Entrada" : "Saída",
       t.amount.toString(),
-      getStatusLabelLocal(t.status),
+      normalizeStatus(t.status),
     ]);
-
-    const csvContent = [headers, ...rows]
-      .map((row) => row.map(csvField).join(","))
-      .join("\n");
-
-    // BOM ensures Excel on Windows renders UTF-8 correctly (ã, ç, é, etc.)
-    const blob = new Blob(["﻿" + csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "transacoes.csv";
-    link.click();
-    toast.success("Arquivo exportado com sucesso!");
+    const csv = [headers, ...rows].map((r) => r.map(csvField).join(",")).join("\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "transacoes.csv";
+    a.click();
+    toast.success("Arquivo exportado!");
   };
 
   const clearProFilters = () => {
-    setDateFrom("");
-    setDateTo("");
-    setMinAmount("");
-    setMaxAmount("");
-    setRecurringOnly(false);
-    setCustomDateFrom("");
-    setCustomDateTo("");
+    setDateFrom(""); setDateTo(""); setMinAmount(""); setMaxAmount("");
+    setRecurringOnly(false); setCustomDateFrom(""); setCustomDateTo("");
     setPeriodFilter("all");
   };
 
-  const toggleTransactionSelect = (id: string) => {
-    setSelectedTransactions(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedTransactions.size === filteredTransactions.length) {
-      setSelectedTransactions(new Set());
-    } else {
-      setSelectedTransactions(new Set(filteredTransactions.map(t => t.id)));
-    }
-  };
-
-  const handleBulkEditSuccess = () => {
-    setSelectedTransactions(new Set());
-    setSelectionMode(false);
-    fetchTransactions();
+  const showMember = isShared && members.length > 1;
+  const getMemberInfo = (userId: string) => {
+    const m = members.find((m) => m.user_id === userId);
+    if (!m) return { name: "Usuário", initials: "U", avatar: null };
+    const name = m.full_name || "Usuário";
+    return { name, initials: name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2), avatar: m.avatar_url };
   };
 
   const totals = calculateTransactionTotals(filteredTransactions, { excludeTransfers: true });
@@ -712,194 +517,298 @@ const Transactions = () => {
     const today = new Date();
     const todayStr = format(today, "yyyy-MM-dd");
     const sevenDaysStr = format(addDays(today, 7), "yyyy-MM-dd");
-
-    const overdue = transactions.filter(
-      (t) => normalizeStatus(t.status) === "overdue" && t.type === "expense"
-    );
-    const dueToday = transactions.filter(
-      (t) => t.date === todayStr && normalizeStatus(t.status) !== "paid" && t.type === "expense"
-    );
-    const next7Days = transactions.filter(
-      (t) =>
-        t.type === "expense" &&
-        t.date > todayStr &&
-        t.date <= sevenDaysStr &&
-        normalizeStatus(t.status) !== "paid"
-    );
-
+    const overdue = transactions.filter((t) => normalizeStatus(t.status) === "overdue" && t.type === "expense");
+    const dueToday = transactions.filter((t) => t.date === todayStr && normalizeStatus(t.status) !== "paid" && t.type === "expense");
+    const next7 = transactions.filter((t) => t.type === "expense" && t.date > todayStr && t.date <= sevenDaysStr && normalizeStatus(t.status) !== "paid");
     return {
       overdueCount: overdue.length,
-      overdueAmount: overdue.reduce((sum, t) => sum + t.amount, 0),
+      overdueAmount: overdue.reduce((s, t) => s + t.amount, 0),
       dueTodayCount: dueToday.length,
-      dueTodayAmount: dueToday.reduce((sum, t) => sum + t.amount, 0),
-      next7DaysCount: next7Days.length,
-      next7DaysAmount: next7Days.reduce((sum, t) => sum + t.amount, 0),
+      dueTodayAmount: dueToday.reduce((s, t) => s + t.amount, 0),
+      next7DaysCount: next7.length,
+      next7DaysAmount: next7.reduce((s, t) => s + t.amount, 0),
     };
   }, [transactions]);
 
   if (authLoading) {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center">
-        <div className="text-muted-foreground">Carregando...</div>
+        <div className="text-muted-foreground text-sm">Carregando...</div>
       </div>
     );
   }
 
+  const colSpanBase = (selectionMode ? 1 : 0) + (showMember ? 1 : 0) + 6;
+
   return (
     <div className="flex min-h-[100dvh]">
       <Sidebar />
-      
+
       <main className="flex-1 min-w-0 pt-16 pb-nav-safe lg:pt-0 lg:pb-0">
-        <div className="max-w-6xl mx-auto px-4 py-4 lg:px-6 lg:py-6 flex flex-col gap-4 lg:gap-5">
-          {/* Gradient accent line — premium visual anchor */}
-          <div className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent -mx-4 lg:-mx-6" />
+        <div className="max-w-6xl mx-auto px-4 py-5 lg:px-8 lg:py-8 flex flex-col gap-5">
 
-          {/* Header — glass surface */}
-          <div className="flex flex-col gap-4 rounded-2xl glass-card px-4 py-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <h1 className="text-2xl font-bold flex items-center gap-2">
-                  <ArrowRightLeft className="w-6 h-6 text-primary" />
-                  Transações
-                </h1>
-                <p className="text-muted-foreground text-xs sm:text-sm mt-1 hidden sm:block">
-                  Gerencie suas entradas e saídas
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <ThemeToggle />
-              </div>
-            </div>
-            {/* Desktop actions */}
-            <div className="hidden sm:flex gap-2 flex-wrap">
-              <Button 
-                variant={selectionMode ? "default" : "outline"} 
-                size="sm" 
-                className="gap-2"
-                onClick={() => {
-                  setSelectionMode(!selectionMode);
-                  if (selectionMode) setSelectedTransactions(new Set());
-                }}
-              >
-                <CheckSquare className="w-4 h-4" />
-                {selectionMode ? `${selectedTransactions.size} selecionadas` : "Selecionar"}
-              </Button>
-              {selectionMode && selectedTransactions.size > 0 && (
-                <Button size="sm" className="gap-2" onClick={() => setIsBulkEditOpen(true)}>
-                  <Edit2 className="w-4 h-4" />
-                  Editar em Massa
+          {/* ─── Header ──────────────────────────────────────────── */}
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="text-xl font-bold tracking-tight">Transações</h1>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <div className="hidden sm:flex items-center gap-2">
+                <ImportTransactionsDialog onSuccess={fetchTransactions} />
+                <Button variant="outline" size="sm" onClick={exportToCSV} className="gap-1.5">
+                  <Download className="w-3.5 h-3.5" />
+                  <span className="hidden md:inline">Exportar</span>
                 </Button>
-              )}
-              <ImportTransactionsDialog onSuccess={fetchTransactions} />
-              <Button variant="outline" onClick={exportToCSV} className="gap-2">
-                <Download className="w-4 h-4" />
-                Exportar CSV
-              </Button>
-              <AddTransactionCompactDialog
-                onSuccess={fetchTransactions}
-                trigger={
-                  <Button className="gap-2 bg-primary hover:bg-primary/90">
-                    <Plus className="w-4 h-4" />
-                    Nova Transação
-                  </Button>
-                }
-              />
-            </div>
-          </div>
-
-          {/* Predictability Panel */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {/* Atrasados */}
-            <div className="flex items-center gap-3 rounded-xl bg-destructive/8 border border-destructive/25 px-4 py-3 card-shadow-soft">
-              <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-destructive/15 flex items-center justify-center">
-                <AlertCircle className="w-4 h-4 text-destructive" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Atrasados</p>
-                <p className="text-lg font-bold text-destructive leading-tight finance-value">
-                  {formatCurrency(predictability.overdueAmount)}
-                </p>
-                <p className="text-[10px] text-muted-foreground">{predictability.overdueCount} {predictability.overdueCount === 1 ? "despesa" : "despesas"}</p>
-              </div>
-            </div>
-
-            {/* A Pagar Hoje */}
-            <div className="flex items-center gap-3 rounded-xl bg-warning/8 border border-warning/25 px-4 py-3 card-shadow-soft">
-              <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-warning/15 flex items-center justify-center">
-                <Calendar className="w-4 h-4 text-warning" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">A Pagar Hoje</p>
-                <p className="text-lg font-bold text-warning leading-tight finance-value">
-                  {formatCurrency(predictability.dueTodayAmount)}
-                </p>
-                <p className="text-[10px] text-muted-foreground">{predictability.dueTodayCount} {predictability.dueTodayCount === 1 ? "despesa" : "despesas"}</p>
-              </div>
-            </div>
-
-            {/* Previsão Próximos 7 Dias */}
-            <div className="flex items-center gap-3 rounded-xl bg-primary/8 border border-primary/25 px-4 py-3 card-shadow-soft">
-              <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
-                <CalendarClock className="w-4 h-4 text-primary" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Próximos 7 Dias</p>
-                <p className="text-lg font-bold text-primary leading-tight finance-value">
-                  {formatCurrency(predictability.next7DaysAmount)}
-                </p>
-                <p className="text-[10px] text-muted-foreground">{predictability.next7DaysCount} {predictability.next7DaysCount === 1 ? "despesa" : "despesas"}</p>
+                <AddTransactionCompactDialog
+                  onSuccess={fetchTransactions}
+                  trigger={
+                    <Button size="sm" className="gap-1.5">
+                      <Plus className="w-4 h-4" />
+                      Nova
+                    </Button>
+                  }
+                />
               </div>
             </div>
           </div>
 
-          {/* Summary Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <div className="stagger-child rounded-xl sm:rounded-2xl glass-card p-3 sm:p-4 relative overflow-hidden" style={{ "--i": 0 } as React.CSSProperties}>
-              <div className="absolute inset-y-0 left-0 w-[2px] rounded-full bg-income" />
-              <p className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70 mb-1">Entradas</p>
-              <p className="text-xl sm:text-2xl font-bold text-income finance-value number-enter leading-tight">{formatCurrency(totals.incomePaid)}</p>
+          {/* ─── Stats inline ────────────────────────────────────── */}
+          <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-0.5">Entradas</p>
+              <p className="text-lg font-bold text-income finance-value">{formatCurrency(totals.incomePaid)}</p>
             </div>
-            <div className="stagger-child rounded-xl sm:rounded-2xl glass-card p-3 sm:p-4 relative overflow-hidden" style={{ "--i": 1 } as React.CSSProperties}>
-              <div className="absolute inset-y-0 left-0 w-[2px] rounded-full bg-destructive" />
-              <p className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70 mb-1">Saídas</p>
-              <p className="text-xl sm:text-2xl font-bold text-destructive finance-value number-enter leading-tight">{formatCurrency(totals.expensePaid)}</p>
+            <div className="w-px h-8 bg-border self-center hidden sm:block" />
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-0.5">Saídas</p>
+              <p className="text-lg font-bold text-destructive finance-value">{formatCurrency(totals.expensePaid)}</p>
             </div>
-            <div className="stagger-child rounded-xl sm:rounded-2xl glass-card p-3 sm:p-4 relative overflow-hidden" style={{ "--i": 2 } as React.CSSProperties}>
-              <div className={`absolute inset-y-0 left-0 w-[2px] rounded-full ${totals.balancePaid >= 0 ? "bg-income" : "bg-destructive"}`} />
-              <p className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70 mb-1">Saldo</p>
-              <p className={`text-xl sm:text-2xl font-bold finance-value number-enter leading-tight ${totals.balancePaid >= 0 ? "text-income" : "text-destructive"}`}>
+            <div className="w-px h-8 bg-border self-center hidden sm:block" />
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-0.5">Saldo</p>
+              <p className={`text-lg font-bold finance-value ${totals.balancePaid >= 0 ? "text-income" : "text-destructive"}`}>
                 {formatCurrency(totals.balancePaid)}
               </p>
             </div>
-            <div className="stagger-child rounded-xl sm:rounded-2xl glass-card p-3 sm:p-4 relative overflow-hidden" style={{ "--i": 3 } as React.CSSProperties}>
-              <div className="absolute inset-y-0 left-0 w-[2px] rounded-full bg-primary" />
-              <p className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70 mb-1">A Receber</p>
-              <p className="text-xl sm:text-2xl font-bold text-primary finance-value number-enter leading-tight">{formatCurrency(totals.pendingIncome)}</p>
+            <div className="w-px h-8 bg-border self-center hidden sm:block" />
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-0.5">A Receber</p>
+              <p className="text-lg font-bold text-foreground finance-value">{formatCurrency(totals.pendingIncome)}</p>
             </div>
-            <div className="stagger-child rounded-xl sm:rounded-2xl glass-card p-3 sm:p-4 relative overflow-hidden" style={{ "--i": 4 } as React.CSSProperties}>
-              <div className="absolute inset-y-0 left-0 w-[2px] rounded-full bg-warning" />
-              <p className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70 mb-1">A Pagar</p>
-              <p className="text-xl sm:text-2xl font-bold text-warning finance-value number-enter leading-tight">{formatCurrency(totals.pendingExpense)}</p>
+            <div className="w-px h-8 bg-border self-center hidden sm:block" />
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-0.5">A Pagar</p>
+              <p className="text-lg font-bold text-warning finance-value">{formatCurrency(totals.pendingExpense)}</p>
             </div>
           </div>
 
-          {/* Filters */}
-          {/* Mobile: compact search + drawer */}
-          <div className="sm:hidden rounded-xl glass-card p-3 mb-4">
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          {/* ─── Alertas (só quando existem) ─────────────────────── */}
+          {(predictability.overdueCount > 0 || predictability.dueTodayCount > 0) && (
+            <div className="flex flex-wrap gap-2">
+              {predictability.overdueCount > 0 && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-destructive/8 border border-destructive/20 text-sm text-destructive">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>
+                    <strong>{predictability.overdueCount}</strong>{" "}
+                    {predictability.overdueCount === 1 ? "despesa atrasada" : "despesas atrasadas"}
+                    {" — "}{formatCurrency(predictability.overdueAmount)}
+                  </span>
+                </div>
+              )}
+              {predictability.dueTodayCount > 0 && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-warning/8 border border-warning/20 text-sm text-warning-foreground">
+                  <CalendarClock className="w-3.5 h-3.5 shrink-0 text-warning" />
+                  <span>
+                    <strong>{predictability.dueTodayCount}</strong>{" "}
+                    {predictability.dueTodayCount === 1 ? "vence hoje" : "vencem hoje"}
+                    {" — "}{formatCurrency(predictability.dueTodayAmount)}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ─── Barra de filtros (desktop) ───────────────────────── */}
+          <div className="hidden sm:block glass-card rounded-xl px-4 py-3">
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Search */}
+              <div className="relative flex-1 min-w-[160px] max-w-xs">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <Input
                   placeholder="Buscar..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 h-10"
+                  className="pl-9 h-9 text-sm"
                 />
               </div>
 
+              {/* Period */}
+              <Select value={periodFilter} onValueChange={setPeriodFilter}>
+                <SelectTrigger className="h-9 w-auto min-w-[110px] text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os períodos</SelectItem>
+                  <SelectItem value="last_month">Mês passado</SelectItem>
+                  <SelectItem value="this_month">Este mês</SelectItem>
+                  <SelectItem value="next_month">Próximo mês</SelectItem>
+                  <SelectItem value="custom">Personalizado</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Type */}
+              <MultiSelect
+                options={[{ value: "income", label: "Entradas" }, { value: "expense", label: "Saídas" }]}
+                selected={typeFilter}
+                onChange={setTypeFilter}
+                allLabel="Tipo"
+              />
+
+              {/* Status */}
+              <MultiSelect
+                options={[
+                  { value: "pending", label: "Em aberto" },
+                  { value: "upcoming", label: "A vencer" },
+                  { value: "overdue", label: "Vencido" },
+                  { value: "paid", label: "Pago" },
+                ]}
+                selected={statusFilter}
+                onChange={setStatusFilter}
+                allLabel="Status"
+              />
+
+              {/* Category */}
+              <MultiSelect
+                options={categories.map((c) => ({ value: c, label: c }))}
+                selected={categoryFilter}
+                onChange={setCategoryFilter}
+                allLabel="Categoria"
+              />
+
+              {/* Tag */}
+              <MultiSelect
+                options={[
+                  { value: "fixa", label: "Fixa" },
+                  { value: "variavel", label: "Variável" },
+                  { value: "esporadica", label: "Esporádica" },
+                ]}
+                selected={tagFilter}
+                onChange={setTagFilter}
+                allLabel="Tag"
+              />
+
+              <div className="flex-1" />
+
+              {/* Agrupar */}
+              <Select value={groupBy} onValueChange={(v) => setGroupBy(v as typeof groupBy)}>
+                <SelectTrigger className="h-9 w-auto text-sm">
+                  <SelectValue placeholder="Agrupar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem grupo</SelectItem>
+                  <SelectItem value="month">Por mês</SelectItem>
+                  <SelectItem value="category">Por categoria</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Ordenar */}
+              <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as typeof sortOrder)}>
+                <SelectTrigger className="h-9 w-auto text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="priority">Prioridade</SelectItem>
+                  <SelectItem value="date_desc">Data ↓</SelectItem>
+                  <SelectItem value="date_asc">Data ↑</SelectItem>
+                  <SelectItem value="amount_desc">Valor ↓</SelectItem>
+                  <SelectItem value="amount_asc">Valor ↑</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Selecionar */}
+              <Button
+                variant={selectionMode ? "default" : "ghost"}
+                size="sm"
+                className="h-9 gap-1.5"
+                onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) setSelectedTransactions(new Set()); }}
+              >
+                <CheckSquare className="w-3.5 h-3.5" />
+                {selectionMode && selectedTransactions.size > 0 && <span>{selectedTransactions.size}</span>}
+              </Button>
+
+              {/* Filtros Pro */}
+              <button
+                onClick={() => setShowProFilters(!showProFilters)}
+                className={`flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs border transition-colors ${
+                  subscribed
+                    ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
+                    : "border-border bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                }`}
+              >
+                {subscribed ? <Crown className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                Pro
+              </button>
+            </div>
+
+            {/* Data customizada */}
+            {periodFilter === "custom" && (
+              <div className="flex gap-2 mt-2">
+                <Input type="date" value={customDateFrom} onChange={(e) => setCustomDateFrom(e.target.value)} className="h-9 text-sm" />
+                <span className="text-muted-foreground self-center text-sm">até</span>
+                <Input type="date" value={customDateTo} onChange={(e) => setCustomDateTo(e.target.value)} className="h-9 text-sm" />
+                {(customDateFrom || customDateTo) && (
+                  <Button variant="ghost" size="sm" onClick={() => { setCustomDateFrom(""); setCustomDateTo(""); }} className="h-9 px-2">
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Filtros Pro expandidos */}
+            {showProFilters && (
+              <div className="relative mt-3 pt-3 border-t border-border">
+                {!subscribed && (
+                  <div className="absolute inset-0 bg-background/70 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-2 rounded-lg">
+                    <Lock className="w-5 h-5 text-muted-foreground" />
+                    <p className="text-xs text-muted-foreground">Filtros exclusivos Pro</p>
+                    <Button size="sm" onClick={() => navigate("/plans")} className="gap-1.5">
+                      <Crown className="w-3.5 h-3.5" /> Assinar Pro
+                    </Button>
+                  </div>
+                )}
+                <div className={`flex flex-wrap gap-2 items-end ${!subscribed ? "filter blur-sm" : ""}`}>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] text-muted-foreground uppercase tracking-wide">De</Label>
+                    <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} disabled={!subscribed} className="h-9 text-sm w-auto" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] text-muted-foreground uppercase tracking-wide">Até</Label>
+                    <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} disabled={!subscribed} className="h-9 text-sm w-auto" />
+                  </div>
+                  <Input type="number" placeholder="Valor mínimo" value={minAmount} onChange={(e) => setMinAmount(e.target.value)} disabled={!subscribed} className="h-9 text-sm w-32" />
+                  <Input type="number" placeholder="Valor máximo" value={maxAmount} onChange={(e) => setMaxAmount(e.target.value)} disabled={!subscribed} className="h-9 text-sm w-32" />
+                  <label className="flex items-center gap-2 h-9 px-3 border border-input rounded-lg text-sm cursor-pointer">
+                    <Checkbox checked={recurringOnly} onCheckedChange={(c) => setRecurringOnly(!!c)} disabled={!subscribed} />
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    Recorrentes
+                  </label>
+                  {subscribed && (dateFrom || dateTo || minAmount || maxAmount || recurringOnly) && (
+                    <Button variant="ghost" size="sm" onClick={clearProFilters} className="h-9">Limpar</Button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ─── Filtros mobile ───────────────────────────────────── */}
+          <div className="sm:hidden glass-card rounded-xl p-3">
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 h-10" />
+              </div>
               <Drawer open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
                 <DrawerTrigger asChild>
-                  <Button type="button" variant="outline" size="icon" className="h-10 w-10">
+                  <Button type="button" variant="outline" size="icon" className="h-10 w-10 shrink-0">
                     <Filter className="w-4 h-4" />
                   </Button>
                 </DrawerTrigger>
@@ -908,35 +817,16 @@ const Transactions = () => {
                     <div className="flex items-center justify-between">
                       <DrawerTitle>Filtros</DrawerTitle>
                       <DrawerClose asChild>
-                        <Button type="button" variant="ghost" size="icon">
-                          <X className="w-5 h-5" />
-                        </Button>
+                        <Button type="button" variant="ghost" size="icon"><X className="w-5 h-5" /></Button>
                       </DrawerClose>
                     </div>
                   </DrawerHeader>
-
-                  <div className="px-4 pb-4 overflow-auto space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Agrupar</Label>
-                        <Select value={groupBy} onValueChange={(v) => setGroupBy(v as "none" | "month" | "category")}>
-                          <SelectTrigger className="h-10 text-base md:text-sm">
-                            <SelectValue placeholder="Agrupar" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Sem agrupamento</SelectItem>
-                            <SelectItem value="month">Por mês</SelectItem>
-                            <SelectItem value="category">Por categoria</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-1.5">
+                  <div className="px-4 pb-4 overflow-auto space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
                         <Label className="text-xs text-muted-foreground">Período</Label>
                         <Select value={periodFilter} onValueChange={setPeriodFilter}>
-                          <SelectTrigger className="h-10 text-base md:text-sm">
-                            <SelectValue placeholder="Período" />
-                          </SelectTrigger>
+                          <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">Todos</SelectItem>
                             <SelectItem value="last_month">Mês passado</SelectItem>
@@ -946,183 +836,34 @@ const Transactions = () => {
                           </SelectContent>
                         </Select>
                       </div>
-
-                      <div className="space-y-1.5">
+                      <div className="space-y-1">
                         <Label className="text-xs text-muted-foreground">Tipo</Label>
-                        <MultiSelect
-                          options={[
-                            { value: "income", label: "Entradas" },
-                            { value: "expense", label: "Saídas" },
-                          ]}
-                          selected={typeFilter}
-                          onChange={setTypeFilter}
-                          allLabel="Todos"
-                        />
+                        <MultiSelect options={[{ value: "income", label: "Entradas" }, { value: "expense", label: "Saídas" }]} selected={typeFilter} onChange={setTypeFilter} allLabel="Todos" />
                       </div>
-
-                      <div className="space-y-1.5">
+                      <div className="space-y-1">
                         <Label className="text-xs text-muted-foreground">Status</Label>
-                        <MultiSelect
-                          options={[
-                            { value: "pending", label: "Em aberto" },
-                            { value: "upcoming", label: "A vencer" },
-                            { value: "overdue", label: "Vencido" },
-                            { value: "paid", label: "Pago" },
-                          ]}
-                          selected={statusFilter}
-                          onChange={setStatusFilter}
-                          allLabel="Todos"
-                        />
+                        <MultiSelect options={[{ value: "pending", label: "Em aberto" }, { value: "upcoming", label: "A vencer" }, { value: "overdue", label: "Vencido" }, { value: "paid", label: "Pago" }]} selected={statusFilter} onChange={setStatusFilter} allLabel="Todos" />
                       </div>
-
-                      <div className="space-y-1.5 col-span-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Agrupar</Label>
+                        <Select value={groupBy} onValueChange={(v) => setGroupBy(v as typeof groupBy)}>
+                          <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Sem grupo</SelectItem>
+                            <SelectItem value="month">Por mês</SelectItem>
+                            <SelectItem value="category">Por categoria</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1 col-span-2">
                         <Label className="text-xs text-muted-foreground">Categoria</Label>
-                        <MultiSelect
-                          options={categories.map((cat) => ({ value: cat, label: cat }))}
-                          selected={categoryFilter}
-                          onChange={setCategoryFilter}
-                          allLabel="Todas"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5 col-span-2">
-                        <Label className="text-xs text-muted-foreground">Tag</Label>
-                        <MultiSelect
-                          options={[
-                            { value: "fixa", label: "Fixa" },
-                            { value: "variavel", label: "Variável" },
-                            { value: "esporadica", label: "Esporádica" },
-                          ]}
-                          selected={tagFilter}
-                          onChange={setTagFilter}
-                          allLabel="Todas"
-                        />
+                        <MultiSelect options={categories.map((c) => ({ value: c, label: c }))} selected={categoryFilter} onChange={setCategoryFilter} allLabel="Todas" />
                       </div>
                     </div>
-
                     {periodFilter === "custom" && (
-                      <div className="grid grid-cols-2 gap-2 items-center">
-                        <Input
-                          type="date"
-                          value={customDateFrom}
-                          onChange={(e) => setCustomDateFrom(e.target.value)}
-                          className="h-10 text-sm"
-                        />
-                        <Input
-                          type="date"
-                          value={customDateTo}
-                          onChange={(e) => setCustomDateTo(e.target.value)}
-                          className="h-10 text-sm"
-                        />
-                        {(customDateFrom || customDateTo) && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setCustomDateFrom("");
-                              setCustomDateTo("");
-                            }}
-                            className="col-span-2 text-muted-foreground hover:text-foreground h-9"
-                          >
-                            Limpar datas
-                          </Button>
-                        )}
-                      </div>
-                    )}
-
-                    <button
-                      onClick={() => setShowProFilters(!showProFilters)}
-                      className={`w-full flex items-center justify-center gap-2 text-xs px-3 py-2 rounded-full border transition-colors ${
-                        subscribed
-                          ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
-                          : "border-border bg-secondary/50 text-muted-foreground"
-                      }`}
-                    >
-                      {subscribed ? <Crown className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                      Filtros Pro
-                    </button>
-
-                    {showProFilters && (
-                      <div className="relative pt-2">
-                        {!subscribed && (
-                          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-3 rounded-xl">
-                            <Lock className="w-6 h-6 text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">Filtros exclusivos do Plano Pro</p>
-                            <Button
-                              size="sm"
-                              onClick={() => navigate("/plans")}
-                              className="gap-2 bg-primary hover:bg-primary/90"
-                            >
-                              <Crown className="w-4 h-4" />
-                              Assinar Pro
-                            </Button>
-                          </div>
-                        )}
-
-                        <div className={`space-y-3 ${!subscribed ? "filter blur-sm" : ""}`}>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                              <Label className="text-xs text-muted-foreground">Data inicial</Label>
-                              <Input
-                                type="date"
-                                value={dateFrom}
-                                onChange={(e) => setDateFrom(e.target.value)}
-                                disabled={!subscribed}
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs text-muted-foreground">Data final</Label>
-                              <Input
-                                type="date"
-                                value={dateTo}
-                                onChange={(e) => setDateTo(e.target.value)}
-                                disabled={!subscribed}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                              <Label className="text-xs text-muted-foreground">Valor mínimo</Label>
-                              <Input
-                                type="number"
-                                placeholder="0"
-                                value={minAmount}
-                                onChange={(e) => setMinAmount(e.target.value)}
-                                disabled={!subscribed}
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs text-muted-foreground">Valor máximo</Label>
-                              <Input
-                                type="number"
-                                placeholder="0"
-                                value={maxAmount}
-                                onChange={(e) => setMaxAmount(e.target.value)}
-                                disabled={!subscribed}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between gap-2 rounded-md border border-input bg-background h-11 px-3">
-                            <Label htmlFor="recurring-filter-mobile" className="text-xs cursor-pointer flex items-center gap-2">
-                              <RefreshCw className="w-4 h-4" />
-                              Recorrentes
-                            </Label>
-                            <Checkbox
-                              id="recurring-filter-mobile"
-                              checked={recurringOnly}
-                              onCheckedChange={(checked) => setRecurringOnly(!!checked)}
-                              disabled={!subscribed}
-                            />
-                          </div>
-
-                          {subscribed && (dateFrom || dateTo || minAmount || maxAmount || recurringOnly) && (
-                            <Button variant="outline" onClick={clearProFilters} className="w-full">
-                              Limpar filtros Pro
-                            </Button>
-                          )}
-                        </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input type="date" value={customDateFrom} onChange={(e) => setCustomDateFrom(e.target.value)} className="h-10 text-sm" />
+                        <Input type="date" value={customDateTo} onChange={(e) => setCustomDateTo(e.target.value)} className="h-10 text-sm" />
                       </div>
                     )}
                   </div>
@@ -1131,466 +872,173 @@ const Transactions = () => {
             </div>
           </div>
 
-          {/* Desktop: full filters card */}
-          <div className="hidden sm:block rounded-2xl glass-card p-4 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Filtros</span>
-              </div>
-              <button
-                onClick={() => setShowProFilters(!showProFilters)}
-                className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                  subscribed
-                    ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
-                    : "border-border bg-secondary/50 text-muted-foreground"
-                }`}
-              >
-                {subscribed ? <Crown className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
-                Filtros Pro
-              </button>
+          {/* ─── Barra de seleção em massa ───────────────────────── */}
+          {selectionMode && selectedTransactions.size > 0 && (
+            <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-primary/8 border border-primary/20 text-sm">
+              <span className="text-primary font-semibold">{selectedTransactions.size} selecionadas</span>
+              <Button size="sm" className="h-8 gap-1.5" onClick={() => setIsBulkEditOpen(true)}>
+                <Edit2 className="w-3.5 h-3.5" /> Editar em massa
+              </Button>
+              <Button variant="ghost" size="sm" className="h-8 ml-auto" onClick={() => { setSelectionMode(false); setSelectedTransactions(new Set()); }}>
+                <X className="w-4 h-4" />
+              </Button>
             </div>
+          )}
 
-            {/* Buscar — linha inteira */}
-            <div className="space-y-1.5 mb-3">
-              <Label className="text-xs text-muted-foreground">Buscar</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 h-10"
-                />
-              </div>
-            </div>
-
-            {/* Filtros — todos em uma linha */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 lg:gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Agrupar</Label>
-                <Select value={groupBy} onValueChange={(v) => setGroupBy(v as "none" | "month" | "category")}>
-                  <SelectTrigger className="h-10 text-base md:text-sm">
-                    <SelectValue placeholder="Agrupar" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sem agrupamento</SelectItem>
-                    <SelectItem value="month">Por mês</SelectItem>
-                    <SelectItem value="category">Por categoria</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Período</Label>
-                <Select value={periodFilter} onValueChange={setPeriodFilter}>
-                  <SelectTrigger className="h-10 text-base md:text-sm">
-                    <SelectValue placeholder="Período" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="last_month">Mês passado</SelectItem>
-                    <SelectItem value="this_month">Este mês</SelectItem>
-                    <SelectItem value="next_month">Próximo mês</SelectItem>
-                    <SelectItem value="custom">Personalizado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Tipo</Label>
-                <MultiSelect
-                  options={[
-                    { value: "income", label: "Entradas" },
-                    { value: "expense", label: "Saídas" },
-                  ]}
-                  selected={typeFilter}
-                  onChange={setTypeFilter}
-                  allLabel="Todos"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Status</Label>
-                <MultiSelect
-                  options={[
-                    { value: "pending", label: "Em aberto" },
-                    { value: "upcoming", label: "A vencer" },
-                    { value: "overdue", label: "Vencido" },
-                    { value: "paid", label: "Pago" },
-                  ]}
-                  selected={statusFilter}
-                  onChange={setStatusFilter}
-                  allLabel="Todos"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Categoria</Label>
-                <MultiSelect
-                  options={categories.map((cat) => ({ value: cat, label: cat }))}
-                  selected={categoryFilter}
-                  onChange={setCategoryFilter}
-                  allLabel="Todas"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Tag</Label>
-                <MultiSelect
-                  options={[
-                    { value: "fixa", label: "Fixa" },
-                    { value: "variavel", label: "Variável" },
-                    { value: "esporadica", label: "Esporádica" },
-                  ]}
-                  selected={tagFilter}
-                  onChange={setTagFilter}
-                  allLabel="Todas"
-                />
-              </div>
-            </div>
-
-            {periodFilter === "custom" && (
-              <div className="flex gap-4 mt-3 items-center">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <Input
-                    type="date"
-                    value={customDateFrom}
-                    onChange={(e) => setCustomDateFrom(e.target.value)}
-                    className="h-10 text-sm"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="date"
-                    value={customDateTo}
-                    onChange={(e) => setCustomDateTo(e.target.value)}
-                    className="h-10 text-sm"
-                  />
-                </div>
-                {(customDateFrom || customDateTo) && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setCustomDateFrom("");
-                      setCustomDateTo("");
-                    }}
-                    className="text-muted-foreground hover:text-foreground h-10"
-                  >
-                    Limpar
-                  </Button>
-                )}
-              </div>
-            )}
-
-            {showProFilters && (
-              <div className="relative mt-4 pt-4 border-t border-border">
-                {!subscribed && (
-                  <div className="absolute inset-0 bg-background/60 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-3 rounded-xl">
-                    <Lock className="w-6 h-6 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Filtros exclusivos do Plano Pro</p>
-                    <Button
-                      size="sm"
-                      onClick={() => navigate("/plans")}
-                      className="gap-2 bg-primary hover:bg-primary/90"
-                    >
-                      <Crown className="w-4 h-4" />
-                      Assinar Pro
-                    </Button>
-                  </div>
-                )}
-
-                <div className={`grid grid-cols-1 md:grid-cols-5 gap-4 ${!subscribed ? "filter blur-sm" : ""}`}>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Calendar className="w-3 h-3" /> Data inicial
-                    </Label>
-                    <Input
-                      type="date"
-                      value={dateFrom}
-                      onChange={(e) => setDateFrom(e.target.value)}
-                      disabled={!subscribed}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Calendar className="w-3 h-3" /> Data final
-                    </Label>
-                    <Input
-                      type="date"
-                      value={dateTo}
-                      onChange={(e) => setDateTo(e.target.value)}
-                      disabled={!subscribed}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Valor mínimo</Label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      value={minAmount}
-                      onChange={(e) => setMinAmount(e.target.value)}
-                      disabled={!subscribed}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Valor máximo</Label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      value={maxAmount}
-                      onChange={(e) => setMaxAmount(e.target.value)}
-                      disabled={!subscribed}
-                    />
-                  </div>
-                  <div className="flex items-end gap-2">
-                    <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-background">
-                      <Checkbox
-                        id="recurring-filter"
-                        checked={recurringOnly}
-                        onCheckedChange={(checked) => setRecurringOnly(!!checked)}
-                        disabled={!subscribed}
-                      />
-                      <Label htmlFor="recurring-filter" className="text-xs cursor-pointer flex items-center gap-1">
-                        <RefreshCw className="w-3 h-3" />
-                        Recorrentes
-                      </Label>
-                    </div>
-                    {subscribed && (dateFrom || dateTo || minAmount || maxAmount || recurringOnly) && (
-                      <Button variant="ghost" size="sm" onClick={clearProFilters} className="h-10">
-                        Limpar
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Transactions List */}
-          <div className="rounded-xl sm:rounded-2xl lg:rounded-2xl glass-card overflow-hidden">
+          {/* ─── Lista de transações ──────────────────────────────── */}
+          <div className="glass-card rounded-2xl overflow-hidden">
             {loading ? (
-              <div className="text-center py-12 text-muted-foreground text-sm">Carregando...</div>
+              <div className="text-center py-16 text-muted-foreground text-sm">Carregando...</div>
             ) : transactionsError ? (
-              <div className="text-center py-12 text-destructive text-sm space-y-3">
-                <p>Erro ao carregar transações. Tente recarregar a página.</p>
-                <Button variant="outline" size="sm" onClick={fetchTransactions}>
-                  Recarregar
-                </Button>
+              <div className="text-center py-16 space-y-3">
+                <p className="text-destructive text-sm">Erro ao carregar transações.</p>
+                <Button variant="outline" size="sm" onClick={fetchTransactions}>Recarregar</Button>
               </div>
             ) : filteredTransactions.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground text-sm">
-                Nenhuma transação encontrada
-              </div>
+              <div className="text-center py-16 text-muted-foreground text-sm">Nenhuma transação encontrada</div>
             ) : (
               <>
-                {/* Mobile: Card view with grouping */}
+                {/* Mobile */}
                 <div className="md:hidden">
                   {groupBy === "none" ? (
                     <>
-                      {paginatedTransactions.map((transaction) => (
-                        <TransactionCard
-                          key={transaction.id}
-                          transaction={transaction}
-                          onEdit={openEditDialog}
-                          onDelete={handleDelete}
-                          onDuplicate={handleDuplicate}
-                          onStatusChange={fetchTransactions}
-                          memberInfo={getMemberInfo(transaction.user_id || "")}
-                          showMember={showMember}
-                        />
+                      {paginatedTransactions.map((t) => (
+                        <TransactionCard key={t.id} transaction={t} onEdit={openEditDialog} onDelete={handleDelete} onDuplicate={handleDuplicate} onStatusChange={fetchTransactions} memberInfo={getMemberInfo(t.user_id || "")} showMember={showMember} />
                       ))}
-                      <TransactionPagination
-                        currentPage={currentPage}
-                        totalPages={Math.ceil(filteredTransactions.length / itemsPerPage)}
-                        onPageChange={setCurrentPage}
-                      />
+                      <TransactionPagination currentPage={currentPage} totalPages={Math.ceil(filteredTransactions.length / itemsPerPage)} onPageChange={setCurrentPage} />
                     </>
                   ) : (
-                    Object.entries(groupedTransactions).map(([key, groupTransactions]) => {
-                      const stats = getGroupStats(groupTransactions);
-                      const isCollapsed = collapsedGroups.has(key);
+                    Object.entries(groupedTransactions).map(([key, grpTxs]) => {
+                      const stats = getGroupStats(grpTxs);
+                      const collapsed = collapsedGroups.has(key);
                       return (
-                        <div key={key} className="border-b border-secondary last:border-0">
-                          <button
-                            onClick={() => toggleGroupCollapse(key)}
-                            className="w-full flex items-center justify-between p-3 sm:p-4 bg-secondary/30 hover:bg-secondary/50 transition-colors"
-                          >
+                        <div key={key} className="border-b border-border/40 last:border-0">
+                          <button onClick={() => toggleGroupCollapse(key)} className="w-full flex items-center justify-between p-3 bg-secondary/20 hover:bg-secondary/40 transition-colors">
                             <div className="flex items-center gap-2">
-                              <ChevronRight className={`w-4 h-4 transition-transform ${isCollapsed ? "" : "rotate-90"}`} />
+                              <ChevronRight className={`w-4 h-4 transition-transform ${collapsed ? "" : "rotate-90"}`} />
                               <span className="font-medium text-sm">{formatGroupHeader(key)}</span>
-                              <span className="text-xs text-muted-foreground">({groupTransactions.length})</span>
+                              <span className="text-xs text-muted-foreground">({grpTxs.length})</span>
                             </div>
                             <div className="flex items-center gap-3 text-xs">
-                              <span className="text-primary">+{formatCurrency(stats.income)}</span>
-                              <span className="text-destructive">-{formatCurrency(stats.expense)}</span>
+                              <span className="text-income">+{formatCurrency(stats.income)}</span>
+                              <span className="text-destructive">−{formatCurrency(stats.expense)}</span>
                             </div>
                           </button>
-                          {!isCollapsed && groupTransactions.map((transaction) => (
-                            <TransactionCard
-                              key={transaction.id}
-                              transaction={transaction}
-                              onEdit={openEditDialog}
-                              onDelete={handleDelete}
-                              onDuplicate={handleDuplicate}
-                              onStatusChange={fetchTransactions}
-                              memberInfo={getMemberInfo(transaction.user_id || "")}
-                              showMember={showMember}
-                            />
+                          {!collapsed && grpTxs.map((t) => (
+                            <TransactionCard key={t.id} transaction={t} onEdit={openEditDialog} onDelete={handleDelete} onDuplicate={handleDuplicate} onStatusChange={fetchTransactions} memberInfo={getMemberInfo(t.user_id || "")} showMember={showMember} />
                           ))}
                         </div>
                       );
                     })
                   )}
                 </div>
-                
-                {/* Desktop: Table view with grouping */}
+
+                {/* Desktop — tabela enxuta */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-muted-foreground border-b border-secondary bg-secondary/30">
+                      <tr className="border-b border-border/40">
                         {selectionMode && (
-                          <th className="py-4 px-2 w-10">
+                          <th className="py-3 px-3 w-10">
                             <Checkbox
-                              checked={paginatedTransactions.length > 0 && paginatedTransactions.every(t => selectedTransactions.has(t.id))}
+                              checked={paginatedTransactions.length > 0 && paginatedTransactions.every((t) => selectedTransactions.has(t.id))}
                               onCheckedChange={(checked) => {
-                                const newSelected = new Set(selectedTransactions);
-                                paginatedTransactions.forEach(t => {
-                                  if (checked) {
-                                    newSelected.add(t.id);
-                                  } else {
-                                    newSelected.delete(t.id);
-                                  }
-                                });
-                                setSelectedTransactions(newSelected);
+                                const next = new Set(selectedTransactions);
+                                paginatedTransactions.forEach((t) => checked ? next.add(t.id) : next.delete(t.id));
+                                setSelectedTransactions(next);
                               }}
                               className="data-[state=checked]:bg-primary"
                             />
                           </th>
                         )}
-                        {showMember && (
-                          <th className="py-4 px-3 w-10"></th>
-                        )}
+                        {showMember && <th className="py-3 px-3 w-10" />}
                         <th
-                          className="text-left py-4 px-4 font-medium cursor-pointer hover:text-foreground transition-colors select-none"
+                          className="text-left py-3 px-4 text-[11px] uppercase tracking-widest text-muted-foreground font-medium cursor-pointer hover:text-foreground transition-colors select-none"
                           onClick={() => setSortOrder(sortOrder === "date_desc" ? "date_asc" : "date_desc")}
                         >
-                          <div className="flex items-center gap-1">
+                          <span className="flex items-center gap-1">
                             Data
-                            {sortOrder === "date_desc" ? (
-                              <ChevronDown className="w-4 h-4 text-primary" />
-                            ) : sortOrder === "date_asc" ? (
-                              <ChevronUp className="w-4 h-4 text-primary" />
-                            ) : (
-                              <ArrowUpDown className="w-3.5 h-3.5 opacity-50" />
-                            )}
-                          </div>
+                            {sortOrder === "date_desc" ? <ChevronDown className="w-3.5 h-3.5 text-primary" /> : sortOrder === "date_asc" ? <ChevronUp className="w-3.5 h-3.5 text-primary" /> : <ArrowUpDown className="w-3 h-3 opacity-40" />}
+                          </span>
                         </th>
-                        <th className="text-left py-4 px-4 font-medium">Descrição</th>
-                        <th className="text-left py-4 px-4 font-medium">Tipo</th>
+                        <th className="text-left py-3 px-4 text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Descrição</th>
+                        <th className="text-left py-3 px-4 text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Categoria</th>
                         <th
-                          className="text-left py-4 px-4 font-medium cursor-pointer hover:text-foreground transition-colors select-none"
+                          className="text-left py-3 px-4 text-[11px] uppercase tracking-widest text-muted-foreground font-medium cursor-pointer hover:text-foreground transition-colors select-none"
                           onClick={() => setSortOrder(sortOrder === "amount_desc" ? "amount_asc" : "amount_desc")}
                         >
-                          <div className="flex items-center gap-1">
+                          <span className="flex items-center gap-1">
                             Valor
-                            {sortOrder === "amount_desc" ? (
-                              <ChevronDown className="w-4 h-4 text-primary" />
-                            ) : sortOrder === "amount_asc" ? (
-                              <ChevronUp className="w-4 h-4 text-primary" />
-                            ) : (
-                              <ArrowUpDown className="w-3.5 h-3.5 opacity-50" />
-                            )}
-                          </div>
+                            {sortOrder === "amount_desc" ? <ChevronDown className="w-3.5 h-3.5 text-primary" /> : sortOrder === "amount_asc" ? <ChevronUp className="w-3.5 h-3.5 text-primary" /> : <ArrowUpDown className="w-3 h-3 opacity-40" />}
+                          </span>
                         </th>
-                        <th className="text-left py-4 px-4 font-medium">Status</th>
-                        <th className="text-left py-4 px-4 font-medium">Data de Pagamento</th>
-                        <th className="text-left py-4 px-4 font-medium">Tag</th>
-                        <th className="text-left py-4 px-4 font-medium">Categoria</th>
-                        <th className="text-left py-4 px-4 font-medium">Forma de Pagamento</th>
-                        <th className="text-left py-4 px-4 font-medium">Ações</th>
+                        <th className="text-left py-3 px-4 text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Status</th>
+                        <th className="py-3 px-3 w-28" />
                       </tr>
                     </thead>
                     <tbody>
                       {groupBy === "none" ? (
-                        paginatedTransactions.map((transaction) => (
+                        paginatedTransactions.map((t) => (
                           <TransactionRow
-                            key={transaction.id}
-                            transaction={transaction}
+                            key={t.id}
+                            transaction={t}
                             onEdit={openEditDialog}
                             onDelete={handleDelete}
                             onDuplicate={handleDuplicate}
                             onStatusChange={fetchTransactions}
                             formatDate={formatDate}
                             formatCurrency={formatCurrency}
-                            isSelected={selectedTransactions.has(transaction.id)}
+                            isSelected={selectedTransactions.has(t.id)}
                             onToggleSelect={(id) => {
-                              const newSelected = new Set(selectedTransactions);
-                              if (newSelected.has(id)) {
-                                newSelected.delete(id);
-                              } else {
-                                newSelected.add(id);
-                              }
-                              setSelectedTransactions(newSelected);
+                              const next = new Set(selectedTransactions);
+                              next.has(id) ? next.delete(id) : next.add(id);
+                              setSelectedTransactions(next);
                             }}
                             selectionMode={selectionMode}
-                            memberInfo={getMemberInfo(transaction.user_id || "")}
+                            memberInfo={getMemberInfo(t.user_id || "")}
                             showMember={showMember}
                           />
                         ))
                       ) : (
-                        Object.entries(groupedTransactions).map(([key, groupTransactions]) => {
-                          const stats = getGroupStats(groupTransactions);
-                          const isCollapsed = collapsedGroups.has(key);
+                        Object.entries(groupedTransactions).map(([key, grpTxs]) => {
+                          const stats = getGroupStats(grpTxs);
+                          const collapsed = collapsedGroups.has(key);
                           return (
                             <React.Fragment key={key}>
-                              <tr 
-                                className="bg-secondary/40 border-b border-secondary cursor-pointer hover:bg-secondary/60 transition-colors"
-                                onClick={() => toggleGroupCollapse(key)}
-                              >
-                                <td colSpan={showMember ? 11 : 10} className="py-3 px-4">
+                              <tr className="bg-secondary/20 border-b border-border/40 cursor-pointer hover:bg-secondary/40 transition-colors" onClick={() => toggleGroupCollapse(key)}>
+                                <td colSpan={colSpanBase} className="py-2.5 px-4">
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                      <ChevronRight className={`w-4 h-4 transition-transform ${isCollapsed ? "" : "rotate-90"}`} />
-                                      <span className="font-semibold">{formatGroupHeader(key)}</span>
-                                      <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
-                                        {groupTransactions.length} transações
-                                      </span>
+                                      <ChevronRight className={`w-4 h-4 transition-transform ${collapsed ? "" : "rotate-90"}`} />
+                                      <span className="font-semibold text-sm">{formatGroupHeader(key)}</span>
+                                      <span className="text-xs text-muted-foreground">({grpTxs.length})</span>
                                     </div>
-                                    <div className="flex items-center gap-4 text-sm">
-                                      <span className="text-primary font-medium">+{formatCurrency(stats.income)}</span>
-                                      <span className="text-destructive font-medium">-{formatCurrency(stats.expense)}</span>
-                                      <span className={`font-bold ${stats.balance >= 0 ? "text-primary" : "text-destructive"}`}>
-                                        = {formatCurrency(stats.balance)}
-                                      </span>
+                                    <div className="flex items-center gap-4 text-xs">
+                                      <span className="text-income font-medium">+{formatCurrency(stats.income)}</span>
+                                      <span className="text-destructive font-medium">−{formatCurrency(stats.expense)}</span>
+                                      <span className={`font-bold ${stats.balance >= 0 ? "text-income" : "text-destructive"}`}>= {formatCurrency(stats.balance)}</span>
                                     </div>
                                   </div>
                                 </td>
                               </tr>
-                              {!isCollapsed && groupTransactions.map((transaction) => (
+                              {!collapsed && grpTxs.map((t) => (
                                 <TransactionRow
-                                  key={transaction.id}
-                                  transaction={transaction}
+                                  key={t.id}
+                                  transaction={t}
                                   onEdit={openEditDialog}
                                   onDelete={handleDelete}
                                   onDuplicate={handleDuplicate}
                                   onStatusChange={fetchTransactions}
                                   formatDate={formatDate}
                                   formatCurrency={formatCurrency}
-                                  isSelected={selectedTransactions.has(transaction.id)}
+                                  isSelected={selectedTransactions.has(t.id)}
                                   onToggleSelect={(id) => {
-                                    const newSelected = new Set(selectedTransactions);
-                                    if (newSelected.has(id)) {
-                                      newSelected.delete(id);
-                                    } else {
-                                      newSelected.add(id);
-                                    }
-                                    setSelectedTransactions(newSelected);
+                                    const next = new Set(selectedTransactions);
+                                    next.has(id) ? next.delete(id) : next.add(id);
+                                    setSelectedTransactions(next);
                                   }}
                                   selectionMode={selectionMode}
-                                  memberInfo={getMemberInfo(transaction.user_id || "")}
+                                  memberInfo={getMemberInfo(t.user_id || "")}
                                   showMember={showMember}
                                 />
                               ))}
@@ -1611,45 +1059,17 @@ const Transactions = () => {
               </>
             )}
           </div>
-
-          {/* Edit Dialog (same component as "Nova Transação") */}
-          <AddTransactionCompactDialog
-            open={isEditDialogOpen}
-            onOpenChange={(nextOpen) => {
-              setIsEditDialogOpen(nextOpen);
-              if (!nextOpen) setEditingTransaction(null);
-            }}
-            mode="edit"
-            transactionId={editingTransaction?.id}
-            initialFormData={editInitialFormData}
-            contentClassName="max-w-[95vw] sm:max-w-lg"
-            showInstallment={false}
-            onSuccess={fetchTransactions}
-          />
-
-          {/* Bulk Edit Dialog */}
-          <BulkEditDialog
-            open={isBulkEditOpen}
-            onOpenChange={setIsBulkEditOpen}
-            selectedIds={Array.from(selectedTransactions)}
-            categories={categories}
-            onSuccess={() => {
-              fetchTransactions();
-              setSelectedTransactions(new Set());
-              setSelectionMode(false);
-            }}
-          />
         </div>
       </main>
 
-      {/* Mobile floating add button */}
+      {/* Mobile FAB */}
       <AddTransactionCompactDialog
         onSuccess={fetchTransactions}
         contentClassName="max-w-[95vw] sm:max-w-lg"
         trigger={
           <Button
             size="icon"
-            className="fixed bottom-28 right-4 z-50 h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/80 hover:from-primary/95 hover:to-primary/75 shadow-float hover:scale-105 active:scale-95 transition-all duration-200 sm:hidden"
+            className="fixed bottom-28 right-4 z-50 h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-float hover:scale-105 active:scale-95 transition-all duration-200 sm:hidden"
           >
             <Plus className="h-6 w-6" />
             <span className="sr-only">Nova transação</span>
@@ -1657,38 +1077,47 @@ const Transactions = () => {
         }
       />
 
-      {/* Recurring delete confirmation dialog */}
-      <AlertDialog
-        open={!!recurringDeleteTarget}
-        onOpenChange={(open) => { if (!open) setRecurringDeleteTarget(null); }}
-      >
+      {/* Edit dialog */}
+      <AddTransactionCompactDialog
+        open={isEditDialogOpen}
+        onOpenChange={(open) => { setIsEditDialogOpen(open); if (!open) setEditingTransaction(null); }}
+        mode="edit"
+        transactionId={editingTransaction?.id}
+        initialFormData={editInitialFormData}
+        contentClassName="max-w-[95vw] sm:max-w-lg"
+        showInstallment={false}
+        onSuccess={fetchTransactions}
+      />
+
+      {/* Bulk edit dialog */}
+      <BulkEditDialog
+        open={isBulkEditOpen}
+        onOpenChange={setIsBulkEditOpen}
+        selectedIds={Array.from(selectedTransactions)}
+        categories={categories}
+        onSuccess={() => { fetchTransactions(); setSelectedTransactions(new Set()); setSelectionMode(false); }}
+      />
+
+      {/* Recurring delete dialog */}
+      <AlertDialog open={!!recurringDeleteTarget} onOpenChange={(open) => { if (!open) setRecurringDeleteTarget(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir transação recorrente</AlertDialogTitle>
             <AlertDialogDescription>
-              <strong>"{recurringDeleteTarget?.description}"</strong> faz parte de uma série recorrente.
-              Como deseja excluir?
+              <strong>"{recurringDeleteTarget?.description}"</strong> faz parte de uma série recorrente. Como deseja excluir?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2">
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive/80 hover:bg-destructive text-white"
-              onClick={() => {
-                if (recurringDeleteTarget) handleDeleteSingle(recurringDeleteTarget.id);
-                setRecurringDeleteTarget(null);
-              }}
+              onClick={() => { if (recurringDeleteTarget) handleDeleteSingle(recurringDeleteTarget.id); setRecurringDeleteTarget(null); }}
             >
               Apenas esta ocorrência
             </AlertDialogAction>
             <AlertDialogAction
               className="bg-destructive hover:bg-destructive/90 text-white"
-              onClick={() => {
-                if (recurringDeleteTarget?.recurring_series_id) {
-                  handleDeleteSeries(recurringDeleteTarget.recurring_series_id);
-                }
-                setRecurringDeleteTarget(null);
-              }}
+              onClick={() => { if (recurringDeleteTarget?.recurring_series_id) handleDeleteSeries(recurringDeleteTarget.recurring_series_id); setRecurringDeleteTarget(null); }}
             >
               Esta e futuras não pagas
             </AlertDialogAction>

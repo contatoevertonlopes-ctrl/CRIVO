@@ -645,15 +645,15 @@
 
 /* ── Cards: vidro fosco em ambos os modos ───────────────────────────────── */
 .glass-card {
-  /* Light: vidro fosco branco sobre fundo com gradiente */
-  background: rgba(255, 255, 255, 0.72);
+  /* Light: vidro fosco branco — borda navy sutil para contraste visível */
+  background: rgba(255, 255, 255, 0.78);
   backdrop-filter: blur(14px) saturate(1.3);
   -webkit-backdrop-filter: blur(14px) saturate(1.3);
-  border: 1px solid rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(26, 46, 74, 0.09);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 1),
-    0 1px 2px hsl(215 40% 40% / 0.04),
-    0 3px 12px hsl(215 40% 30% / 0.06);
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 3px rgba(26, 46, 74, 0.06),
+    0 4px 14px rgba(26, 46, 74, 0.05);
 }
 
 .dark .glass-card {
