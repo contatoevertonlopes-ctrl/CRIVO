@@ -126,10 +126,12 @@ interface TransactionRowProps {
 }
 
 const TagBadge = ({ tag }: { tag: string }) => (
-  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold tracking-wide shrink-0 ${
-    tag === "fixa" ? "bg-primary/10 text-primary"
-    : tag === "variavel" ? "bg-warning/15 text-warning-foreground"
-    : "bg-muted text-muted-foreground"
+  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold tracking-wide shrink-0 ${
+    tag === "fixa"
+      ? "bg-primary/20 text-primary dark:text-emerald-300"
+      : tag === "variavel"
+      ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
+      : "bg-secondary text-foreground/60 dark:text-foreground/50"
   }`}>
     {tag === "fixa" ? "Fixa" : tag === "variavel" ? "Variável" : "Esporádica"}
   </span>
@@ -715,7 +717,7 @@ const Transactions = () => {
           {(predictability.overdueCount > 0 || predictability.dueTodayCount > 0) && (
             <div className="flex flex-wrap gap-2">
               {predictability.overdueCount > 0 && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-destructive/8 border border-destructive/20 text-sm text-destructive">
+                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-destructive/15 border border-destructive/40 text-sm text-destructive dark:text-red-400">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                   <span>
                     <strong>{predictability.overdueCount}</strong>{" "}
@@ -725,8 +727,8 @@ const Transactions = () => {
                 </div>
               )}
               {predictability.dueTodayCount > 0 && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-warning/8 border border-warning/20 text-sm text-warning-foreground">
-                  <CalendarClock className="w-3.5 h-3.5 shrink-0 text-warning" />
+                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500/15 border border-amber-500/40 text-sm text-amber-600 dark:text-amber-400">
+                  <CalendarClock className="w-3.5 h-3.5 shrink-0" />
                   <span>
                     <strong>{predictability.dueTodayCount}</strong>{" "}
                     {predictability.dueTodayCount === 1 ? "vence hoje" : "vencem hoje"}
