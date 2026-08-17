@@ -627,145 +627,176 @@ const Transactions = () => {
             </div>
           )}
 
-          {/* ─── Barra de filtros (desktop) ───────────────────────── */}
-          <div className="hidden sm:block glass-card rounded-xl px-4 py-3">
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Search */}
-              <div className="relative flex-1 min-w-[160px] max-w-xs">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 h-9 text-sm"
+          {/* ─── Filtros (desktop) ─────────────────────────────── */}
+          <div className="hidden sm:block glass-card rounded-xl px-5 py-4 space-y-3">
+
+            {/* Linha 1: Busca · Período · Tipo · Status */}
+            <div className="grid grid-cols-[1fr_170px_130px_170px] gap-3">
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Buscar</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Descrição ou categoria..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-9 h-9 text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Período</Label>
+                <Select value={periodFilter} onValueChange={setPeriodFilter}>
+                  <SelectTrigger className="h-9 w-full text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os períodos</SelectItem>
+                    <SelectItem value="last_month">Mês passado</SelectItem>
+                    <SelectItem value="this_month">Este mês</SelectItem>
+                    <SelectItem value="next_month">Próximo mês</SelectItem>
+                    <SelectItem value="custom">Personalizado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Tipo</Label>
+                <MultiSelect
+                  options={[{ value: "income", label: "Entradas" }, { value: "expense", label: "Saídas" }]}
+                  selected={typeFilter}
+                  onChange={setTypeFilter}
+                  allLabel="Todos"
+                  className="h-9 text-sm"
                 />
               </div>
 
-              {/* Period */}
-              <Select value={periodFilter} onValueChange={setPeriodFilter}>
-                <SelectTrigger className="h-9 w-auto min-w-[110px] text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os períodos</SelectItem>
-                  <SelectItem value="last_month">Mês passado</SelectItem>
-                  <SelectItem value="this_month">Este mês</SelectItem>
-                  <SelectItem value="next_month">Próximo mês</SelectItem>
-                  <SelectItem value="custom">Personalizado</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Type */}
-              <MultiSelect
-                options={[{ value: "income", label: "Entradas" }, { value: "expense", label: "Saídas" }]}
-                selected={typeFilter}
-                onChange={setTypeFilter}
-                allLabel="Tipo"
-              />
-
-              {/* Status */}
-              <MultiSelect
-                options={[
-                  { value: "pending", label: "Em aberto" },
-                  { value: "upcoming", label: "A vencer" },
-                  { value: "overdue", label: "Vencido" },
-                  { value: "paid", label: "Pago" },
-                ]}
-                selected={statusFilter}
-                onChange={setStatusFilter}
-                allLabel="Status"
-              />
-
-              {/* Category */}
-              <MultiSelect
-                options={categories.map((c) => ({ value: c, label: c }))}
-                selected={categoryFilter}
-                onChange={setCategoryFilter}
-                allLabel="Categoria"
-              />
-
-              {/* Tag */}
-              <MultiSelect
-                options={[
-                  { value: "fixa", label: "Fixa" },
-                  { value: "variavel", label: "Variável" },
-                  { value: "esporadica", label: "Esporádica" },
-                ]}
-                selected={tagFilter}
-                onChange={setTagFilter}
-                allLabel="Tag"
-              />
-
-              <div className="flex-1" />
-
-              {/* Agrupar */}
-              <Select value={groupBy} onValueChange={(v) => setGroupBy(v as typeof groupBy)}>
-                <SelectTrigger className="h-9 w-auto text-sm">
-                  <SelectValue placeholder="Agrupar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sem grupo</SelectItem>
-                  <SelectItem value="month">Por mês</SelectItem>
-                  <SelectItem value="category">Por categoria</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Ordenar */}
-              <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as typeof sortOrder)}>
-                <SelectTrigger className="h-9 w-auto text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="priority">Prioridade</SelectItem>
-                  <SelectItem value="date_desc">Data ↓</SelectItem>
-                  <SelectItem value="date_asc">Data ↑</SelectItem>
-                  <SelectItem value="amount_desc">Valor ↓</SelectItem>
-                  <SelectItem value="amount_asc">Valor ↑</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Selecionar */}
-              <Button
-                variant={selectionMode ? "default" : "ghost"}
-                size="sm"
-                className="h-9 gap-1.5"
-                onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) setSelectedTransactions(new Set()); }}
-              >
-                <CheckSquare className="w-3.5 h-3.5" />
-                {selectionMode && selectedTransactions.size > 0 && <span>{selectedTransactions.size}</span>}
-              </Button>
-
-              {/* Filtros Pro */}
-              <button
-                onClick={() => setShowProFilters(!showProFilters)}
-                className={`flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs border transition-colors ${
-                  subscribed
-                    ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
-                    : "border-border bg-secondary/50 text-muted-foreground hover:bg-secondary"
-                }`}
-              >
-                {subscribed ? <Crown className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                Pro
-              </button>
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Status</Label>
+                <MultiSelect
+                  options={[
+                    { value: "pending", label: "Em aberto" },
+                    { value: "upcoming", label: "A vencer" },
+                    { value: "overdue", label: "Vencido" },
+                    { value: "paid", label: "Pago" },
+                  ]}
+                  selected={statusFilter}
+                  onChange={setStatusFilter}
+                  allLabel="Todos"
+                  className="h-9 text-sm"
+                />
+              </div>
             </div>
 
-            {/* Data customizada */}
+            {/* Data customizada (só quando período = personalizado) */}
             {periodFilter === "custom" && (
-              <div className="flex gap-2 mt-2">
-                <Input type="date" value={customDateFrom} onChange={(e) => setCustomDateFrom(e.target.value)} className="h-9 text-sm" />
-                <span className="text-muted-foreground self-center text-sm">até</span>
-                <Input type="date" value={customDateTo} onChange={(e) => setCustomDateTo(e.target.value)} className="h-9 text-sm" />
+              <div className="flex items-center gap-2 pl-px">
+                <Label className="text-xs text-muted-foreground whitespace-nowrap">De</Label>
+                <Input type="date" value={customDateFrom} onChange={(e) => setCustomDateFrom(e.target.value)} className="h-9 text-sm w-36" />
+                <Label className="text-xs text-muted-foreground whitespace-nowrap">até</Label>
+                <Input type="date" value={customDateTo} onChange={(e) => setCustomDateTo(e.target.value)} className="h-9 text-sm w-36" />
                 {(customDateFrom || customDateTo) && (
-                  <Button variant="ghost" size="sm" onClick={() => { setCustomDateFrom(""); setCustomDateTo(""); }} className="h-9 px-2">
+                  <Button variant="ghost" size="icon" onClick={() => { setCustomDateFrom(""); setCustomDateTo(""); }} className="h-9 w-9">
                     <X className="w-4 h-4" />
                   </Button>
                 )}
               </div>
             )}
 
+            {/* Linha 2: Categoria · Tag · Agrupar · Ordenar · ações */}
+            <div className="flex items-end gap-3">
+              <div className="flex-1 space-y-1">
+                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Categoria</Label>
+                <MultiSelect
+                  options={categories.map((c) => ({ value: c, label: c }))}
+                  selected={categoryFilter}
+                  onChange={setCategoryFilter}
+                  allLabel="Todas"
+                  className="h-9 text-sm"
+                />
+              </div>
+
+              <div className="w-[130px] space-y-1">
+                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Tag</Label>
+                <MultiSelect
+                  options={[
+                    { value: "fixa", label: "Fixa" },
+                    { value: "variavel", label: "Variável" },
+                    { value: "esporadica", label: "Esporádica" },
+                  ]}
+                  selected={tagFilter}
+                  onChange={setTagFilter}
+                  allLabel="Todas"
+                  className="h-9 text-sm"
+                />
+              </div>
+
+              <div className="w-[140px] space-y-1">
+                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Agrupar</Label>
+                <Select value={groupBy} onValueChange={(v) => setGroupBy(v as typeof groupBy)}>
+                  <SelectTrigger className="h-9 w-full text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem grupo</SelectItem>
+                    <SelectItem value="month">Por mês</SelectItem>
+                    <SelectItem value="category">Por categoria</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="w-[140px] space-y-1">
+                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Ordenar</Label>
+                <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as typeof sortOrder)}>
+                  <SelectTrigger className="h-9 w-full text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="priority">Prioridade</SelectItem>
+                    <SelectItem value="date_desc">Data ↓</SelectItem>
+                    <SelectItem value="date_asc">Data ↑</SelectItem>
+                    <SelectItem value="amount_desc">Valor ↓</SelectItem>
+                    <SelectItem value="amount_asc">Valor ↑</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Selecionar em massa */}
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground invisible">_</Label>
+                <Button
+                  variant={selectionMode ? "default" : "outline"}
+                  size="sm"
+                  className="h-9 gap-1.5"
+                  onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) setSelectedTransactions(new Set()); }}
+                  title="Seleção em massa"
+                >
+                  <CheckSquare className="w-3.5 h-3.5" />
+                  {selectionMode && selectedTransactions.size > 0 ? <span>{selectedTransactions.size}</span> : <span className="hidden md:inline">Selecionar</span>}
+                </Button>
+              </div>
+
+              {/* Pro */}
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground invisible">_</Label>
+                <button
+                  onClick={() => setShowProFilters(!showProFilters)}
+                  className={`flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs border transition-colors ${
+                    subscribed
+                      ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
+                      : "border-border bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                  }`}
+                >
+                  {subscribed ? <Crown className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                  Pro
+                </button>
+              </div>
+            </div>
+
             {/* Filtros Pro expandidos */}
             {showProFilters && (
-              <div className="relative mt-3 pt-3 border-t border-border">
+              <div className="relative pt-3 border-t border-border">
                 {!subscribed && (
                   <div className="absolute inset-0 bg-background/70 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-2 rounded-lg">
                     <Lock className="w-5 h-5 text-muted-foreground" />
@@ -775,24 +806,30 @@ const Transactions = () => {
                     </Button>
                   </div>
                 )}
-                <div className={`flex flex-wrap gap-2 items-end ${!subscribed ? "filter blur-sm" : ""}`}>
+                <div className={`flex flex-wrap gap-3 items-end ${!subscribed ? "filter blur-sm" : ""}`}>
                   <div className="space-y-1">
-                    <Label className="text-[10px] text-muted-foreground uppercase tracking-wide">De</Label>
-                    <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} disabled={!subscribed} className="h-9 text-sm w-auto" />
+                    <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">De</Label>
+                    <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} disabled={!subscribed} className="h-9 text-sm w-36" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] text-muted-foreground uppercase tracking-wide">Até</Label>
-                    <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} disabled={!subscribed} className="h-9 text-sm w-auto" />
+                    <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Até</Label>
+                    <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} disabled={!subscribed} className="h-9 text-sm w-36" />
                   </div>
-                  <Input type="number" placeholder="Valor mínimo" value={minAmount} onChange={(e) => setMinAmount(e.target.value)} disabled={!subscribed} className="h-9 text-sm w-32" />
-                  <Input type="number" placeholder="Valor máximo" value={maxAmount} onChange={(e) => setMaxAmount(e.target.value)} disabled={!subscribed} className="h-9 text-sm w-32" />
-                  <label className="flex items-center gap-2 h-9 px-3 border border-input rounded-lg text-sm cursor-pointer">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Valor mín.</Label>
+                    <Input type="number" placeholder="0,00" value={minAmount} onChange={(e) => setMinAmount(e.target.value)} disabled={!subscribed} className="h-9 text-sm w-28" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Valor máx.</Label>
+                    <Input type="number" placeholder="9.999,00" value={maxAmount} onChange={(e) => setMaxAmount(e.target.value)} disabled={!subscribed} className="h-9 text-sm w-28" />
+                  </div>
+                  <label className="flex items-center gap-2 h-9 px-3 border border-input rounded-lg text-sm cursor-pointer self-end">
                     <Checkbox checked={recurringOnly} onCheckedChange={(c) => setRecurringOnly(!!c)} disabled={!subscribed} />
                     <RefreshCw className="w-3.5 h-3.5" />
                     Recorrentes
                   </label>
                   {subscribed && (dateFrom || dateTo || minAmount || maxAmount || recurringOnly) && (
-                    <Button variant="ghost" size="sm" onClick={clearProFilters} className="h-9">Limpar</Button>
+                    <Button variant="ghost" size="sm" onClick={clearProFilters} className="h-9 self-end">Limpar</Button>
                   )}
                 </div>
               </div>
