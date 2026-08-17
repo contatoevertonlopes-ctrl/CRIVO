@@ -23,8 +23,9 @@ import { toast } from "sonner";
 import {
   Search, Plus, Edit2, Trash2, Filter, Download, Lock, Crown,
   RefreshCw, Calendar, Copy, ArrowUpDown, ChevronUp, ChevronDown,
-  ChevronRight, CheckSquare, X, AlertCircle, CalendarClock,
+  ChevronRight, CheckSquare, X, AlertCircle, CalendarClock, Columns3,
 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import AddTransactionCompactDialog from "@/components/AddTransactionCompactDialog";
 import Sidebar from "@/components/Sidebar";
 import ImportTransactionsDialog from "@/components/ImportTransactionsDialog";
@@ -53,6 +54,40 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+// ─── Column config ───────────────────────────────────────────────────────────
+const COLUMN_DEFS = [
+  { id: "date",           label: "Data",          locked: true,  defaultVisible: true  },
+  { id: "description",    label: "Descrição",      locked: true,  defaultVisible: true  },
+  { id: "category",       label: "Categoria",      locked: false, defaultVisible: true  },
+  { id: "tag",            label: "Tag",            locked: false, defaultVisible: false },
+  { id: "type",           label: "Tipo",           locked: false, defaultVisible: false },
+  { id: "payment_method", label: "Pagamento",      locked: false, defaultVisible: false },
+  { id: "due_date",       label: "Vencimento",     locked: false, defaultVisible: false },
+  { id: "paid_date",      label: "Data paga",      locked: false, defaultVisible: false },
+  { id: "amount",         label: "Valor",          locked: true,  defaultVisible: true  },
+  { id: "status",         label: "Status",         locked: false, defaultVisible: true  },
+  { id: "actions",        label: "Ações",          locked: true,  defaultVisible: true  },
+] as const;
+
+type ColumnId = (typeof COLUMN_DEFS)[number]["id"];
+type ColVisibility = Record<ColumnId, boolean>;
+
+const COL_STORAGE_KEY = "crivo-tx-columns-v1";
+
+const defaultColVisibility = (): ColVisibility =>
+  Object.fromEntries(COLUMN_DEFS.map((c) => [c.id, c.defaultVisible])) as ColVisibility;
+
+const loadColVisibility = (): ColVisibility => {
+  try {
+    const raw = localStorage.getItem(COL_STORAGE_KEY);
+    if (!raw) return defaultColVisibility();
+    return { ...defaultColVisibility(), ...JSON.parse(raw) };
+  } catch {
+    return defaultColVisibility();
+  }
+};
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface Transaction {
   id: string;
@@ -87,30 +122,28 @@ interface TransactionRowProps {
   selectionMode?: boolean;
   memberInfo?: { name: string; initials: string; avatar: string | null };
   showMember?: boolean;
+  cols: ColVisibility;
 }
 
+const TagBadge = ({ tag }: { tag: string }) => (
+  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold tracking-wide shrink-0 ${
+    tag === "fixa" ? "bg-primary/10 text-primary"
+    : tag === "variavel" ? "bg-warning/15 text-warning-foreground"
+    : "bg-muted text-muted-foreground"
+  }`}>
+    {tag === "fixa" ? "Fixa" : tag === "variavel" ? "Variável" : "Esporádica"}
+  </span>
+);
+
 const TransactionRow = ({
-  transaction,
-  onEdit,
-  onDelete,
-  onDuplicate,
-  onStatusChange,
-  formatDate,
-  formatCurrency,
-  isSelected,
-  onToggleSelect,
-  selectionMode,
-  memberInfo,
-  showMember,
+  transaction, onEdit, onDelete, onDuplicate, onStatusChange,
+  formatDate, formatCurrency, isSelected, onToggleSelect,
+  selectionMode, memberInfo, showMember, cols,
 }: TransactionRowProps) => (
   <tr className={`border-b border-border/40 hover:bg-secondary/25 transition-colors group ${isSelected ? "bg-primary/8" : ""}`}>
     {selectionMode && (
       <td className="py-3 px-3">
-        <Checkbox
-          checked={isSelected}
-          onCheckedChange={() => onToggleSelect?.(transaction.id)}
-          className="data-[state=checked]:bg-primary"
-        />
+        <Checkbox checked={isSelected} onCheckedChange={() => onToggleSelect?.(transaction.id)} className="data-[state=checked]:bg-primary" />
       </td>
     )}
     {showMember && (
@@ -121,9 +154,7 @@ const TransactionRow = ({
               <TooltipTrigger>
                 <Avatar className="w-6 h-6 ring-1 ring-border/40">
                   <AvatarImage src={memberInfo.avatar || undefined} />
-                  <AvatarFallback className="text-[9px] bg-primary/20 text-primary">
-                    {memberInfo.initials}
-                  </AvatarFallback>
+                  <AvatarFallback className="text-[9px] bg-primary/20 text-primary">{memberInfo.initials}</AvatarFallback>
                 </Avatar>
               </TooltipTrigger>
               <TooltipContent><p>{memberInfo.name}</p></TooltipContent>
@@ -138,31 +169,63 @@ const TransactionRow = ({
       {formatDate(transaction.date)}
     </td>
 
-    {/* Descrição + tag inline */}
+    {/* Descrição */}
     <td className="py-3 px-4">
-      <div className="flex items-center gap-2">
-        <span className="font-medium text-sm truncate max-w-[200px]">{transaction.description}</span>
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="font-medium text-sm truncate">{transaction.description}</span>
         {transaction.is_recurring && (
           <RefreshCw className="w-3 h-3 text-muted-foreground/50 shrink-0" title="Recorrente" />
         )}
-        {transaction.tag && (
-          <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold tracking-wide shrink-0 ${
-            transaction.tag === "fixa"
-              ? "bg-primary/10 text-primary"
-              : transaction.tag === "variavel"
-              ? "bg-warning/15 text-warning-foreground"
-              : "bg-muted text-muted-foreground"
-          }`}>
-            {transaction.tag === "fixa" ? "Fixa" : transaction.tag === "variavel" ? "Var" : "Esp"}
-          </span>
-        )}
+        {/* Tag inline só quando a coluna Tag está oculta */}
+        {!cols.tag && transaction.tag && <TagBadge tag={transaction.tag} />}
       </div>
     </td>
 
     {/* Categoria */}
-    <td className="py-3 px-4">
-      <span className="text-xs text-muted-foreground">{transaction.category}</span>
-    </td>
+    {cols.category && (
+      <td className="py-3 px-4">
+        <span className="text-xs text-muted-foreground">{transaction.category}</span>
+      </td>
+    )}
+
+    {/* Tag (coluna própria) */}
+    {cols.tag && (
+      <td className="py-3 px-4">
+        {transaction.tag ? <TagBadge tag={transaction.tag} /> : <span className="text-muted-foreground/40 text-xs">—</span>}
+      </td>
+    )}
+
+    {/* Tipo */}
+    {cols.type && (
+      <td className="py-3 px-4">
+        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+          transaction.type === "income" ? "bg-income/10 text-income" : "bg-destructive/10 text-destructive"
+        }`}>
+          {transaction.type === "income" ? "Entrada" : "Saída"}
+        </span>
+      </td>
+    )}
+
+    {/* Pagamento */}
+    {cols.payment_method && (
+      <td className="py-3 px-4">
+        <span className="text-xs text-muted-foreground">{transaction.payment_method || <span className="text-muted-foreground/40">—</span>}</span>
+      </td>
+    )}
+
+    {/* Vencimento */}
+    {cols.due_date && (
+      <td className="py-3 px-4 whitespace-nowrap text-sm text-muted-foreground tabular-nums">
+        {transaction.due_date ? formatDate(transaction.due_date) : <span className="text-muted-foreground/40">—</span>}
+      </td>
+    )}
+
+    {/* Data paga */}
+    {cols.paid_date && (
+      <td className="py-3 px-4 whitespace-nowrap text-sm text-muted-foreground tabular-nums">
+        {transaction.paid_date ? formatDate(transaction.paid_date) : <span className="text-muted-foreground/40">—</span>}
+      </td>
+    )}
 
     {/* Valor */}
     <td className="py-3 px-4 whitespace-nowrap">
@@ -174,37 +237,27 @@ const TransactionRow = ({
     </td>
 
     {/* Status */}
-    <td className="py-3 px-4">
-      <StatusSelector
-        transactionId={transaction.id}
-        currentStatus={transaction.status}
-        recurringSeriesId={transaction.recurring_series_id}
-        onStatusChange={onStatusChange}
-      />
-    </td>
+    {cols.status && (
+      <td className="py-3 px-4">
+        <StatusSelector
+          transactionId={transaction.id}
+          currentStatus={transaction.status}
+          recurringSeriesId={transaction.recurring_series_id}
+          onStatusChange={onStatusChange}
+        />
+      </td>
+    )}
 
-    {/* Ações — visíveis só no hover */}
+    {/* Ações */}
     <td className="py-3 px-3">
       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button
-          onClick={() => onDuplicate(transaction)}
-          className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-primary/15 text-muted-foreground hover:text-primary transition-colors"
-          title="Duplicar"
-        >
+        <button onClick={() => onDuplicate(transaction)} className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-primary/15 text-muted-foreground hover:text-primary transition-colors" title="Duplicar">
           <Copy className="w-3.5 h-3.5" />
         </button>
-        <button
-          onClick={() => onEdit(transaction)}
-          className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-          title="Editar"
-        >
+        <button onClick={() => onEdit(transaction)} className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors" title="Editar">
           <Edit2 className="w-3.5 h-3.5" />
         </button>
-        <button
-          onClick={() => onDelete(transaction.id)}
-          className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-destructive/15 text-muted-foreground hover:text-destructive transition-colors"
-          title="Excluir"
-        >
+        <button onClick={() => onDelete(transaction.id)} className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-destructive/15 text-muted-foreground hover:text-destructive transition-colors" title="Excluir">
           <Trash2 className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -249,8 +302,17 @@ const Transactions = () => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
   const [recurringDeleteTarget, setRecurringDeleteTarget] = useState<Transaction | null>(null);
+  const [colVisibility, setColVisibility] = useState<ColVisibility>(loadColVisibility);
   const itemsPerPage = 15;
   const loading = authLoading || transactionsLoading;
+
+  const toggleCol = (id: ColumnId) => {
+    setColVisibility((prev) => {
+      const next = { ...prev, [id]: !prev[id] };
+      localStorage.setItem(COL_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
@@ -538,7 +600,16 @@ const Transactions = () => {
     );
   }
 
-  const colSpanBase = (selectionMode ? 1 : 0) + (showMember ? 1 : 0) + 6;
+  const colSpanBase = (selectionMode ? 1 : 0) + (showMember ? 1 : 0)
+    + 3 // date + description + amount (locked)
+    + (colVisibility.category ? 1 : 0)
+    + (colVisibility.tag ? 1 : 0)
+    + (colVisibility.type ? 1 : 0)
+    + (colVisibility.payment_method ? 1 : 0)
+    + (colVisibility.due_date ? 1 : 0)
+    + (colVisibility.paid_date ? 1 : 0)
+    + (colVisibility.status ? 1 : 0)
+    + 1; // actions (locked)
 
   return (
     <div className="flex min-h-[100dvh]">
@@ -553,6 +624,45 @@ const Transactions = () => {
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <div className="hidden sm:flex items-center gap-2">
+                {/* Colunas */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1.5">
+                      <Columns3 className="w-3.5 h-3.5" />
+                      <span className="hidden md:inline">Colunas</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-52 p-3 space-y-0.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Colunas visíveis</p>
+                    {COLUMN_DEFS.map((col) => (
+                      <label
+                        key={col.id}
+                        className={`flex items-center gap-2.5 py-1.5 px-1 rounded-lg text-sm cursor-pointer hover:bg-secondary/60 transition-colors ${col.locked ? "opacity-50 pointer-events-none" : ""}`}
+                      >
+                        <Checkbox
+                          checked={colVisibility[col.id]}
+                          onCheckedChange={() => !col.locked && toggleCol(col.id as ColumnId)}
+                          className="data-[state=checked]:bg-primary"
+                        />
+                        <span>{col.label}</span>
+                        {col.locked && <span className="ml-auto text-[10px] text-muted-foreground">fixo</span>}
+                      </label>
+                    ))}
+                    <div className="pt-2 border-t border-border mt-2">
+                      <button
+                        className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+                        onClick={() => {
+                          const def = defaultColVisibility();
+                          setColVisibility(def);
+                          localStorage.setItem(COL_STORAGE_KEY, JSON.stringify(def));
+                        }}
+                      >
+                        Restaurar padrão
+                      </button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
                 <ImportTransactionsDialog onSuccess={fetchTransactions} />
                 <Button variant="outline" size="sm" onClick={exportToCSV} className="gap-1.5">
                   <Download className="w-3.5 h-3.5" />
@@ -999,7 +1109,12 @@ const Transactions = () => {
                           </span>
                         </th>
                         <th className="text-left py-3 px-4 text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Descrição</th>
-                        <th className="text-left py-3 px-4 text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Categoria</th>
+                        {colVisibility.category && <th className="text-left py-3 px-4 text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Categoria</th>}
+                        {colVisibility.tag && <th className="text-left py-3 px-4 text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Tag</th>}
+                        {colVisibility.type && <th className="text-left py-3 px-4 text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Tipo</th>}
+                        {colVisibility.payment_method && <th className="text-left py-3 px-4 text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Pagamento</th>}
+                        {colVisibility.due_date && <th className="text-left py-3 px-4 text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Vencimento</th>}
+                        {colVisibility.paid_date && <th className="text-left py-3 px-4 text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Data paga</th>}
                         <th
                           className="text-left py-3 px-4 text-[11px] uppercase tracking-widest text-muted-foreground font-medium cursor-pointer hover:text-foreground transition-colors select-none"
                           onClick={() => setSortOrder(sortOrder === "amount_desc" ? "amount_asc" : "amount_desc")}
@@ -1009,7 +1124,7 @@ const Transactions = () => {
                             {sortOrder === "amount_desc" ? <ChevronDown className="w-3.5 h-3.5 text-primary" /> : sortOrder === "amount_asc" ? <ChevronUp className="w-3.5 h-3.5 text-primary" /> : <ArrowUpDown className="w-3 h-3 opacity-40" />}
                           </span>
                         </th>
-                        <th className="text-left py-3 px-4 text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Status</th>
+                        {colVisibility.status && <th className="text-left py-3 px-4 text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Status</th>}
                         <th className="py-3 px-3 w-28" />
                       </tr>
                     </thead>
@@ -1034,6 +1149,7 @@ const Transactions = () => {
                             selectionMode={selectionMode}
                             memberInfo={getMemberInfo(t.user_id || "")}
                             showMember={showMember}
+                            cols={colVisibility}
                           />
                         ))
                       ) : (
@@ -1077,6 +1193,7 @@ const Transactions = () => {
                                   selectionMode={selectionMode}
                                   memberInfo={getMemberInfo(t.user_id || "")}
                                   showMember={showMember}
+                                  cols={colVisibility}
                                 />
                               ))}
                             </React.Fragment>
