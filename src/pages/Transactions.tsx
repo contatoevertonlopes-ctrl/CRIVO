@@ -278,7 +278,9 @@ const Transactions = () => {
   const { transactions, isLoading: transactionsLoading, refetch: refetchTransactions, error: transactionsError } = useTransactions();
   const { categories: predefinedCategories } = useTransactionCategories();
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const debounceRef = React.useRef<ReturnType<typeof setTimeout>>();
   const [typeFilter, setTypeFilter] = useState<string[]>(searchParams.get("type") ? [searchParams.get("type")!] : []);
   const [statusFilter, setStatusFilter] = useState<string[]>(searchParams.get("status") ? [searchParams.get("status")!] : []);
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
@@ -567,6 +569,27 @@ const Transactions = () => {
     setPeriodFilter("all");
   };
 
+  const clearAllFilters = () => {
+    setSearchInput(""); setSearch("");
+    setTypeFilter([]); setStatusFilter([]); setCategoryFilter([]); setTagFilter([]);
+    setPeriodFilter("this_month");
+    setDateFrom(""); setDateTo(""); setMinAmount(""); setMaxAmount("");
+    setRecurringOnly(false); setCustomDateFrom(""); setCustomDateTo("");
+  };
+
+  const activeFilterCount = useMemo(() =>
+    [
+      search.length > 0,
+      typeFilter.length > 0,
+      statusFilter.length > 0,
+      categoryFilter.length > 0,
+      tagFilter.length > 0,
+      periodFilter !== "this_month",
+      !!dateFrom || !!dateTo || !!minAmount || !!maxAmount || recurringOnly,
+    ].filter(Boolean).length,
+    [search, typeFilter, statusFilter, categoryFilter, tagFilter, periodFilter, dateFrom, dateTo, minAmount, maxAmount, recurringOnly]
+  );
+
   const showMember = isShared && members.length > 1;
   const getMemberInfo = (userId: string) => {
     const m = members.find((m) => m.user_id === userId);
@@ -742,6 +765,22 @@ const Transactions = () => {
           {/* ─── Filtros (desktop) ─────────────────────────────── */}
           <div className="hidden sm:block glass-card rounded-xl px-5 py-4 space-y-3">
 
+            {/* Indicador de filtros ativos */}
+            {activeFilterCount > 0 && (
+              <div className="flex items-center justify-between pb-1 border-b border-border/40">
+                <span className="text-xs text-muted-foreground">
+                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold mr-1.5">{activeFilterCount}</span>
+                  {activeFilterCount === 1 ? "filtro ativo" : "filtros ativos"}
+                </span>
+                <button
+                  onClick={clearAllFilters}
+                  className="text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1"
+                >
+                  <X className="w-3 h-3" /> Limpar tudo
+                </button>
+              </div>
+            )}
+
             {/* Linha 1: Busca · Período · Tipo · Status */}
             <div className="grid grid-cols-[1fr_170px_130px_170px] gap-3">
               <div className="space-y-1">
@@ -750,8 +789,12 @@ const Transactions = () => {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                   <Input
                     placeholder="Descrição ou categoria..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => {
+                      setSearchInput(e.target.value);
+                      clearTimeout(debounceRef.current);
+                      debounceRef.current = setTimeout(() => setSearch(e.target.value), 250);
+                    }}
                     className="pl-9 h-9 text-sm"
                   />
                 </div>
@@ -1044,7 +1087,25 @@ const Transactions = () => {
                 <Button variant="outline" size="sm" onClick={fetchTransactions}>Recarregar</Button>
               </div>
             ) : filteredTransactions.length === 0 ? (
-              <div className="text-center py-16 text-muted-foreground text-sm">Nenhuma transação encontrada</div>
+              <div className="flex flex-col items-center justify-center py-20 gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-secondary flex items-center justify-center">
+                  <Search className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium">Nenhuma transação encontrada</p>
+                  {search && (
+                    <p className="text-xs text-muted-foreground mt-0.5">para "{search}"</p>
+                  )}
+                  {activeFilterCount > 0 && (
+                    <button
+                      onClick={clearAllFilters}
+                      className="mt-2 text-xs text-primary hover:underline"
+                    >
+                      Limpar {activeFilterCount} {activeFilterCount === 1 ? "filtro" : "filtros"} ativos
+                    </button>
+                  )}
+                </div>
+              </div>
             ) : (
               <>
                 {/* Mobile */}
@@ -1085,8 +1146,8 @@ const Transactions = () => {
                 {/* Desktop — tabela enxuta */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border/40">
+                    <thead className="sticky top-0 z-20">
+                      <tr className="border-b border-border/60 bg-card/95 backdrop-blur-md">
                         {selectionMode && (
                           <th className="py-3 px-3 w-10">
                             <Checkbox
@@ -1203,6 +1264,39 @@ const Transactions = () => {
                         })
                       )}
                     </tbody>
+
+                    {/* Rodapé: contagem + totais */}
+                    {filteredTransactions.length > 0 && (
+                      <tfoot>
+                        <tr className="border-t border-border/50 bg-secondary/10">
+                          <td colSpan={colSpanBase} className="px-5 py-3">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span>
+                                {groupBy === "none"
+                                  ? `Mostrando ${Math.min((currentPage - 1) * itemsPerPage + 1, filteredTransactions.length)}–${Math.min(currentPage * itemsPerPage, filteredTransactions.length)} de ${filteredTransactions.length} transações`
+                                  : `${filteredTransactions.length} transações`}
+                              </span>
+                              <div className="flex items-center gap-5 tabular-nums">
+                                <span>
+                                  Entradas{" "}
+                                  <strong className="text-income font-semibold">{formatCurrency(totals.incomePaid)}</strong>
+                                </span>
+                                <span>
+                                  Saídas{" "}
+                                  <strong className="text-destructive font-semibold">{formatCurrency(totals.expensePaid)}</strong>
+                                </span>
+                                <span>
+                                  Saldo{" "}
+                                  <strong className={`font-semibold ${totals.balancePaid >= 0 ? "text-income" : "text-destructive"}`}>
+                                    {formatCurrency(totals.balancePaid)}
+                                  </strong>
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      </tfoot>
+                    )}
                   </table>
                   {groupBy === "none" && (
                     <TransactionPagination
